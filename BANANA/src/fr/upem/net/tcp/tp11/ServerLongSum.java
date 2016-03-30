@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 
 public class ServerLongSum {
@@ -14,9 +15,28 @@ public class ServerLongSum {
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
-	static private final int BUFSIZ = 10;
 
+	static private final int BUFSIZ = 10;
+	private final HashMap<Id, Attachement> map = new HashMap<>();
+
+	private class Id {
+		long id ;
+		String login ;
+	}
+
+	private enum StatusExchange {
+		BEGIN,
+	}
+
+	
 	private class Attachement {
+
+		class StatusSession {
+			
+			
+		}
+		
+		
 		ByteBuffer in;
 		ByteBuffer out;
 		int nbOp = 0;
