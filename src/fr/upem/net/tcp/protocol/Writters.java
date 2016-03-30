@@ -6,6 +6,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
+import fr.upem.net.logger.Logger;
+
 public class Writters {
 	
 	private static final Charset UTF8 = Charset.forName("utf-8");
@@ -30,7 +32,10 @@ public class Writters {
 		buff2.putInt(buff.remaining());
 		
 		buff2.put(buff);
+		
+		new Logger(buff2).toString();
 		buff2.flip();
+
 		
 		sc.write(buff2);
 		
@@ -49,6 +54,7 @@ public class Writters {
 		
 		buff.putInt(3).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
 		
+		new Logger(buff).toString();
 		buff.flip();
 		
 		sc.write(buff);
@@ -66,26 +72,61 @@ public class Writters {
 		ByteBuffer buff = allocate(4,srcBuff.remaining() + adressBuff.remaining());
 		
 		buff.putInt(5).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+		
+		new Logger(buff).toString();
 		buff.flip();
 		
 		sc.write(buff);
 	}
 	
 	/**
-	 * 
+	 * Deny a private connection from src.
 	 * @param sc
+	 * @param src
+	 * @throws IOException
 	 */
+	public static void denyPrivateConnection(SocketChannel sc,String src) throws IOException{
+		ByteBuffer srcBuff = UTF8.encode(src);
 
-	public static void accept(SocketChannel sc){
+		ByteBuffer buff = allocate(2,srcBuff.remaining() );
 		
+		buff.putInt(6).putInt(srcBuff.remaining()).put(srcBuff);
+		
+		new Logger(buff).toString();
+		buff.flip();
+		
+		sc.write(buff);
 	}
 	
 	/**
-	 * 
+	 * Ask for a connection to send files.
+	 * @param sc The socket use for file.
+	 * @param type 9 for asking and 10 to respond.
+	 */
+	public static void askPrivateFileConnection(SocketChannel sc,int type) throws IOException, IllegalStateException{
+		if( (type == 9) || (type == 10)){
+			ByteBuffer adressBuff = UTF8.encode(sc.getLocalAddress().toString());
+			ByteBuffer buff = allocate(2,adressBuff.remaining());
+			
+			buff.putInt(type).putInt(adressBuff.remaining()).put(adressBuff);
+			
+			new Logger(buff).toString();
+			buff.flip();
+			sc.write(buff);
+		}
+		else{
+			throw new IllegalStateException("Wrong request id "+type+". Type is 9 or 10.");
+		}
+		
+
+	}
+	
+	/**
+	 * Ask authorization to send a file.
 	 * @param sc
 	 */
-	public static void deny(SocketChannel sc){
-		
+	public static void askToSendFile(SocketChannel sc, Path path){
+		System.out.println("askTosendFile");
 	}
 	
 	/**
@@ -93,8 +134,19 @@ public class Writters {
 	 * @param sc
 	 * @param expediteur
 	 */
-	public static void sendMessage(SocketChannel sc, String expediteur, String msg){
+	public static void sendMessage(SocketChannel sc, String src, String msg) throws IOException{
+		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer msgBuff = UTF8.encode(msg);
+
+		ByteBuffer buff = allocate(3,srcBuff.remaining() + msgBuff.remaining() );
 		
+		buff.putInt(15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		
+		new Logger(buff).toString();
+		
+		buff.flip();
+		
+		sc.write(buff);
 	}
 	
 	/**
@@ -106,13 +158,6 @@ public class Writters {
 		
 	}
 
-	/**
-	 * 
-	 * @param src
-	 * @param dst
-	 */
-	public static void sendAdress(SocketChannel src, SocketChannel dst){
-		
-	}
+	
 
 }

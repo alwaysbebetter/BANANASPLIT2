@@ -1,13 +1,16 @@
 package fr.upem.net.tcp.protocol;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
 
 public class Readers {
 	private final static ByteBuffer BUFFINT = ByteBuffer.allocateDirect(Integer.BYTES);
 	private final static ByteBuffer BUFFLONG = ByteBuffer.allocateDirect(Long.BYTES);
+	private final static Charset UTF8 = Charset.forName("utf-8");
 	
 	
 	/**
@@ -64,12 +67,78 @@ public class Readers {
 	 * @return
 	 * @throws IOException
 	 */
-	public static boolean demandAccepted(SocketChannel sc) throws IOException{
+	public static boolean nameAccepted(SocketChannel sc) throws IOException{
 		int answer = readInt(sc);
 		if(answer == 1)
 			return true;
 		else if(answer == 2)
 			return false;
 		throw new ReadersException("Problem, unknow response");
+	}
+	/**
+	 * 
+	 * @param sc
+	 * @return The pseudo of the demander.
+	 * @throws IOException
+	 */
+	public static String readDemandConnection(SocketChannel sc) throws IOException{
+		int pseudoSize = readInt(sc);
+		
+		ByteBuffer buff = ByteBuffer.allocate(pseudoSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readDemandConnection");
+		}
+		buff.flip();
+		String pseudo = UTF8.decode(buff).toString();
+		System.out.println(pseudo + " has invited you.");
+		System.out.println("Tape /yes to accept or /no to refuse.");
+		return pseudo;
+	}
+	
+	public static SocketChannel readAdress(SocketChannel sc) throws IOException{
+		int adressSize = readInt(sc);
+		
+		ByteBuffer buff = ByteBuffer.allocate(adressSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readAdress");
+		}
+		buff.flip();
+		String adress = UTF8.decode(buff).toString();
+		
+		int port = readInt(sc);
+
+		SocketChannel res = SocketChannel.open();
+		res.connect(new InetSocketAddress(adress,port));
+		
+		return res;
+	
+	}
+	
+	/**
+	 * Read a message and print.
+	 * @param sc
+	 * @throws IOException
+	 */
+	public static void readMessage(SocketChannel sc) throws IOException{
+		int pseudoSize = readInt(sc);
+		
+		ByteBuffer buff = ByteBuffer.allocate(pseudoSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readLong");
+		}
+		buff.flip();
+		String pseudo = UTF8.decode(buff).toString();
+		
+		int msgSize = readInt(sc);
+		buff = ByteBuffer.allocate(msgSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readLong");
+		}
+		buff.flip();
+		String message = UTF8.decode(buff).toString();
+		
+		System.out.println(pseudo +" : " + message);
+		
+		
 	}
 }

@@ -3,11 +3,11 @@ package fr.upem.net.tcp.client;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
 public class ClientTCPMatou {
@@ -21,16 +21,20 @@ public class ClientTCPMatou {
 	private SocketChannel privateChannel = null;
 	
 	//Channel uses to download/upload file
-	private SocketChannel fileChannel;
+	private SocketChannel fileChannel = null;
 	
 	//List of folks connected
 	//We use a Linked list because people will connect and disconnect(add/remove) often
-	private final LinkedList<String> listPeople = new LinkedList<>();
+	//private final LinkedList<String> listPeople = new LinkedList<>();
 	
 	private final String myName;
+	private  String destName;
 	
 	// If we have been invite by someone
-	private static boolean receivedInvite = false;
+	private  boolean receivedInvite = false;
+	private final Object lock = new Object();
+	
+	
 
 	/**
 	 * 
@@ -44,17 +48,47 @@ public class ClientTCPMatou {
 		generalChannel = SocketChannel.open();
 		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
 		myName = askName();
+		//System.out.println(myName);
 		currentChannel = generalChannel;
+		initListener();
 	}
 	
-	private String askName() throws IOException{
+	private void initListener(){
+		Thread generalListener = new Thread( () -> {
+			try{
+				while(true){
+					int id = Readers.readInt(generalChannel);
+					switch(id){
+						
+						case 4 : 
+							this.receivedInvite = true;
+							this.destName = Readers.readDemandConnection(generalChannel);
+							break;
+							
+						case 7 :
+							privateChannel = Readers.readAdress(generalChannel);break;
+						case 15 : Readers.readMessage(generalChannel);break;
+					}
+
+				}
+			}catch (IOException e){
+				
+			}
+			
+		});
+	}
+	
+	private String askName() throws IOException{//TODO
 		try (Scanner sc = new Scanner(System.in);) {
 			while (true) {
+				System.out.println("What is your pseudo ?");
 				if (sc.hasNextLine()) {
-					// Ask name
+					// Ask name				
 					String name = sc.nextLine();
 					Writters.requestName(generalChannel, name);
-
+					if(Readers.nameAccepted(generalChannel)){
+						return name;
+					}
 					
 				}
 
@@ -62,7 +96,7 @@ public class ClientTCPMatou {
 		}
 	}
 
-	private void treatCommand(String line) {
+	private void treatCommand(String line) throws IOException{
 		String command;
 		if (line.startsWith("/")) {
 			command = line.split(" \n", 2)[0];
@@ -131,7 +165,7 @@ public class ClientTCPMatou {
 					System.out.println("Vous n'avez pas reçu d'invitation.");
 				return;
 			
-			//Whispe a private message
+			//switch to private message
 			case "/p" :
 				if(privateChannel != null){
 					currentChannel = privateChannel;
@@ -158,12 +192,11 @@ public class ClientTCPMatou {
 				return;
 			
 			default :
-				
-				break;
+				Writters.sendMessage(currentChannel, myName, line);
+				return;
 					
 			}
 		}
-		//Writters.sendMessage(currentChannel,myName,line);
 
 	}
 
@@ -174,7 +207,7 @@ public class ClientTCPMatou {
 	 * @throws InterruptedException
 	 */
 	public void launch() throws IOException, InterruptedException {
-		ByteBuffer bb = ByteBuffer.allocate(4);
+		
 
 		try (Scanner sc = new Scanner(System.in);) {
 			while (true) {
