@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 import fr.upem.net.tcp.protocol.Readers;
@@ -28,10 +28,10 @@ public class ClientTCPMatou {
 	//private final LinkedList<String> listPeople = new LinkedList<>();
 	
 	private final String myName;
-	private  String destName;
+	private  String destName = "destTest";
 	
 	// If we have been invite by someone
-	private  boolean receivedInvite = false;
+	private  boolean receivedInvite = true;
 	private final Object lock = new Object();
 	
 	
@@ -47,13 +47,15 @@ public class ClientTCPMatou {
 			throws UnknownHostException, IOException {
 		generalChannel = SocketChannel.open();
 		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
-		myName = askName();
+		//myName = askName();
 		//System.out.println(myName);
+		myName = "moi";
 		currentChannel = generalChannel;
 		initListener();
 	}
 	
 	private void initListener(){
+		//TODO
 		Thread generalListener = new Thread( () -> {
 			try{
 				while(true){
@@ -78,17 +80,20 @@ public class ClientTCPMatou {
 		});
 	}
 	
-	private String askName() throws IOException{//TODO
-		try (Scanner sc = new Scanner(System.in);) {
+	/*Cette méthode bloquer avec le scanner, à corriger pour que le scanner se ferme vraiment */
+	private String askName() throws IOException{
+		//TODO
+		try (Scanner sc = new Scanner(System.in)) {
 			while (true) {
 				System.out.println("What is your pseudo ?");
 				if (sc.hasNextLine()) {
 					// Ask name				
 					String name = sc.nextLine();
 					Writters.requestName(generalChannel, name);
-					if(Readers.nameAccepted(generalChannel)){
+					//if(Readers.nameAccepted(generalChannel)){
+						sc.close();
 						return name;
-					}
+					//}
 					
 				}
 
@@ -98,8 +103,9 @@ public class ClientTCPMatou {
 
 	private void treatCommand(String line) throws IOException{
 		String command;
+		System.out.println("treat");
 		if (line.startsWith("/")) {
-			command = line.split(" \n", 2)[0];
+			command = line.split(" ", 2)[0];
 			switch (command) {
 			
 			//See people connected
@@ -114,8 +120,8 @@ public class ClientTCPMatou {
 				//Exemple /invite Bob
 				String[] name = line.split(" ", 3);
 				if(name.length >= 2){
-					System.out.println("Demande de chat privé à" + name[1]);
-					//Writters.invite(generalChannel,myName,name[1]);
+					System.out.println("Demande de chat privé à " + name[1]);
+					Writters.askPrivateConnection(generalChannel,myName,name[1]);
 				}
 				else
 					System.out.println("Précisez la personne à inviter !");
@@ -126,7 +132,7 @@ public class ClientTCPMatou {
 			String[] fileName = line.split(" ", 3);
 			if(fileName.length >= 2){
 				System.out.println("Envoi du fichier " + fileName[1] + " en cours...");
-				//Writters.sendFile(generalChannel,Paths.get(fileName[1]);
+				Writters.sendFile(generalChannel,Paths.get(fileName[1]));
 			}
 			else
 				System.out.println("Précisez un fichier à envoyer !");
@@ -149,7 +155,7 @@ public class ClientTCPMatou {
 			case "/yes":
 				if(receivedInvite){
 					System.out.println("Vous avez accepté l'invitation");
-					//Writters.accept(generalChannel);
+					Writters.acceptPrivateConnection(generalChannel,destName);
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation");
@@ -159,7 +165,7 @@ public class ClientTCPMatou {
 			case "/no":
 				if(receivedInvite){
 					System.out.println("Vous avez refusé l'invitation.");
-					//Writters.deny(generalChannel);
+					Writters.denyPrivateConnection(generalChannel,destName);
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation.");
@@ -192,12 +198,14 @@ public class ClientTCPMatou {
 				return;
 			
 			default :
-				
-				Writters.sendMessage(currentChannel, myName, line);
-				return;
+
+				break;
 					
 			}
+			
 		}
+		System.out.println(line + " envoyé !");
+		Writters.sendMessage(currentChannel, myName, line);
 
 	}
 
@@ -209,13 +217,16 @@ public class ClientTCPMatou {
 	 */
 	public void launch() throws IOException, InterruptedException {
 		
-
-		try (Scanner sc = new Scanner(System.in);) {
+		System.out.println("Client is ready.");
+		String line;
+		try (Scanner sc = new Scanner(System.in)) {
 			while (true) {
+
 				if (sc.hasNextLine()) {
 					// First Read message
-					String line = sc.nextLine();
-
+					
+					line = sc.nextLine();
+					
 					// Treat command or send message
 					treatCommand(line);
 				}
@@ -223,6 +234,7 @@ public class ClientTCPMatou {
 			}
 		} finally {
 			silentlyClose(generalChannel);
+			
 		}
 	}
 

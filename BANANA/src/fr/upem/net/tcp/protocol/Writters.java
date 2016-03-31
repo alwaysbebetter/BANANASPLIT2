@@ -1,12 +1,13 @@
 package fr.upem.net.tcp.protocol;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
-import fr.upem.net.logger.Logger;
+import fr.upem.net.logger.Loggers;
 
 public class Writters {
 	
@@ -33,7 +34,7 @@ public class Writters {
 		
 		buff2.put(buff);
 		
-		new Logger(buff2).toString();
+		Loggers.test(buff2);
 		buff2.flip();
 
 		
@@ -54,7 +55,7 @@ public class Writters {
 		
 		buff.putInt(3).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
 		
-		new Logger(buff).toString();
+		Loggers.test(buff);
 		buff.flip();
 		
 		sc.write(buff);
@@ -67,13 +68,15 @@ public class Writters {
 	 * @param src
 	 */
 	public static void acceptPrivateConnection(SocketChannel sc,String src) throws IOException{
+		InetSocketAddress adress = (InetSocketAddress)sc.getLocalAddress();
 		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer adressBuff = UTF8.encode(sc.getLocalAddress().toString());
+		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
 		ByteBuffer buff = allocate(4,srcBuff.remaining() + adressBuff.remaining());
 		
 		buff.putInt(5).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+		buff.putInt(adress.getPort());
 		
-		new Logger(buff).toString();
+		Loggers.test(buff);
 		buff.flip();
 		
 		sc.write(buff);
@@ -92,7 +95,7 @@ public class Writters {
 		
 		buff.putInt(6).putInt(srcBuff.remaining()).put(srcBuff);
 		
-		new Logger(buff).toString();
+		Loggers.test(buff);
 		buff.flip();
 		
 		sc.write(buff);
@@ -110,7 +113,7 @@ public class Writters {
 			
 			buff.putInt(type).putInt(adressBuff.remaining()).put(adressBuff);
 			
-			new Logger(buff).toString();
+			Loggers.test(buff);
 			buff.flip();
 			sc.write(buff);
 		}
@@ -130,6 +133,19 @@ public class Writters {
 	}
 	
 	/**
+	 * Send acceptation for file.
+	 * @param sc
+	 * @throws IOException
+	 */
+	public static void acceptFile(SocketChannel sc) throws IOException{
+		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(12));
+	}
+	
+	public static void refuseFile(SocketChannel sc) throws IOException{
+		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(12));
+	}
+	
+	/**
 	 * 
 	 * @param sc
 	 * @param expediteur
@@ -142,7 +158,7 @@ public class Writters {
 		
 		buff.putInt(15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
 		
-		new Logger(buff).toString();
+		Loggers.test(buff);
 		
 		buff.flip();
 		
@@ -155,7 +171,7 @@ public class Writters {
 	 * @param path
 	 */
 	public static void sendFile(SocketChannel sc, Path path){
-		
+		//TODO
 	}
 
 	
