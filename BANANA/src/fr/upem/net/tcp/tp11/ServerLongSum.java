@@ -1,11 +1,13 @@
 package fr.upem.net.tcp.tp11;
 
-
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -15,44 +17,50 @@ public class ServerLongSum {
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
-
-	static private final int BUFSIZ = 10;
 	private final HashMap<Id, Attachement> map = new HashMap<>();
-
+	static private final int BUFSIZ = 10;
+	
 	private class Id {
 		long id ;
 		String login ;
 	}
 
 	private enum StatusExchange {
-		BEGIN,
+		BEGIN,MIDDLE,END
 	}
-
 	
 	private class Attachement {
-
-		class StatusSession {
-			
-			
-		}
-		
-		
 		ByteBuffer in;
 		ByteBuffer out;
 		int nbOp = 0;
 		long sum = 0;
 		boolean isClosed = false;
 		SelectionKey key;
-		int status = 0;
+		StatusExchange status = StatusExchange.BEGIN;
+		
 
-		public Attachement() {
+
+
+
+		
+		class StatusSession {
+			
+			
+		}
+		
+		
+		
+		
+		public Attachement(SelectionKey key) {
 			in = ByteBuffer.allocate(BUFSIZ);
 			out = ByteBuffer.allocate(BUFSIZ);
+			this.key = key;
 		}
 
-		public int getInterest() { // il faut le faire aprés avoir unappeler
-									// process ET ça il faut le préciser dans le
-									// protocole.
+		public int getInterest() throws IOException { // il faut le faire aprés
+														// avoir unappeler
+			// process ET ça il faut le préciser dans le
+			// protocole.
 			int interest = 0;// initialize
 			if (out.position() > 0) {
 				interest = interest | SelectionKey.OP_WRITE;
@@ -60,22 +68,23 @@ public class ServerLongSum {
 			if (!isClosed && in.hasRemaining()) {
 				interest |= SelectionKey.OP_READ;
 			}
+	
 			return interest;
 
 		}
 
 		public void buildOut() {
 
-			if (in.position() >= 4 && (status == 0)) {
+			if (in.position() >= 4 && status == StatusExchange.BEGIN ) {
 				// getInt la tail
-				//System.out.println("in : " + in);
+				// System.out.println("in : " + in);
 				in.flip();
 				nbOp = in.getInt();
-				//System.out.println("in après : " + in);
+				// System.out.println("in après : " + in);
 				out = ByteBuffer.allocate(Long.BYTES * nbOp);
-				//System.out.println("NBOP 1 : " + nbOp);
+				// System.out.println("NBOP 1 : " + nbOp);
 				sum = 0;
-				status = 1;
+				status = StatusExchange.MIDDLE;
 				in.compact();
 				return;
 
@@ -90,26 +99,26 @@ public class ServerLongSum {
 			 * 
 			 * }
 			 */
-			System.out.println("nbOP15 : " + nbOp );
-			if ((status == 1) && (nbOp > 0)) {
-				
+			System.out.println("nbOP15 : " + nbOp);
+			if ((status == StatusExchange.MIDDLE) && (nbOp > 0)) {
+
 				if (in.position() >= Long.BYTES) {
 					in.flip();
 					sum += in.getLong();
 					nbOp--;
 					in.compact();
 					System.out.println("statut  :" + status);
-					System.out.println("nbop :"+ nbOp);
+					System.out.println("nbop :" + nbOp);
 					if (nbOp == 0) {
 						out.putLong(sum);
 						System.out.println("Sum :" + sum);
-						status = 2;
+						status = StatusExchange.END;
 					}
 
 				}
 
 			}
-			System.out.println("nbOP16 : " + nbOp );
+			System.out.println("nbOP16 : " + nbOp);
 		}
 
 	}
@@ -162,7 +171,8 @@ public class ServerLongSum {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, new Attachement());
+		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
+				new Attachement(key));
 
 	}
 
@@ -185,8 +195,10 @@ public class ServerLongSum {
 		}
 
 		theAttachement.buildOut();
-
-		key.interestOps(theAttachement.getInterest());
+		int interrest;
+		if ((interrest = theAttachement.getInterest()) != 0) {
+			key.interestOps(interrest);
+		}
 
 	}
 
@@ -194,7 +206,7 @@ public class ServerLongSum {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
 
-		if (theAttachement.status == 2) {
+		if (theAttachement.status == StatusExchange.END ) {
 
 			theAttachement.out.flip();
 
@@ -206,14 +218,16 @@ public class ServerLongSum {
 				client.close();
 				theAttachement.isClosed = true;
 			}
-			
-			theAttachement.status = 0;
+
+			theAttachement.status = StatusExchange.BEGIN ;
 		}
-		key.interestOps(theAttachement.getInterest());// ça ça permet le multi
+
+		key.interestOps(theAttachement.getInterest());
 
 	}
 
-	public static void main(String[] args) throws NumberFormatException, IOException {
+	public static void main(String[] args) throws NumberFormatException,
+			IOException {
 		new ServerLongSum(Integer.parseInt(args[0])).launch();
 
 	}
@@ -241,17 +255,21 @@ public class ServerLongSum {
 	public void printKeys() {
 		Set<SelectionKey> selectionKeySet = selector.keys();
 		if (selectionKeySet.isEmpty()) {
-			System.out.println("The selector contains no key : this should not happen!");
+			System.out
+					.println("The selector contains no key : this should not happen!");
 			return;
 		}
 		System.out.println("The selector contains:");
 		for (SelectionKey key : selectionKeySet) {
 			SelectableChannel channel = key.channel();
 			if (channel instanceof ServerSocketChannel) {
-				System.out.println("\tKey for ServerSocketChannel : " + interestOpsToString(key));
+				System.out.println("\tKey for ServerSocketChannel : "
+						+ interestOpsToString(key));
 			} else {
 				SocketChannel sc = (SocketChannel) channel;
-				System.out.println("\tKey for Client " + remoteAddressToString(sc) + " : " + interestOpsToString(key));
+				System.out.println("\tKey for Client "
+						+ remoteAddressToString(sc) + " : "
+						+ interestOpsToString(key));
 			}
 
 		}
@@ -274,11 +292,12 @@ public class ServerLongSum {
 		for (SelectionKey key : selectedKeys) {
 			SelectableChannel channel = key.channel();
 			if (channel instanceof ServerSocketChannel) {
-				System.out.println("\tServerSocketChannel can perform : " + possibleActionsToString(key));
+				System.out.println("\tServerSocketChannel can perform : "
+						+ possibleActionsToString(key));
 			} else {
 				SocketChannel sc = (SocketChannel) channel;
-				System.out.println(
-						"\tClient " + remoteAddressToString(sc) + " can perform : " + possibleActionsToString(key));
+				System.out.println("\tClient " + remoteAddressToString(sc)
+						+ " can perform : " + possibleActionsToString(key));
 			}
 
 		}
