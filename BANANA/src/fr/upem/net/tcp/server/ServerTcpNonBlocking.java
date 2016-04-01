@@ -34,13 +34,12 @@ public class ServerTcpNonBlocking {
 	}
 
 	private enum StatusTreatment {
-		BEGIN, MIDDLE, END, TYPE_READING, CHOOSE_TREATING,
-		
-		
+		BEGIN, MIDDLE, END, // TODO : delete those three value when i will decide
+		TYPE_READING, 
+		CHOOSE_TREATING,
 		READ_LOGIN,
-		
-		
-		END_READING
+		END_READING,
+		END_TREATMENT
 
 	}
 
@@ -62,12 +61,12 @@ public class ServerTcpNonBlocking {
 		REF_CO_PRV_SC(8), // Refue de connection privé part2 S -> C1 (venant de C2)
 
 		// TO ESTABLISH CONNECTION PRIVATE TO FILE
-		ASC_CO_FIL_CS(9), // Demande de connection privé fichier C1 -> S (vers C2)
-		ACC_CO_FIL_CS(10), // Acceptation de connection privé pour fichier C2 -> S
+		ASC_CO_FIL_CC(9), // Demande de connection privé fichier C1 -> S (vers C2)
+		ACC_CO_FIL_CC(10), // Acceptation de connection privé pour fichier C2 -> S
 		// (vers C1)
-		ASC_CO_FIL_CC(11), // Demande d’envoie de fichié C1 -> C2
-		ACC_CO_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2 -> C1
-		REF_CO_FIL_CC(13), // Refu de la demande d’envoie de fichier
+		ASC_SEND_FIL_CC(11), // Demande d’envoie de fichié C1 -> C2
+		ACC_SEND_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2 -> C1
+		REF_SEND_FIL_CC(13), // Refu de la demande d’envoie de fichier
 
 		// TO SEND FILE
 		FILE(14),
@@ -84,7 +83,14 @@ public class ServerTcpNonBlocking {
 	}
 
 	private enum StatusExchange {
-
+		WAITING_TO_CO_SERV(0),CONNECTED_TO_SERV(1),WAITING_TO_CO_PRV(2),CONNECTED_TO_PRV(3);
+		private final int value ;
+		public int getValue (){
+			return value ;
+		}
+		private StatusExchange( int value ) {
+			this.value = value;
+		}
 	}
 
 	private boolean isAUniqLogin(String login) {
@@ -106,7 +112,7 @@ public class ServerTcpNonBlocking {
 		boolean isClosed = false;
 		SelectionKey key;
 		StatusTreatment statusTreatment = StatusTreatment.BEGIN;
-		StatusExchange statusExchange;
+		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV ;
 		TypePacket typeLastPacketReceiv;
 		int sizeLogin = -1;
 
@@ -172,35 +178,34 @@ public class ServerTcpNonBlocking {
 					if ( (in.position() >= sizeLogin) && (sizeLogin != -1) ) {
 						in.flip();
 						String login = UTF_8.decode(in).toString();
-						
+						in.compact();
 						// check unicity of login
 						if( ! isAUniqLogin(login) ){
-							// TODO : if false login refuse connexion but client need to be
-							
-						
-							
+							// TODO : if false login we refused connexion ? 
 							// appeler la fonction qui va remplir le out avec le packet de refu ( et fermer la connection ? )
 							realBuildOut(TypePacket.REF_CO_SERV);
+							return ;
+							
 						}
 						
 						
 						// generate uniq long and create the id
 						long id = rand.nextLong();// TODO: do we have to manage the unicity with a comparason
-						//TODO : AJOUTER a la map
 						
 						// TODO ; add the client, here ?
 						map.put(new Id(id,login), this);
-						in.compact();
+						
 						
 						// TODO : Appeler la fonction qui va remplir le out avec le paquet d'acceptation.
 						realBuildOut(TypePacket.ACC_CO_SERV);
 						
-						//change status
-						statusTreatment = StatusTreatment.END_READING ;
+						//change status of treatment
+						statusTreatment = StatusTreatment.END_READING ;// TODO : delete, but check if we can before
 						
-						
+						// change status of exchange
+						statusExchange = StatusExchange.CONNECTED_TO_SERV ;
 						// TODO: Verifier si c'est pas la qu'on change l'état WRITE ou READ ( je pense pas non )
-
+						statusTreatment = StatusTreatment.END_TREATMENT;
 					}
 					// TODO : find checks
 
@@ -252,12 +257,12 @@ public class ServerTcpNonBlocking {
 			 * was expected according the statusExchage et statusTreatement //
 			 * TODO : find checks break;
 			 */
-			case ASC_CO_FIL_CS:
+			case ASC_CO_FIL_CC:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
 				break;
-			case ACC_CO_FIL_CS:
+			case ACC_CO_FIL_CC:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
@@ -359,7 +364,7 @@ public class ServerTcpNonBlocking {
 					if (nbOp == 0) {
 						out.putLong(sum);
 						System.out.println("Sum :" + sum);
-						status = StatusTreatment.END;
+						//status = StatusTreatment.END;
 					}
 
 				}
@@ -453,7 +458,7 @@ public class ServerTcpNonBlocking {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
 
-		if (theAttachement.status == StatusTreatment.END) {
+		if (theAttachement.statusTreatment == StatusTreatment.END_TREATMENT) {
 
 			theAttachement.out.flip();
 
@@ -466,7 +471,7 @@ public class ServerTcpNonBlocking {
 				theAttachement.isClosed = true;
 			}
 
-			theAttachement.status = StatusTreatment.BEGIN;
+			//theAttachement.status = StatusTreatment.BEGIN;
 		}
 
 		key.interestOps(theAttachement.getInterest());
