@@ -28,11 +28,17 @@ public class ClientTCPMatou {
 	//private final LinkedList<String> listPeople = new LinkedList<>();
 	
 	private final String myName;
-	private  String destName = "destTest";
-	
+	private String destName = "destTest";
+	private String fileName;
+	private Scanner sc ;
+	//To prevent identity stealing.
+	private final long clientID;
 	// If we have been invite by someone
 	private  boolean receivedInvite = true;
+	private  boolean receivedFile = true;
+	
 	private final Object lock = new Object();
+	private Thread generalListener, privateListener;
 	
 	
 
@@ -47,63 +53,121 @@ public class ClientTCPMatou {
 			throws UnknownHostException, IOException {
 		generalChannel = SocketChannel.open();
 		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
-		//myName = askName();
-		//System.out.println(myName);
-		myName = "moi";
+		this.sc = new Scanner(System.in);
+		myName = askName();
+		this.clientID = Readers.readLong(generalChannel);
+		System.out.println("Your name is " + myName);
 		currentChannel = generalChannel;
 		initListener();
 	}
 	
 	private void initListener(){
-		//TODO
-		Thread generalListener = new Thread( () -> {
+		this.generalListener = new Thread( () -> {
 			try{
 				while(true){
 					int id = Readers.readInt(generalChannel);
 					switch(id){
 						
 						case 4 : 
-							this.receivedInvite = true;
-							this.destName = Readers.readDemandConnection(generalChannel);
+							synchronized(lock){
+								this.receivedInvite = true;
+							}
+							this.destName = Readers.readDemand(generalChannel);
+							System.out.println(destName + " has invited you.");
+							System.out.println("Tape /yes to accept or /no to refuse.");
+							
 							break;
 							
 						case 7 :
-							privateChannel = Readers.readAdress(generalChannel);break;
+							//In this case we are c1 because c2 have open a channel for us.
+							if(privateChannel == null){
+								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+								fileChannel = SocketChannel.open();
+								Writters.askPrivateFileConnection(privateChannel,9,fileChannel);
+							}
+							//In this case we are c2 because we already had accept and open a channel for c1.
+							//We just have to connect to c1
+							else{
+								this.privateChannel.connect(Readers.readAddress(generalChannel));
+							}
+							privateListener.start();
+							break;
 						case 15 : Readers.readMessage(generalChannel);break;
 					}
 
 				}
 			}catch (IOException e){
 				
-			}
-			
+			}			
+		});
+		generalListener.start();
+		
+		this.privateListener = new Thread( () -> {
+			try{
+				while(true){
+					int id = Readers.readInt(privateChannel);
+					switch(id){
+						
+					//Exchange address and port between the two clients
+					//Here we are c2, we open the channel and connect then send our address and port.
+						case 9 : 
+							fileChannel = SocketChannel.open(Readers.readAddress(privateChannel));
+							Writters.askPrivateFileConnection(privateChannel,10,fileChannel);
+							break;
+						//Here we are c1 and connect to c2
+						case 10 :
+							fileChannel.connect(Readers.readAddress(privateChannel));
+							break;
+						
+						//case we have a demand for file.
+						case 11:
+							//TODO
+							synchronized(lock){
+								receivedFile = true;
+							}
+							this.fileName = Readers.readDemand(privateChannel);
+							System.out.println(destName + " wants to send you " + this.fileName);
+							System.out.println("Tape /yes to accept or /no to refuse.");
+							break;
+						
+						case 15 : Readers.readMessage(privateChannel);break;
+					}
+
+				}
+			}catch (IOException e){
+				
+			}			
 		});
 	}
 	
-	/*Cette méthode bloquer avec le scanner, à corriger pour que le scanner se ferme vraiment */
+	/* Enlever les condition commenter aprés test */
 	private String askName() throws IOException{
-		//TODO
-		try (Scanner sc = new Scanner(System.in)) {
+
+
+		String name;
+
 			while (true) {
 				System.out.println("What is your pseudo ?");
 				if (sc.hasNextLine()) {
 					// Ask name				
-					String name = sc.nextLine();
+					name = sc.nextLine();
 					Writters.requestName(generalChannel, name);
-					//if(Readers.nameAccepted(generalChannel)){
-						sc.close();
+					//TODO
+					//if à commenter pour tester le client sans serveur
+					if(Readers.nameAccepted(generalChannel)){
+
 						return name;
-					//}
+					}
 					
 				}
 
 			}
-		}
+
 	}
 
 	private void treatCommand(String line) throws IOException{
 		String command;
-		System.out.println("treat");
 		if (line.startsWith("/")) {
 			command = line.split(" ", 2)[0];
 			switch (command) {
@@ -117,11 +181,12 @@ public class ClientTCPMatou {
 			//Invite someone	
 			case "/invite":
 				//Take the two first word
-				//Exemple /invite Bob
+				//Example /invite Bob
 				String[] name = line.split(" ", 3);
 				if(name.length >= 2){
 					System.out.println("Demande de chat privé à " + name[1]);
-					Writters.askPrivateConnection(generalChannel,myName,name[1]);
+					this.destName = name[1];
+					Writters.askPrivateConnection(generalChannel,clientID,myName,name[1]);
 				}
 				else
 					System.out.println("Précisez la personne à inviter !");
@@ -132,6 +197,8 @@ public class ClientTCPMatou {
 			String[] fileName = line.split(" ", 3);
 			if(fileName.length >= 2){
 				System.out.println("Envoi du fichier " + fileName[1] + " en cours...");
+				//TODO
+				//Create a thread to send the file.
 				Writters.sendFile(generalChannel,Paths.get(fileName[1]));
 			}
 			else
@@ -153,9 +220,17 @@ public class ClientTCPMatou {
 			
 			//accept an invite
 			case "/yes":
+				//In this case we are c2, and accept the connection to c1.
 				if(receivedInvite){
 					System.out.println("Vous avez accepté l'invitation");
-					Writters.acceptPrivateConnection(generalChannel,destName);
+					//We prepare the channel here and send our address and port to c1.
+					//We need to connect to c1 after, the tread generalListener will do this.
+					privateChannel = SocketChannel.open();
+					Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+				}
+				if(receivedFile && (privateChannel != null) ){
+					System.out.println("Vous avez accepté le fichier.");
+					Writters.acceptFile(privateChannel);
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation");
@@ -163,9 +238,13 @@ public class ClientTCPMatou {
 			
 			//Deny an invite	
 			case "/no":
-				if(receivedInvite){
+				if(receivedInvite && (privateChannel == null) ){
 					System.out.println("Vous avez refusé l'invitation.");
-					Writters.denyPrivateConnection(generalChannel,destName);
+					Writters.denyPrivateConnection(generalChannel,clientID,destName);
+				}
+				if(receivedFile && (privateChannel != null)){
+					System.out.println("Vous avez refusé le fichier.");
+					Writters.refuseFile(privateChannel);
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation.");
@@ -205,7 +284,7 @@ public class ClientTCPMatou {
 			
 		}
 		System.out.println(line + " envoyé !");
-		Writters.sendMessage(currentChannel, myName, line);
+		Writters.sendMessage(currentChannel, clientID, myName, line);
 
 	}
 
@@ -219,7 +298,7 @@ public class ClientTCPMatou {
 		
 		System.out.println("Client is ready.");
 		String line;
-		try (Scanner sc = new Scanner(System.in)) {
+		try{
 			while (true) {
 
 				if (sc.hasNextLine()) {
@@ -234,7 +313,7 @@ public class ClientTCPMatou {
 			}
 		} finally {
 			silentlyClose(generalChannel);
-			
+			sc.close();
 		}
 	}
 

@@ -77,12 +77,12 @@ public class Readers {
 	}
 
 	/**
-	 * 
+	 * Read the fileName of a demand or the name of a demander.
 	 * @param sc
 	 * @return The pseudo of the demander.
 	 * @throws IOException
 	 */
-	public static String readDemandConnection(SocketChannel sc) throws IOException{
+	public static String readDemand(SocketChannel sc) throws IOException{
 		int pseudoSize = readInt(sc);
 		
 		ByteBuffer buff = ByteBuffer.allocate(pseudoSize);
@@ -91,12 +91,16 @@ public class Readers {
 		}
 		buff.flip();
 		String pseudo = UTF8.decode(buff).toString();
-		System.out.println(pseudo + " has invited you.");
-		System.out.println("Tape /yes to accept or /no to refuse.");
+
 		return pseudo;
 	}
-	
-	public static SocketChannel readAdress(SocketChannel sc) throws IOException{
+	/**
+	 * Return a SocketChannel connected to the address and port read.
+	 * @param sc
+	 * @return
+	 * @throws IOException
+	 */
+	public static InetSocketAddress readAddress(SocketChannel sc) throws IOException{
 		int adressSize = readInt(sc);
 		
 		ByteBuffer buff = ByteBuffer.allocate(adressSize);
@@ -108,12 +112,12 @@ public class Readers {
 		
 		int port = readInt(sc);
 
-		SocketChannel res = SocketChannel.open();
-		res.connect(new InetSocketAddress(adress,port));
-		
-		return res;
+
+		return new InetSocketAddress(adress,port);
+
 	
 	}
+	
 	
 	/**
 	 * Read a message and print.

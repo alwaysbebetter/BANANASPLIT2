@@ -47,13 +47,13 @@ public class Writters {
 	 * @param src
 	 * @param dest
 	 */
-	public static void askPrivateConnection(SocketChannel sc, String src, String dest)throws IOException{
+	public static void askPrivateConnection(SocketChannel sc, long clientID, String src, String dest)throws IOException{
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer destBuff = UTF8.encode(dest);
 
-		ByteBuffer buff = allocate(3,srcBuff.remaining() + destBuff.remaining() );
+		ByteBuffer buff = allocate(3,Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
 		
-		buff.putInt(3).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
+		buff.putInt(3).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -67,13 +67,13 @@ public class Writters {
 	 * @param sc
 	 * @param src
 	 */
-	public static void acceptPrivateConnection(SocketChannel sc,String src) throws IOException{
-		InetSocketAddress adress = (InetSocketAddress)sc.getLocalAddress();
+	public static void acceptPrivateConnection(SocketChannel sc, long clientID, String src, SocketChannel privateSc) throws IOException{
+		InetSocketAddress adress = (InetSocketAddress)privateSc.getLocalAddress();
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
-		ByteBuffer buff = allocate(4,srcBuff.remaining() + adressBuff.remaining());
+		ByteBuffer buff = allocate(4,Long.BYTES + srcBuff.remaining() + adressBuff.remaining());
 		
-		buff.putInt(5).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+		buff.putInt(5).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
 		buff.putInt(adress.getPort());
 		
 		Loggers.test(buff);
@@ -88,12 +88,12 @@ public class Writters {
 	 * @param src
 	 * @throws IOException
 	 */
-	public static void denyPrivateConnection(SocketChannel sc,String src) throws IOException{
+	public static void denyPrivateConnection(SocketChannel sc, long clientID, String src) throws IOException{
 		ByteBuffer srcBuff = UTF8.encode(src);
 
-		ByteBuffer buff = allocate(2,srcBuff.remaining() );
+		ByteBuffer buff = allocate(2,Long.BYTES + srcBuff.remaining() );
 		
-		buff.putInt(6).putInt(srcBuff.remaining()).put(srcBuff);
+		buff.putInt(6).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -106,9 +106,9 @@ public class Writters {
 	 * @param sc The socket use for file.
 	 * @param type 9 for asking and 10 to respond.
 	 */
-	public static void askPrivateFileConnection(SocketChannel sc,int type) throws IOException, IllegalStateException{
+	public static void askPrivateFileConnection(SocketChannel sc,int type, SocketChannel fileChannel) throws IOException, IllegalStateException{
 		if( (type == 9) || (type == 10)){
-			ByteBuffer adressBuff = UTF8.encode(sc.getLocalAddress().toString());
+			ByteBuffer adressBuff = UTF8.encode(fileChannel.getLocalAddress().toString());
 			ByteBuffer buff = allocate(2,adressBuff.remaining());
 			
 			buff.putInt(type).putInt(adressBuff.remaining()).put(adressBuff);
@@ -142,7 +142,7 @@ public class Writters {
 	}
 	
 	public static void refuseFile(SocketChannel sc) throws IOException{
-		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(12));
+		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(13));
 	}
 	
 	/**
@@ -150,13 +150,13 @@ public class Writters {
 	 * @param sc
 	 * @param expediteur
 	 */
-	public static void sendMessage(SocketChannel sc, String src, String msg) throws IOException{
+	public static void sendMessage(SocketChannel sc,long clientID, String src, String msg) throws IOException{
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
-		ByteBuffer buff = allocate(3,srcBuff.remaining() + msgBuff.remaining() );
+		ByteBuffer buff = allocate(3,Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
 		
-		buff.putInt(15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		buff.putInt(15).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
 		
 		Loggers.test(buff);
 		
