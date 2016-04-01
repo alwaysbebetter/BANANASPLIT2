@@ -16,6 +16,7 @@ import java.util.Set;
 
 public class ServerTcpNonBlocking {
 
+
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
@@ -23,66 +24,59 @@ public class ServerTcpNonBlocking {
 	static private final int BUFSIZ = 10;
 	private static final Charset UTF_8 = Charset.forName("utf-8");
 	private static final Random rand = new Random();
-
-	/*
-	 * ------------------------------- ENUM
-	 * -----------------------------------------------------------
-	 */
-
-	/* --------------------- STATUS ENUM ------------------- */
-
+	
+	
+	/* ------------------------------- ENUM ----------------------------------------------------------- */
+	
+	
+	
+			/* --------------------- STATUS ENUM  ------------------- */
+	
 	private enum StatusTreatment {
-		BEGIN, MIDDLE, END, // TODO : delete those three value when i will
-							// decide
-		TYPE_READING, CHOOSE_TREATING, READ_LOGIN, END_READING, END_TREATMENT
+		BEGIN, MIDDLE, END, // TODO : delete those three value when i will decide
+		TYPE_READING, 
+		CHOOSE_TREATING,
+		READ_LOGIN,
+		END_READING,
+		END_TREATMENT
 
 	}
-
+	
 	private enum StatusExchange {
-		WAITING_TO_CO_SERV(0), CONNECTED_TO_SERV(1), WAITING_TO_CO_PRV(2), CONNECTED_TO_PRV(
-				3);
-		private final int value;
-
-		public int getValue() {
-			return value;
+		WAITING_TO_CO_SERV(0),CONNECTED_TO_SERV(1),WAITING_TO_CO_PRV(2),CONNECTED_TO_PRV(3);
+		private final int value ;
+		public int getValue (){
+			return value ;
 		}
-
-		private StatusExchange(int value) {
+		private StatusExchange( int value ) {
 			this.value = value;
 		}
 	}
-
-	/* --------------------- PACKET TYPE ENUM ------------------- */
-
-	public enum TypePacket {
+			/* --------------------- PACKET TYPE ENUM  ------------------- */
+	
+	private enum TypePacket {
 
 		// TO ESTABLISH CONNECTION TO TCHAT
-		ASC_CO_SERV(0), // Demande de connection au serveux C1 ->S
+		ASC_CO_SERV(0),// Demande de connection au serveux C1 ->S
 		ACC_CO_SERV(1), // Acception de connection au serveur S -> C1
 		REF_CO_SERV(2), // Refue de connection au serveur S -> C1
 
 		// TO ESTABLISH CONNECTION PRIVATE TO MESSAGE
 		ASC_CO_PRV_CS(3), // Demande de connection privé C1 -> S (vers C2)
-		ASC_CO_PRV_SC(4), // Demande de connection privé part2 S -> C2 (venant
-							// de
+		ASC_CO_PRV_SC(4), // Demande de connection privé part2 S -> C2 (venant de
 		// C1)
 		ACC_CO_PRV_CS(5), // Acceptation connection privé C2 -> S (vers C1)
 		REF_CO_PRV_CS(6), // Refue de connection privé C2 -> S (vers C1)
-		ACC_CO_PRV_SC(7), // Acceptation connection privé parte2 S -> C1 (venant
-							// de
+		ACC_CO_PRV_SC(7), // Acceptation connection privé parte2 S -> C1 (venant de
 		// C2)
-		REF_CO_PRV_SC(8), // Refue de connection privé part2 S -> C1 (venant de
-							// C2)
+		REF_CO_PRV_SC(8), // Refue de connection privé part2 S -> C1 (venant de C2)
 
 		// TO ESTABLISH CONNECTION PRIVATE TO FILE
-		ASC_CO_FIL_CC(9), // Demande de connection privé fichier C1 -> S (vers
-							// C2)
-		ACC_CO_FIL_CC(10), // Acceptation de connection privé pour fichier C2 ->
-							// S
+		ASC_CO_FIL_CC(9), // Demande de connection privé fichier C1 -> S (vers C2)
+		ACC_CO_FIL_CC(10), // Acceptation de connection privé pour fichier C2 -> S
 		// (vers C1)
 		ASC_SEND_FIL_CC(11), // Demande d’envoie de fichié C1 -> C2
-		ACC_SEND_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2
-								// -> C1
+		ACC_SEND_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2 -> C1
 		REF_SEND_FIL_CC(13), // Refu de la demande d’envoie de fichier
 
 		// TO SEND FILE
@@ -90,32 +84,30 @@ public class ServerTcpNonBlocking {
 
 		// TO SEND MESSAGE
 		MESSAGE(15);
-		private final int value;
-
-		public int getValue() {
-			return value;
+		private final int value ;
+		public int getValue ( ){
+			return value ;
 		}
-
-		private TypePacket(int value) {
+		private TypePacket( int value ) {
 			this.value = value;
 		}
 	}
 
-	/*
-	 * ---------------------------------- ATTACHMENT
-	 * ------------------------------------------------
-	 */
-
+	
+	/* ---------------------------------- ATTACHMENT ------------------------------------------------ */
+	
+	
+	
 	private class Id {
 		long id;
 		String login;
-
-		public Id(long id, String login) {
-			this.id = id;
-			this.login = login;
+		public Id( long id , String login ){
+			this.id = id ;
+			this.login = login ;
 		}
 	}
 
+	
 	private boolean isAUniqLogin(String login) {
 		for (Id id : map.keySet()) {
 			if (id.login.equals(login)) {
@@ -126,7 +118,8 @@ public class ServerTcpNonBlocking {
 	}
 
 	private class Attachement {
-
+		
+		
 		ByteBuffer in;
 		ByteBuffer out;
 		int nbOp = 0;
@@ -134,9 +127,10 @@ public class ServerTcpNonBlocking {
 		boolean isClosed = false;
 		SelectionKey key;
 		StatusTreatment statusTreatment = StatusTreatment.BEGIN;
-		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV;
+		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV ;
 		TypePacket typeLastPacketReceiv;
 		int sizeLogin = -1;
+		
 
 		public Attachement(SelectionKey key) {
 			in = ByteBuffer.allocate(BUFSIZ);
@@ -165,50 +159,9 @@ public class ServerTcpNonBlocking {
 			return interest;
 
 		}
-
-		/**
-		 * isAnExpectedTypePacket :
-		 * 
-		 * return if this type packet was expected according the current state
-		 * of Exchange ( statusExchange ) return true if it's expected if else
-		 * false
-		 * 
-		 * @param:
-		 */
-		public boolean isAnExpectedTypePacket(TypePacket typePacket) {// NOTE it
-																		// controle
-																		// that
-																		// automate
-																		// of
-																		// state
-																		// is
-																		// good
-			switch (statusExchange) {
-			case WAITING_TO_CO_SERV:
-				if (typePacket.equals(TypePacket.ASC_CO_SERV))
-					return true;
-				return false;
-			case CONNECTED_TO_SERV:
-				if (typePacket.equals(TypePacket.ASC_CO_PRV_CS)
-						|| typePacket.equals(TypePacket.MESSAGE))
-					return true;
-				return false;
-			case WAITING_TO_CO_PRV:
-				if (typePacket.equals(TypePacket.REF_CO_PRV_CS)
-						|| typePacket.equals(TypePacket.ACC_CO_PRV_CS) 
-						|| typePacket.equals(TypePacket.MESSAGE)) return true;
-				return false;
-			case CONNECTED_TO_PRV:
-				if (typePacket.equals(TypePacket.MESSAGE))
-					return true;
-				return false;
-			}
-			return false;
-		}
-
-		public void realBuildOut(TypePacket typePacketToSend) {
-			// TODO: check if byte to in will not be a pb
-			out.put((byte) typePacketToSend.getValue());
+		
+		public void realBuildOut ( TypePacket typePacketToSend  ){
+			out.put((byte)typePacketToSend.getValue());// TODO: check if byte to in will not be a pb
 		}
 
 		/**
@@ -221,13 +174,8 @@ public class ServerTcpNonBlocking {
 			// TODO: logger pour afficher le buffer pour verifier
 			switch (typeLastPacketReceiv) {
 
-			case ASC_CO_SERV:// Code : 0
-				if (!isAnExpectedTypePacket(TypePacket.ASC_CO_SERV)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe attention
-					// car il y a des gestion avec getInterrest et tout
-				}
+			case ASC_CO_SERV:
+
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 
@@ -242,59 +190,63 @@ public class ServerTcpNonBlocking {
 					}
 					break;
 				case READ_LOGIN:
-
-					if ((in.position() >= sizeLogin) && (sizeLogin != -1)) {
+					
+					if ( (in.position() >= sizeLogin) && (sizeLogin != -1) ) {
 						in.flip();
 						String login = UTF_8.decode(in).toString();
 						in.compact();
 						// check unicity of login
-						if (!isAUniqLogin(login)) {
-							// TODO : if false login we refused connexion ?
-							// appeler la fonction qui va remplir le out avec le
-							// packet de refu ( et fermer la connection ? )
+						if( ! isAUniqLogin(login) ){
+							// TODO : if false login we refused connexion ? 
+							// appeler la fonction qui va remplir le out avec le packet de refu ( et fermer la connection ? )
 							realBuildOut(TypePacket.REF_CO_SERV);
-							return;
-
+							return ;
+							
 						}
-
+						
+						
 						// generate uniq long and create the id
-						long id = rand.nextLong();// TODO: do we have to manage
-													// the unicity with a
-													// comparason
-
+						long id = rand.nextLong();// TODO: do we have to manage the unicity with a comparason
+						
 						// TODO ; add the client, here ?
-						map.put(new Id(id, login), this);
-
-						// TODO : Appeler la fonction qui va remplir le out avec
-						// le paquet d'acceptation.
+						map.put(new Id(id,login), this);
+						
+						
+						// TODO : Appeler la fonction qui va remplir le out avec le paquet d'acceptation.
 						realBuildOut(TypePacket.ACC_CO_SERV);
-
-						// change status of treatment
-						// TODO : delete se following, but check if we can before
-						statusTreatment = StatusTreatment.END_READING;
-
+						
+						//change status of treatment
+						statusTreatment = StatusTreatment.END_READING ;// TODO : delete, but check if we can before
+						
 						// change status of exchange
-						statusExchange = StatusExchange.CONNECTED_TO_SERV;
-						// TODO: Verifier si c'est pas la qu'on change l'état
-						// WRITE ou READ ( je pense pas non )
+						statusExchange = StatusExchange.CONNECTED_TO_SERV ;
+						// TODO: Verifier si c'est pas la qu'on change l'état WRITE ou READ ( je pense pas non )
 						statusTreatment = StatusTreatment.END_TREATMENT;
 					}
 					// TODO : find checks
 
+					/*
+					 * TO THE SENDING case ACC_CO_SERV:
+					 * 
+					 * // TODO : Check that's was expected according the
+					 * statusExchage et statusTreatement // TODO : find checks
+					 * 
+					 * break;
+					 */
+					/*
+					 * TO THE SENDING case REF_CO_SERV: // TODO : Check that's was
+					 * expected according the statusExchage et statusTreatement //
+					 * TODO : find checks break;
+					 */
 					break;
-
-				default:// TODO : bad case, reject
+					
+					default ://TODO : bad case, reject
 				}
 
 				return;
 
-			case ASC_CO_PRV_CS:// Code : 3
-				if (!isAnExpectedTypePacket(TypePacket.ASC_CO_PRV_CS)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe attention
-					// car il y a des gestion avec getInterrest et tout
-				}
+				
+			case ASC_CO_PRV_CS:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
@@ -304,42 +256,53 @@ public class ServerTcpNonBlocking {
 			 * expected according the statusExchage et statusTreatement // TODO
 			 * : find checks break;
 			 */
-			case ACC_CO_PRV_CS:// Code : 5
-				if (!isAnExpectedTypePacket(TypePacket.ACC_CO_PRV_CS)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe attention
-					// car il y a des gestion avec getInterrest et tout
-				}
+			case ACC_CO_PRV_CS:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
 				break;
-			case REF_CO_PRV_CS:// Code : 6
-				if (!isAnExpectedTypePacket(TypePacket.REF_CO_PRV_CS)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe attention
-					// car il y a des gestion avec getInterrest et tout
-				}
+			case REF_CO_PRV_CS:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
 				break;
-			case MESSAGE:// Code :15
-				if (!isAnExpectedTypePacket(TypePacket.MESSAGE)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe attention
-					// car il y a des gestion avec getInterrest et tout
-				}
+			/*
+			 * TO THE SENDING case ACC_CO_PRV_SC: // TODO : Check that's was
+			 * expected according the statusExchage et statusTreatement // TODO
+			 * : find checks break; case REF_CO_PRV_SC: // TODO : Check that's
+			 * was expected according the statusExchage et statusTreatement //
+			 * TODO : find checks break;
+			 */
+			case ASC_CO_FIL_CC:
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
+				break;
+			case ACC_CO_FIL_CC:
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
+				break;
+			/*
+			 * ONLY TO CLIENTS case ASC_CO_FIL_CC: // TODO : Check that's was
+			 * expected according the statusExchage et statusTreatement // TODO
+			 * : find checks break; case ACC_CO_FIL_CC: // TODO : Check that's
+			 * was expected according the statusExchage et statusTreatement //
+			 * TODO : find checks break; case REF_CO_FIL_CC: // TODO : Check
+			 * that's was expected according the statusExchage et
+			 * statusTreatement // TODO : find checks break; case FILE: // TODO
+			 * : Check that's was expected according the statusExchage et
+			 * statusTreatement // TODO : find checks break;
+			 */
+			case MESSAGE:
 				// TODO : Check that's was expected according the statusExchage
 				// et statusTreatement
 				// TODO : find checks
 				break;
 
-			default: // TODO : c'est le fameux NOP/C, donc on par sur un close
-						// et on le jart de la map
+			default:
+				// TODO : client will be denied without waring him
+				// TODO : Check if it is always a problem
 
 			}
 		}
@@ -352,12 +315,19 @@ public class ServerTcpNonBlocking {
 				in.flip();
 
 				byte typePacket = in.get();
+
 				if (!isValideTypePacket(typePacket)) {
-					// TODO : CLOSE ( check if we can do that asking to the
-					// other
+					// TODO : REJECT
 				}
-				// TODO: HECK IF THAT WILL NO IMPLIES PROBLEM
-				typeLastPacketReceiv = TypePacket.values()[in.get()];
+
+				typeLastPacketReceiv = TypePacket.values()[in.get()];// TODO:
+																		// HECK
+																		// IF
+																		// THAT
+																		// WILL
+																		// NO
+																		// IMPLIES
+																		// PROBLEM
 
 				in.compact();
 
@@ -410,7 +380,7 @@ public class ServerTcpNonBlocking {
 					if (nbOp == 0) {
 						out.putLong(sum);
 						System.out.println("Sum :" + sum);
-						// status = StatusTreatment.END;
+						//status = StatusTreatment.END;
 					}
 
 				}
@@ -517,7 +487,7 @@ public class ServerTcpNonBlocking {
 				theAttachement.isClosed = true;
 			}
 
-			// theAttachement.status = StatusTreatment.BEGIN;
+			//theAttachement.status = StatusTreatment.BEGIN;
 		}
 
 		key.interestOps(theAttachement.getInterest());
