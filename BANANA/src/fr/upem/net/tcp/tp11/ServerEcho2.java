@@ -1,13 +1,14 @@
 package fr.upem.net.tcp.tp11;
 
-
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServerEcho2 {
 
@@ -16,14 +17,17 @@ public class ServerEcho2 {
 	private final Set<SelectionKey> selectedKeys;
 	static private final int BUFSIZ = 1024;
 
-
 	private class Attachement {
 		ByteBuffer buff;
 		boolean isClosed = false;
+		ArrayBlockingQueue<ByteBuffer> queue = new ArrayBlockingQueue<ByteBuffer>(
+				BUFSIZ);
 
 		public Attachement() {
+
 			buff = ByteBuffer.allocate(BUFSIZ);
 		}
+
 		public int getInterest() {
 			int interest = 0;// initialize
 			if (buff.position() > 0) {
@@ -37,7 +41,6 @@ public class ServerEcho2 {
 		}
 	}
 
-	
 	public ServerEcho2(int port) throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
 		serverSocketChannel.bind(new InetSocketAddress(port));
@@ -50,11 +53,9 @@ public class ServerEcho2 {
 		serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 		Set<SelectionKey> selectedKeys = selector.selectedKeys();
 		while (!Thread.interrupted()) {
-			printKeys();
-			System.out.println("Starting select");
+
 			selector.select();
-			System.out.println("Select finished");
-			printSelectedKey();
+
 			processSelectedKeys();
 			selectedKeys.clear();
 		}
@@ -86,23 +87,16 @@ public class ServerEcho2 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, new Attachement());
+		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
+				new Attachement());
 
 	}
 
-	// on n'utilise pas de readfully en non bloquant.
-
-
-
 	private void doRead(SelectionKey key) throws IOException {
 		Attachement theAttachement = (Attachement) key.attachment();
-		// ne pas faire de bb.clear()
-		// clear tres mauvais idee car on efface ce qu'on a lu avant
 
 		SocketChannel client = (SocketChannel) key.channel();
-		// pas besoin de test si c'est null
 
-		// gerer le cas ou ça retourne -1
 		if (-1 == client.read(theAttachement.buff)) {
 
 			theAttachement.isClosed = true;
@@ -114,26 +108,34 @@ public class ServerEcho2 {
 			}
 
 		}
-		
-		/*
-		 * On a plus a vérifier que le buffer est remplie, c'est ce qui contribu
-		 * à améliorer les performance.
-		if (theAttachement.buff.hasRemaining()) {
-			// il reste encore desc chose a lire donc on fait return
-			return;
-		}
-		*/
-		// pas besoin de faire attach car on travail sur l'adress
-		
+
 		key.interestOps(theAttachement.getInterest());
-
-		// c'est a la fin du doRead() il faut preparer les donner .
-
 	}
 
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
+		// theAttachement.buff.flip();
+		for (SelectionKey selectionKey : selector.keys()) {
+			if (!client.equals(selectionKey.channel())) {
+				Attachement at = (Attachement) selectionKey.attachment();
+				System.out.println("coucou");
+				if (at != null) {
+					System.out.println("coucou2");
+					theAttachement.buff.flip();
+					ByteBuffer bb = ByteBuffer.allocate(theAttachement.buff
+							.remaining());
+					bb.put(theAttachement.buff);
+					at.queue.add(bb);
+				}
+			}
+		}
+
+		while ( ! theAttachement.queue.isEmpty() ){
+			ByteBuffer tmp = theAttachement.queue.poll() ;
+			tmp.flip();
+			client.write(tmp);
+		}
 		theAttachement.buff.flip();
 		client.write(theAttachement.buff);
 		theAttachement.buff.compact();// pour bien se repositionner sans ecraser
@@ -146,88 +148,10 @@ public class ServerEcho2 {
 		key.interestOps(theAttachement.getInterest());
 	}
 
-	public static void main(String[] args) throws NumberFormatException, IOException {
+	public static void main(String[] args) throws NumberFormatException,
+			IOException {
 		new ServerEcho2(Integer.parseInt(args[0])).launch();
 
 	}
 
-	/***
-	 * Theses methods are here to help understanding the behavior of the
-	 * selector
-	 ***/
-
-	private String interestOpsToString(SelectionKey key) {
-		if (!key.isValid()) {
-			return "CANCELLED";
-		}
-		int interestOps = key.interestOps();
-		ArrayList<String> list = new ArrayList<>();
-		if ((interestOps & SelectionKey.OP_ACCEPT) != 0)
-			list.add("OP_ACCEPT");
-		if ((interestOps & SelectionKey.OP_READ) != 0)
-			list.add("OP_READ");
-		if ((interestOps & SelectionKey.OP_WRITE) != 0)
-			list.add("OP_WRITE");
-		return String.join("|", list);
-	}
-
-	public void printKeys() {
-		Set<SelectionKey> selectionKeySet = selector.keys();
-		if (selectionKeySet.isEmpty()) {
-			System.out.println("The selector contains no key : this should not happen!");
-			return;
-		}
-		System.out.println("The selector contains:");
-		for (SelectionKey key : selectionKeySet) {
-			SelectableChannel channel = key.channel();
-			if (channel instanceof ServerSocketChannel) {
-				System.out.println("\tKey for ServerSocketChannel : " + interestOpsToString(key));
-			} else {
-				SocketChannel sc = (SocketChannel) channel;
-				System.out.println("\tKey for Client " + remoteAddressToString(sc) + " : " + interestOpsToString(key));
-			}
-
-		}
-	}
-
-	private String remoteAddressToString(SocketChannel sc) {
-		try {
-			return sc.getRemoteAddress().toString();
-		} catch (IOException e) {
-			return "???";
-		}
-	}
-
-	private void printSelectedKey() {
-		if (selectedKeys.isEmpty()) {
-			System.out.println("There were not selected keys.");
-			return;
-		}
-		System.out.println("The selected keys are :");
-		for (SelectionKey key : selectedKeys) {
-			SelectableChannel channel = key.channel();
-			if (channel instanceof ServerSocketChannel) {
-				System.out.println("\tServerSocketChannel can perform : " + possibleActionsToString(key));
-			} else {
-				SocketChannel sc = (SocketChannel) channel;
-				System.out.println(
-						"\tClient " + remoteAddressToString(sc) + " can perform : " + possibleActionsToString(key));
-			}
-
-		}
-	}
-
-	private String possibleActionsToString(SelectionKey key) {
-		if (!key.isValid()) {
-			return "CANCELLED";
-		}
-		ArrayList<String> list = new ArrayList<>();
-		if (key.isAcceptable())
-			list.add("ACCEPT");
-		if (key.isReadable())
-			list.add("READ");
-		if (key.isWritable())
-			list.add("WRITE");
-		return String.join(" and ", list);
-	}
 }

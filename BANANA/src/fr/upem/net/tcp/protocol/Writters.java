@@ -8,10 +8,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import fr.upem.net.logger.Loggers;
+import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
 
 public class Writters {
 	
-	private static final Charset UTF8 = Charset.forName("utf-8");
+	private static final Charset UTF_8 = Charset.forName("utf-8");
 	
 	
 	private static ByteBuffer allocate(int nbInt, int size){
@@ -23,7 +24,7 @@ public class Writters {
 	 * @param sc
 	 */
 	public static void requestName(SocketChannel sc, String name) throws IOException{
-		ByteBuffer buff = UTF8.encode(name);
+		ByteBuffer buff = UTF_8.encode(name);
 		ByteBuffer buff2 = allocate(2 , buff.remaining());
 		
 		//Code 0 ask for connection
@@ -48,8 +49,8 @@ public class Writters {
 	 * @param dest
 	 */
 	public static void askPrivateConnection(SocketChannel sc, String src, String dest)throws IOException{
-		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer destBuff = UTF8.encode(dest);
+		ByteBuffer srcBuff = UTF_8.encode(src);
+		ByteBuffer destBuff = UTF_8.encode(dest);
 
 		ByteBuffer buff = allocate(3,srcBuff.remaining() + destBuff.remaining() );
 		
@@ -62,6 +63,15 @@ public class Writters {
 		
 	}
 	
+	public static void aquitPrivateConnection(TypePacket typePacket, String login , int port , ByteBuffer out ){
+		ByteBuffer bb = UTF_8.encode(login);
+		out.put((byte)typePacket.getValue());
+		out.putInt(bb.remaining());
+		out.put(bb);
+		out.putInt(port);
+		
+		
+	}
 	/**
 	 * Accept a private connection from the client scr.
 	 * @param sc
@@ -69,8 +79,8 @@ public class Writters {
 	 */
 	public static void acceptPrivateConnection(SocketChannel sc,String src) throws IOException{
 		InetSocketAddress adress = (InetSocketAddress)sc.getLocalAddress();
-		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
+		ByteBuffer srcBuff = UTF_8.encode(src);
+		ByteBuffer adressBuff = UTF_8.encode(adress.getHostName());
 		ByteBuffer buff = allocate(4,srcBuff.remaining() + adressBuff.remaining());
 		
 		buff.putInt(5).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
@@ -89,7 +99,7 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void denyPrivateConnection(SocketChannel sc,String src) throws IOException{
-		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer srcBuff = UTF_8.encode(src);
 
 		ByteBuffer buff = allocate(2,srcBuff.remaining() );
 		
@@ -108,7 +118,7 @@ public class Writters {
 	 */
 	public static void askPrivateFileConnection(SocketChannel sc,int type) throws IOException, IllegalStateException{
 		if( (type == 9) || (type == 10)){
-			ByteBuffer adressBuff = UTF8.encode(sc.getLocalAddress().toString());
+			ByteBuffer adressBuff = UTF_8.encode(sc.getLocalAddress().toString());
 			ByteBuffer buff = allocate(2,adressBuff.remaining());
 			
 			buff.putInt(type).putInt(adressBuff.remaining()).put(adressBuff);
@@ -151,8 +161,8 @@ public class Writters {
 	 * @param expediteur
 	 */
 	public static void sendMessage(SocketChannel sc, String src, String msg) throws IOException{
-		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer msgBuff = UTF8.encode(msg);
+		ByteBuffer srcBuff = UTF_8.encode(src);
+		ByteBuffer msgBuff = UTF_8.encode(msg);
 
 		ByteBuffer buff = allocate(3,srcBuff.remaining() + msgBuff.remaining() );
 		

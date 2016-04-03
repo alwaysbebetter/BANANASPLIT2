@@ -1,7 +1,6 @@
 package fr.upem.net.tcp.server;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
@@ -9,7 +8,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
@@ -20,7 +18,6 @@ import fr.upem.net.tcp.server.readers.Reader;
 import fr.upem.net.tcp.server.readers.ReaderInt;
 import fr.upem.net.tcp.server.readers.ReaderLong;
 import fr.upem.net.tcp.server.readers.ReaderString;
-import fr.upem.net.tcp.protocol.Writters;;
 
 public class ServerTcpNonBlocking {
 
@@ -28,7 +25,6 @@ public class ServerTcpNonBlocking {
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
 	private final HashMap<String, Attachement> map = new HashMap<>();
-	public static final Charset UTF_8 = Charset.forName("utf-8");
 	static private final int BUFSIZ = 10;
 	private static final Random rand = new Random();
 
@@ -120,19 +116,18 @@ public class ServerTcpNonBlocking {
 		return false;
 	}
 
+
 	private class Attachement {
-		public final static int SRC_DATA = 0, DEST_DATA = 1, DEST_DATA_SRC = 2;
+
 		ByteBuffer in, out;
-		String login;
 		long id;
 		boolean isClosed = false;
 		SelectionKey key;
-		Queue<DataPacketRead> bbWaitingsToBeUsed;
+		Queue<ByteBuffer> bbWaitingsToBeUsed ;
 		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV;
 		StatusTreatment statusTreatment = StatusTreatment.TYPE_READING;
 		TypePacket typeLastPacketReceiv;
-		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
-				readerMESSAGE, currentReader;
+		Reader readerACC_CO_PRV_CS,readerREF_CO_PRV_CS,readerMESSAGE,currentReader;
 		int sizeLogin = -1;
 
 		public Attachement(SelectionKey key) {
@@ -142,12 +137,11 @@ public class ServerTcpNonBlocking {
 		}
 
 		private boolean isValideTypePacket(byte typePacket) {
-			if (typePacket < 0 || typePacket > 15)
-				return false;
+			if (typePacket < 0 || typePacket > 15) return false;
 			return true;
 		}
 
-		public int getInterest() throws IOException {
+		public int getInterest() throws IOException { 
 			int interest = 0;
 			if (out.position() > 0) {
 				interest = interest | SelectionKey.OP_WRITE;
@@ -168,92 +162,89 @@ public class ServerTcpNonBlocking {
 				typeLastPacketReceiv = TypePacket.values()[in.get()];
 				in.compact();
 				// change status
-				if (!isAnExpectedTypePacket(typeLastPacketReceiv)) {
-					// TODO : NOP/C, aprioris un close mais attendre les
-					// vérification
-					// du prof, puis il faut bien le faire le clsoe
-					// attention
-					// car il y a des gestion avec getInterrest et tout
-					// TODO : return
-				}
 
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 
-					// TODO : Check that's was expected according the
-					// statusExchage
-					// et statusTreatement
-					// TODO : find checks
-
-					currentReader = new ReaderString(SRC_DATA);
-
-					break;
-
-				case ASC_CO_PRV_CS:// Code : 3
-
-					// TODO : Check that's was expected according the
-					// statusExchage
-					// et statusTreatement
-					// TODO : find checks
-					if (readerASC_CO_PRV_CS == null) {
-						readerASC_CO_PRV_CS = new ReaderString(new ReaderLong(
-								new ReaderString(SRC_DATA)), DEST_DATA);
+					if (!isAnExpectedTypePacket(TypePacket.ASC_CO_PRV_CS)) {
+						// TODO : NOP/C, aprioris un close mais attendre les
+						// vérification
+						// du prof, puis il faut bien le faire le clsoe
+						// attention
+						// car il y a des gestion avec getInterrest et tout
 					}
-					currentReader = readerASC_CO_PRV_CS;
+					// TODO : Check that's was expected according the
+					// statusExchage
+					// et statusTreatement
+					// TODO : find checks
+
+					currentReader = new ReaderString();
 					break;
-				case ACC_CO_PRV_CS:// Code : 5
+
+				case ACC_CO_PRV_CS:// Code : 3
+					if (!isAnExpectedTypePacket(TypePacket.ASC_CO_PRV_CS)) {
+						// TODO : NOP/C, aprioris un close mais attendre les
+						// vérification
+						// du prof, puis il faut bien le faire le clsoe
+						// attention
+						// car il y a des gestion avec getInterrest et tout
+					}
 					// TODO : Check that's was expected according the
 					// statusExchage
 					// et statusTreatement
 					// TODO : find checks
 					if (readerACC_CO_PRV_CS == null) {
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
-								new ReaderLong(new ReaderString(SRC_DATA)),
-								DEST_DATA_SRC));
+						readerACC_CO_PRV_CS = new ReaderLong(new ReaderString());
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
 				case REF_CO_PRV_CS:// Code : 5
-
+					if (!isAnExpectedTypePacket(TypePacket.REF_CO_PRV_CS)) {
+						// TODO : NOP/C, aprioris un close mais attendre les
+						// vérification
+						// du prof, puis il faut bien le faire le clsoe
+						// attention
+						// car il y a des gestion avec getInterrest et tout
+					}
 					// TODO : Check that's was expected according the
 					// statusExchage
 					// et statusTreatement
 					// TODO : find checks
 					if (readerREF_CO_PRV_CS == null) {
-						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
-								SRC_DATA));
+						readerREF_CO_PRV_CS = new ReaderInt(new ReaderLong(new ReaderString()));
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
 				case MESSAGE:// Code :15
-
+					if (!isAnExpectedTypePacket(TypePacket.MESSAGE)) {
+						// TODO : NOP/C, aprioris un close mais attendre les
+						// vérification
+						// du prof, puis il faut bien le faire le clsoe
+						// attention
+						// car il y a des gestion avec getInterrest et tout
+					}
 					// TODO : Check that's was expected according the
 					// statusExchage
 					// et statusTreatement
 					// TODO : find checks
 					if (readerMESSAGE == null) {
-						readerMESSAGE = new ReaderString(new ReaderLong(
-								new ReaderString(SRC_DATA)), DEST_DATA);// on cousidere le message come un login desinataire pour economiser les change et on peut faire ça car on a la meêm limitation en tail sur le message que sur le login
+						readerMESSAGE = new ReaderString(new ReaderLong(new ReaderString()));
 					}
 					currentReader = readerMESSAGE;
 					break;
-
-				default: // close
 				}
 			}
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
-				switch (currentReader.process(in)) {
+				switch(currentReader.process(in)){
 				case DONE:
-					DataPacketRead dataPacketRead = currentReader.get();
-					dataPacketRead.setTypePacket(typeLastPacketReceiv);
-					bbWaitingsToBeUsed.add(dataPacketRead);
+					
+					bbWaitingsToBeUsed.add(currentReader.get());
 					statusTreatment = StatusTreatment.END_READING;
 					break;
 				case ERROR:
 					// TODO : close
 					break;
-				case REFILL:
-					return;
+				case REFILL:return ;
 				}
 			}
 
@@ -305,166 +296,189 @@ public class ServerTcpNonBlocking {
 			out.put((byte) typePacketToSend.getValue());
 		}
 
+		/**
+		 * treatmentPacket :
+		 * 
+		 * will only treat received packet
+		 * 
+		 */
+		private void treatmentPacket() {
+			// TODO: logger pour afficher le buffer pour verifier
+			switch (typeLastPacketReceiv) {
 
-		private String readString(ByteBuffer bb) {
-			int size = bb.getInt();
-			int oldLimit = bb.limit();
-			bb.limit(size);
-			String theString = UTF_8.decode(bb).toString();
-			bb.limit(oldLimit);
-			return theString;
-		}
-
-		public void dispatch() {
-			if (bbWaitingsToBeUsed.isEmpty())
-				return;
-			DataPacketRead data = bbWaitingsToBeUsed.poll();
-			TypePacket typePacket = data.getTypePacket();
-			if (!isAnExpectedTypePacket(typePacket)) {/* close */
-			}
-			switch (typePacket) {
-			case ASC_CO_SERV:
-				// je test la car ça pourrait êre faut au moment ou on le
-				// recupere de lafile
-				login = data.getLoginSrc();
-
-				if (!isAUniqLogin(login)) {
-					// TODO : if false login we refused connexion ?
-					// appeler la fonction qui va remplir le out avec le
-					// packet de refu ( et fermer la connection ? )
-					realBuildOut(TypePacket.REF_CO_SERV);
-					return;
+			case ASC_CO_SERV:// Code : 0
+				if (!isAnExpectedTypePacket(TypePacket.ASC_CO_SERV)) {
+					// TODO : NOP/C, aprioris un close mais attendre les
+					// vérification
+					// du prof, puis il faut bien le faire le clsoe attention
+					// car il y a des gestion avec getInterrest et tout
 				}
-				// TODO: do we have to manage the unicity with a comparason
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
 
-				id = rand.nextLong();
-
-				// TODO ; add the client, here ?
-				map.put(login, this);
-
-				// TODO : Appeler la fonction qui va remplir le out avec
-				// le paquet d'acceptation.
-				realBuildOut(TypePacket.ACC_CO_SERV);
-
-				// change status of exchange
-				statusExchange = StatusExchange.CONNECTED_TO_SERV;
-				// TODO: Verifier si c'est pas la qu'on change l'état
-				// WRITE ou READ ( je pense pas non )
-
-				statusTreatment = StatusTreatment.END_TREATMENT;
-
-				break;
-			case ASC_CO_PRV_CS:// code 3
-				// if client doesn't existe
-				// if it's the same client
-
-				if ((!data.getLoginSrc().equals(login)) || (id != data.getId())) {
-					// si il s'agit d'une usurpation d'identité on ferme la
-					// connection
-					// TODO: close
-				}
-
-				String loginDest = data.getLoginDst();
-				if (map.get(loginDest) == null) {
-					// TODO: ne rien faire car il se peut que le destinataire ce
-					// soit déconnecté,
-					// on aura alors une gestion du time out pour l'attente de
-					// l'aquitemetn deml par du client
-					// on pourarait faire en sort que ce soit le serveur qui
-					// dans ce cas renvoit uenun paquet
-					// pour dirt que l'utilisateur n'est plus disponible
-					// ouaalors simplement pour marqué
-					// le refu mais depuis le serveur,
-				}
-
-				// WRITTER
-				// realBuildOut(TypePacket.ACC_CO_SERV);
-
-				statusExchange = StatusExchange.WAITING_TO_CO_PRV;
-
-				statusTreatment = StatusTreatment.END_TREATMENT;
-
-				break;
-
-			case ACC_CO_PRV_CS:
-				
-				if ((!data.getLoginSrc().equals(login)) || (id != data.getId())) {
-					// si il s'agit d'une usurpation d'identité on ferme la
-					// connection
-					// TODO: close
-				}
-				
-				// attention c'est l'adresse privé c'est pour ça que debase le serveur ne la connait aps et qu'il la communique.
-				// TODO/ dans le rapport il faudra bien mettre en avant ce que gere le serveur, notemment il empeche l'usurapation
-
-				Writters.aquitPrivateConnection(TypePacket.ACC_CO_PRV_SC,data.getAdrSrc(),data.getPortSrc(),out);
-				
-				// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame qu'on compose !!!!!
-
-				//--------------------------------------------------
-				//|int| int                   | String       | int       |
-				//|7  | taille address | address    | port     |
-				//---------------------------------------------------
+				// TODO : read login
+				switch (statusTreatment) {
+				case CHOOSE_TREATING:
+					if (in.position() >= 4) {
+						in.flip();
+						sizeLogin = in.getInt();
+						in.compact();
+						statusTreatment = StatusTreatment.READ_LOGIN;
+					}
+					break;
+				case READ_LOGIN:
 					
-				
-				statusExchange = StatusExchange.CONNECTED_TO_PRV;
-				// TODO : on doit accede a l'autre client poru envoyer la trame sur ça socket et aussi pour changer son statu
 
-				statusTreatment = StatusTreatment.END_TREATMENT;
-				break;
-			case REF_CO_PRV_CS:
-				if ((!data.getLoginSrc().equals(login)) || (id != data.getId())) {
-					// si il s'agit d'une usurpation d'identité on ferme la
-					// connection
-					// TODO: close
+					if ((in.position() >= sizeLogin) && (sizeLogin != -1)) {
+						in.flip();
+						String login = UTF_8.decode(in).toString();
+						in.compact();
+						// check unicity of login
+						if (!isAUniqLogin(login)) {
+							// TODO : if false login we refused connexion ?
+							// appeler la fonction qui va remplir le out avec le
+							// packet de refu ( et fermer la connection ? )
+							realBuildOut(TypePacket.REF_CO_SERV);
+							return;
+
+						}
+
+						// generate uniq long and create the id
+						id = rand.nextLong();// TODO: do we have to manage
+												// the unicity with a
+												// comparason
+
+						// TODO ; add the client, here ?
+						map.put(login, this);
+
+						// TODO : Appeler la fonction qui va remplir le out avec
+						// le paquet d'acceptation.
+						realBuildOut(TypePacket.ACC_CO_SERV);
+
+						// change status of treatment
+						// TODO : delete se following, but check if we can
+						// before
+						statusTreatment = StatusTreatment.END_READING;
+
+						// change status of exchange
+						statusExchange = StatusExchange.CONNECTED_TO_SERV;
+						// TODO: Verifier si c'est pas la qu'on change l'état
+						// WRITE ou READ ( je pense pas non )
+						statusTreatment = StatusTreatment.END_TREATMENT;
+					}
+					// TODO : find checks
+
+					break;
+
+				default:// TODO : bad case, reject
 				}
+
+				return;
+
+			case ASC_CO_PRV_CS:// Code : 3
 				
-				/*
-				 
------------------------------------------
-|int| int                      | String      | id
-| 6 | taille pseudo c1 |pseudo c1| long
------------------------------------------ 
- 
-				 */
-				realBuildOut(TypePacket.REF_CO_PRV_SC);
-
-				statusExchange = StatusExchange.CONNECTED_TO_SERV;
-
-				statusTreatment = StatusTreatment.END_TREATMENT;
-				break;
-			case MESSAGE:
-				/*
-				 * 
--------------------------------------------------------------------------------------------
-|int   | int                   | String       | long | int                      | String     |
-|15    | taille pseudo         |pseudo        |  id  | taille message           | Message|
--------------------------------------------------------------------------------------------
-				 * 
-				 * 
-				 * 
-				 * 
-				 */
-				if ((!data.getLoginSrc().equals(login)) || (id != data.getId())) {
-					// si il s'agit d'une usurpation d'identité on ferme la
-					// connection
-					// TODO: close
+				if (!isAnExpectedTypePacket(TypePacket.ASC_CO_PRV_CS)) {
+					// TODO : NOP/C, aprioris un close mais attendre les
+					// vérification
+					// du prof, puis il faut bien le faire le clsoe attention
+					// car il y a des gestion avec getInterrest et tout
 				}
-				Writters.aquitPrivateConnection(TypePacket.MESSAGE, loginDest, port, out);
-				Writters.sendMessage(sc, src, data.getLoginDst()/*size message*/);
-			
-				
-
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
 				break;
+			/*
+			 * TO THE SENDING case ASC_CO_PRV_SC: // TODO : Check that's was
+			 * expected according the statusExchage et statusTreatement // TODO
+			 * : find checks break;
+			 */
+
+			case ACC_CO_PRV_CS:// Code : 5
+				if (!isAnExpectedTypePacket(TypePacket.ACC_CO_PRV_CS)) {
+					// TODO : NOP/C, aprioris un close mais attendre les
+					// vérification
+					// du prof, puis il faut bien le faire le clsoe attention
+					// car il y a des gestion avec getInterrest et tout
+				}
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
+				break;
+
+			case REF_CO_PRV_CS:// Code : 6
+				if (!isAnExpectedTypePacket(TypePacket.REF_CO_PRV_CS)) {
+					// TODO : NOP/C, aprioris un close mais attendre les
+					// vérification
+					// du prof, puis il faut bien le faire le clsoe attention
+					// car il y a des gestion avec getInterrest et tout
+				}
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
+				break;
+
+			case MESSAGE:// Code :15
+				if (!isAnExpectedTypePacket(TypePacket.MESSAGE)) {
+					// TODO : NOP/C, aprioris un close mais attendre les
+					// vérification
+					// du prof, puis il faut bien le faire le clsoe attention
+					// car il y a des gestion avec getInterrest et tout
+				}
+				// TODO : Check that's was expected according the statusExchage
+				// et statusTreatement
+				// TODO : find checks
+				break;
+
+			default: // TODO : c'est le fameux NOP/C, donc on par sur un close
+						// et on le jart de la map
 
 			}
+			
+		public void dispatch ( ) {
+			
+			ByteBuffer bb ;
+			
+			switch(bb.get()){
+			case REF_CO_PRV_CS:break;
+			case READ_LOGIN:
 
+			case ASC_CO_PRV_CS:// Code : 3
+			case ACC_CO_PRV_CS:
+			case MESSAGE:break;
+			
+			}
+		}
+		
+		
+		
+		
 		}
 
 		// We must do those check of status to the treatment because because in
 		// tcp non blockin, the reading can be not finished in one time
 		public void buildOut() {
-			fillQueue();
+			if ( /* conditions && */(in.position() >= Byte.BYTES)
+					&& (statusTreatment == StatusTreatment.TYPE_READING)) {
+				in.flip();
+
+				byte typePacket = in.get();
+				if (!isValideTypePacket(typePacket)) {
+					// TODO : CLOSE ( check if we can do that asking to the
+					// other
+				}
+				// TODO: HECK IF THAT WILL NO IMPLIES PROBLEM
+				typeLastPacketReceiv = TypePacket.values()[in.get()];
+
+				in.compact();
+
+				statusTreatment = StatusTreatment.CHOOSE_TREATING;
+
+				return;
+			}
+
+			if ( /* conditions && */statusTreatment == StatusTreatment.CHOOSE_TREATING) {
+				treatmentPacket();
+			}
 		}
 
 	}
@@ -553,7 +567,7 @@ public class ServerTcpNonBlocking {
 		Attachement theAttachement = (Attachement) key.attachment();
 
 		if (theAttachement.statusTreatment == StatusTreatment.END_READING) {
-			// Dispatch
+			//Dispatch
 			theAttachement.out.flip();
 
 			client.write(theAttachement.out);
