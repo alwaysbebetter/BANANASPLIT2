@@ -187,6 +187,19 @@ public class Writters {
 		sc.write(buff);
 	}
 	
+	public static void sendSimpleMessage(SocketChannel sc, String msg) throws IOException{
+
+		ByteBuffer msgBuff = UTF8.encode(msg);
+
+		ByteBuffer buff = allocate(2, msgBuff.remaining() );
+		
+		buff.putInt(15).putInt(msgBuff.remaining()).put(msgBuff);
+		
+		buff.flip();
+		
+		sc.write(buff);
+	}
+	
 	/**
 	 * 
 	 * @param sc

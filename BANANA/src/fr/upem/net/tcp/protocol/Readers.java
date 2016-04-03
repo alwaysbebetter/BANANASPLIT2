@@ -146,6 +146,20 @@ public class Readers {
 		
 		
 	}
+	
+	public static void readSimpleMessage(SocketChannel sc) throws IOException{
+		//TODO Erase method after test
+
+		int msgSize = readInt(sc);
+		ByteBuffer buff = ByteBuffer.allocate(msgSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readMessage");
+		}
+		buff.flip();
+		String message = UTF8.decode(buff).toString();
+		
+		System.out.println("Message reçu : " + message);
+	}
 }
 
 
