@@ -9,20 +9,14 @@ import java.util.Scanner;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
-
 public class ClientTCPMessage {
-	
 
-	
-	//General message come here
+	// General message come here
 	private final SocketChannel generalChannel;
-	
 
-	private Scanner sc ;
+	private Scanner sc;
 
 	private Thread generalListener;
-	
-	
 
 	/**
 	 * 
@@ -38,36 +32,35 @@ public class ClientTCPMessage {
 		this.sc = new Scanner(System.in);
 		initListener();
 	}
-	
-	private void initListener(){
-		this.generalListener = new Thread( () -> {
-			try{
-				while(true){
-					Readers.readSimpleMessage(generalChannel);				
-				}			
-			}catch (IOException e){
-				
-			}			
+
+	private void initListener() {
+		this.generalListener = new Thread(() -> {
+			try {
+				while (true) {
+					Readers.readSimpleMessage(generalChannel);
+				}
+			} catch (IOException e) {
+
+			}
 		});
 		generalListener.start();
 	}
 
-			
 	/**
 	 * 
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
 	public void launch() throws IOException, InterruptedException {
-		
+
 		System.out.println("Client is ready.");
 		String line;
-		try{
+		try {
 			while (true) {
 
 				if (sc.hasNextLine()) {
 					// First Read message
-					
+
 					line = sc.nextLine();
 					Writters.sendSimpleMessage(generalChannel, line);
 

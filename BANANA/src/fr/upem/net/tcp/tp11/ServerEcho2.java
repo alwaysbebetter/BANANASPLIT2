@@ -152,7 +152,7 @@ public class ServerEcho2 {
 					}
 				}
 			}
-			theAttachement.status = 2;
+			theAttachement.status = 0;
 		}
 
 		key.interestOps(theAttachement.getInterest());
@@ -180,7 +180,7 @@ public class ServerEcho2 {
 			client.close();
 			theAttachement.isClosed = true;
 		}
-
+		
 		key.interestOps(theAttachement.getInterest());
 	}
 
