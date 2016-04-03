@@ -191,9 +191,9 @@ public class Writters {
 
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
-		ByteBuffer buff = allocate(2, msgBuff.remaining() );
+		ByteBuffer buff = allocate(1, msgBuff.remaining() );
 		
-		buff.putInt(15).putInt(msgBuff.remaining()).put(msgBuff);
+		buff.putInt(msgBuff.remaining()).put(msgBuff);
 		
 		buff.flip();
 		
