@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -135,7 +136,8 @@ public class ServerEcho2 {
 				&& (theAttachement.buff.position() >= theAttachement.sizeMessage)) {
 			System.out.println("ecrit !");
 			theAttachement.buff.flip();
-			for (SelectionKey selectionKey : selector.keys()) {
+			for (Integer i : map.keySet()) {
+				SelectionKey selectionKey = map.get(i);
 				if (!client.equals(selectionKey.channel())) {
 					Attachement at = (Attachement) selectionKey.attachment();
 					System.out.println("coucou");
@@ -164,7 +166,7 @@ public class ServerEcho2 {
 			System.out.println("empty1");
 			ByteBuffer tmp = theAttachement.queue.poll();
 			tmp.flip();
-		
+
 			client.write(tmp);
 
 		}
