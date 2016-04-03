@@ -1,4 +1,4 @@
-package fr.upem.net.tcp.client;
+package fr.upem.net.tcp.tp11;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -10,12 +10,12 @@ import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
 
-public class ClientTCPMessage {
+public class Bite {
 
 	// General message come here
 	private final SocketChannel generalChannel;
 
-	private Scanner scanou;
+	private Scanner sc;
 
 	private Thread generalListener;
 
@@ -26,11 +26,11 @@ public class ClientTCPMessage {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public ClientTCPMessage(String serverAdress, int serverPort)
+	public Bite(String serverAdress, int serverPort)
 			throws UnknownHostException, IOException {
 		generalChannel = SocketChannel.open();
 		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
-		this.scanou = new Scanner(System.in);
+		this.sc = new Scanner(System.in);
 		initListener();
 	}
 
@@ -59,10 +59,10 @@ public class ClientTCPMessage {
 		try {
 			while (true) {
 
-				if (scanou.hasNextLine()) {
+				if (sc.hasNextLine()) {
 					// First Read message
 
-					line = scanou.nextLine();
+					line = sc.nextLine();
 					Writters.sendSimpleMessage(generalChannel, line);
 
 				}
@@ -70,7 +70,7 @@ public class ClientTCPMessage {
 			}
 		} finally {
 			silentlyClose(generalChannel);
-			scanou.close();
+			sc.close();
 		}
 	}
 
@@ -86,6 +86,6 @@ public class ClientTCPMessage {
 
 	public static void main(String[] args) throws NumberFormatException,
 			UnknownHostException, IOException, InterruptedException {
-		new ClientTCPMessage(args[0], Integer.parseInt(args[1])).launch();
+		new Bite(args[0], Integer.parseInt(args[1])).launch();
 	}
 }

@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.server;
 
 import java.io.IOException;
+
 import java.io.Writer;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -16,10 +17,6 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
-import fr.upem.net.tcp.server.readers.Reader;
-import fr.upem.net.tcp.server.readers.ReaderInt;
-import fr.upem.net.tcp.server.readers.ReaderLong;
-import fr.upem.net.tcp.server.readers.ReaderString;
 import fr.upem.net.tcp.protocol.Writters;;
 
 public class ServerTcpNonBlocking {
@@ -450,8 +447,8 @@ public class ServerTcpNonBlocking {
 					// connection
 					// TODO: close
 				}
-				Writters.aquitPrivateConnection(TypePacket.MESSAGE, loginDest, port, out);
-				Writters.sendMessage(sc, src, data.getLoginDst()/*size message*/);
+				//Writters.aquitPrivateConnection(TypePacket.MESSAGE, loginDest, port, out);
+				//Writters.sendMessage(sc, src, data.getLoginDst()/*size message*/);
 			
 				
 
