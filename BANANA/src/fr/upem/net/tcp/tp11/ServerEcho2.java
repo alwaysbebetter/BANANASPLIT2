@@ -11,6 +11,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.net.ssl.SSLEngineResult.Status;
+
 public class ServerEcho2 {
 
 	private final ServerSocketChannel serverSocketChannel;
@@ -18,13 +20,15 @@ public class ServerEcho2 {
 	private final Set<SelectionKey> selectedKeys;
 	private final ConcurrentHashMap<Integer, SelectionKey> map = new ConcurrentHashMap<>();
 	private int co = 0;
-	static private final int BUFSIZ = 4;
+	static private final int BUFSIZ = 200;
 
 	private class Attachement {
 		ByteBuffer buff;
+		int sizeMessage;
 		boolean isClosed = false;
 		ArrayBlockingQueue<ByteBuffer> queue = new ArrayBlockingQueue<ByteBuffer>(
 				BUFSIZ);
+		int status = 0;
 
 		public Attachement() {
 
@@ -68,68 +72,22 @@ public class ServerEcho2 {
 	private void processSelectedKeys() throws IOException {
 
 		for (SelectionKey key : selectedKeys) {
-			Attachement theAttachement = (Attachement) key.attachment();
 
-			if ((theAttachement != null)) {
-				System.out.println("www");
-				while (!theAttachement.queue.isEmpty()) {
-					ByteBuffer tmp = theAttachement.queue.poll();
-					tmp.flip();
-					SocketChannel client = (SocketChannel) key.channel();
-					synchronized (selector) {
-						client.write(tmp);
-					}
-				}
-			}
 			if (key.isValid() && key.isAcceptable()) {
 				doAccept(key);// on ne catrch pas cette exception parce que si
 								// le accept
 				// pete c'et que le serveur est mor
 			}
-			if ((theAttachement != null)) {
 
-				while (!theAttachement.queue.isEmpty()) {
-					System.out.println("empty1");
-					ByteBuffer tmp = theAttachement.queue.poll();
-					tmp.flip();
-					SocketChannel client = (SocketChannel) key.channel();
-					synchronized (selector) {
-						client.write(tmp);
-					}
-				}
-			}
 			try { // on la catch ici car on arrete pas le serveur pour ça
 				if (key.isValid() && key.isWritable()) {
 					doWrite(key);
 				}
-				if ((theAttachement != null)) {
 
-					while (!theAttachement.queue.isEmpty()) {
-						System.out.println("empty2");
-						ByteBuffer tmp = theAttachement.queue.poll();
-						tmp.flip();
-						SocketChannel client = (SocketChannel) key.channel();
-						synchronized (selector) {
-							client.write(tmp);
-						}
-					}
-				}
 				if (key.isValid() && key.isReadable()) {
 					doRead(key);
 				}
-				if ((theAttachement != null)) {
 
-					while (!theAttachement.queue.isEmpty()) {
-						System.out.println("empty3");
-						ByteBuffer tmp = theAttachement.queue.poll();
-						tmp.flip();
-						SocketChannel client = (SocketChannel) key.channel();
-						synchronized (selector) {
-							client.write(tmp);
-						}
-
-					}
-				}
 			} catch (IOException e) {
 				;
 			}
@@ -166,8 +124,17 @@ public class ServerEcho2 {
 			}
 
 		}
-		if (!theAttachement.buff.hasRemaining()) {
-
+		if ((theAttachement.buff.position() >= Integer.BYTES)
+				&& (theAttachement.status == 0)) {
+			theAttachement.buff.flip();
+			theAttachement.sizeMessage = theAttachement.buff.getInt();
+			theAttachement.buff.compact();
+			theAttachement.status = 1;
+		}
+		if ((theAttachement.status == 1)
+				&& (theAttachement.buff.position() >= theAttachement.sizeMessage)) {
+			System.out.println("ecrit !");
+			theAttachement.buff.flip();
 			for (SelectionKey selectionKey : selector.keys()) {
 				if (!client.equals(selectionKey.channel())) {
 					Attachement at = (Attachement) selectionKey.attachment();
@@ -175,13 +142,15 @@ public class ServerEcho2 {
 					if (at != null) {
 						System.out.println("coucou2");
 						theAttachement.buff.flip();
-						ByteBuffer bb = ByteBuffer.allocate(theAttachement.buff
-								.remaining());
+						ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES
+								+ theAttachement.sizeMessage);
+						bb.putInt(theAttachement.sizeMessage);
 						bb.put(theAttachement.buff);
 						at.queue.add(bb);
 					}
 				}
 			}
+			theAttachement.status = 2;
 		}
 
 		key.interestOps(theAttachement.getInterest());
@@ -190,9 +159,18 @@ public class ServerEcho2 {
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
-		// theAttachement.buff.flip();
 
-		// theAttachement.buff.flip();
+		while (!theAttachement.queue.isEmpty()) {
+			System.out.println("empty1");
+			ByteBuffer tmp = theAttachement.queue.poll();
+			tmp.flip();
+		
+			client.write(tmp);
+
+		}
+		theAttachement.buff.flip();
+		client.write(theAttachement.buff);
+
 		// client.write(theAttachement.buff);
 		theAttachement.buff.compact();// pour bien se repositionner sans ecraser
 										// ce que l'on a lu
