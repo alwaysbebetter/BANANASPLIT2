@@ -9,6 +9,7 @@ import java.util.Scanner;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
+
 public class ClientTCPMessage {
 
 	// General message come here
