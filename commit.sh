@@ -1,4 +1,4 @@
 #!/bin/bash 
-git add *
+git add BANANA
 git commit -m "$1"
-git push A master
+git push matou master
