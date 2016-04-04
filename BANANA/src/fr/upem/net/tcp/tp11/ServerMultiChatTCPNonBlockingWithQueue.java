@@ -119,7 +119,7 @@ public class ServerMultiChatTCPNonBlockingWithQueue {
 		}
 
 		for (SelectionKey key2 : selector.keys()) {
-			if (key2.isValid() && key2.channel() instanceof SocketChannel) {
+			if (key2.isValid() && ( key2.channel() instanceof SocketChannel ) && ( !key2.equals(key))) {
 				theAttachement.buff.flip();
 				SocketChannel sch = (SocketChannel) key2.channel();
 				sch.write(theAttachement.buff);
