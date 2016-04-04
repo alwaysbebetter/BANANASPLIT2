@@ -237,6 +237,7 @@ public class ServerTcpNonBlocking {
 
 				default: // close
 				}
+				statusTreatment = StatusTreatment.TYPE_KNOWN;
 			}
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
 				switch (currentReader.process(in)) {
