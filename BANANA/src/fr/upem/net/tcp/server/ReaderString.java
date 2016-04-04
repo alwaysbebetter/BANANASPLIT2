@@ -3,6 +3,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class ReaderString implements Reader {
 	private int sizeString;
@@ -17,9 +18,10 @@ public class ReaderString implements Reader {
 											// LOGIN FROM SRC OR DATA FROM DEST
 	}
 
-	public ReaderString(int concernedData) {
+	public ReaderString(int concernedData, TypePacket typePacket) {
 		this.concernedData = concernedData;
 		data = new DataPacketRead();
+		data.setTypePacket(typePacket);
 	}
 
 	/**

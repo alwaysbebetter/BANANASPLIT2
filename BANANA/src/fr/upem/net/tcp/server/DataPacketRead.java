@@ -1,6 +1,6 @@
 package fr.upem.net.tcp.server;
 
-import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class DataPacketRead {
 	private TypePacket typePacket;
@@ -89,5 +89,20 @@ public class DataPacketRead {
 	void setId(long id) {
 		this.id = id;
 	}
+
+	@Override
+	public String toString() {
+		return "\n\ttypePacket = "+typePacket
+				+"\n\tsizeLoginSrc  = "+sizeLoginSrc  
+				+"\n\tloginSrc = "+loginSrc
+				+"\n\tid = "+id
+				+"\n\tsizeLoginDst = "+sizeLoginDst
+				+"\n\tloginDst  = "+loginDst
+				+"\n\tadrSrc = "+adrSrc
+				+"\n\tportSrc = "+portSrc+"";
+				
+				
+	}
+	
 
 }

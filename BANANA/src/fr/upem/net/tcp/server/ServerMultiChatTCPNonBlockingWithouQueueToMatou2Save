@@ -181,7 +181,7 @@ public class ServerTcpNonBlocking {
 					// et statusTreatement
 					// TODO : find checks
 
-//					currentReader = new ReaderString(SRC_DATA);
+					currentReader = new ReaderString(SRC_DATA);
 
 					break;
 
@@ -192,7 +192,8 @@ public class ServerTcpNonBlocking {
 					// et statusTreatement
 					// TODO : find checks
 					if (readerASC_CO_PRV_CS == null) {
-			//			readerASC_CO_PRV_CS = new ReaderString(new ReaderLong(new ReaderString(SRC_DATA)), DEST_DATA);
+						readerASC_CO_PRV_CS = new ReaderString(new ReaderLong(
+								new ReaderString(SRC_DATA)), DEST_DATA);
 					}
 					currentReader = readerASC_CO_PRV_CS;
 					break;
@@ -202,9 +203,9 @@ public class ServerTcpNonBlocking {
 					// et statusTreatement
 					// TODO : find checks
 					if (readerACC_CO_PRV_CS == null) {
-				//		readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
-				//				new ReaderLong(new ReaderString(SRC_DATA)),
-			//					DEST_DATA_SRC));
+						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+								new ReaderLong(new ReaderString(SRC_DATA)),
+								DEST_DATA_SRC));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -215,8 +216,8 @@ public class ServerTcpNonBlocking {
 					// et statusTreatement
 					// TODO : find checks
 					if (readerREF_CO_PRV_CS == null) {
-			//			readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
-			//					SRC_DATA));
+						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
+								SRC_DATA));
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
@@ -227,8 +228,8 @@ public class ServerTcpNonBlocking {
 					// et statusTreatement
 					// TODO : find checks
 					if (readerMESSAGE == null) {
-					//	readerMESSAGE = new ReaderString(new ReaderLong(
-					//		//	new ReaderString(SRC_DATA)), DEST_DATA);// on cousidere le message come un login desinataire pour economiser les change et on peut faire ça car on a la meêm limitation en tail sur le message que sur le login
+						readerMESSAGE = new ReaderString(new ReaderLong(
+								new ReaderString(SRC_DATA)), DEST_DATA);// on cousidere le message come un login desinataire pour economiser les change et on peut faire ça car on a la meêm limitation en tail sur le message que sur le login
 					}
 					currentReader = readerMESSAGE;
 					break;
@@ -241,7 +242,7 @@ public class ServerTcpNonBlocking {
 				switch (currentReader.process(in)) {
 				case DONE:
 					DataPacketRead dataPacketRead = currentReader.get();
-				//	dataPacketRead.setTypePacket(typeLastPacketReceiv);
+					dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					bbWaitingsToBeUsed.add(dataPacketRead);
 					statusTreatment = StatusTreatment.END_READING;
 					break;
@@ -316,9 +317,9 @@ public class ServerTcpNonBlocking {
 			if (bbWaitingsToBeUsed.isEmpty())
 				return;
 			DataPacketRead data = bbWaitingsToBeUsed.poll();
-			TypePacket typePacket =null ; //data.getTypePacket();
-		/*	if (!isAnExpectedTypePacket(typePacket)) {
-			}*/
+			TypePacket typePacket = data.getTypePacket();
+			if (!isAnExpectedTypePacket(typePacket)) {/* close */
+			}
 			switch (typePacket) {
 			case ASC_CO_SERV:
 				// je test la car ça pourrait êre faut au moment ou on le

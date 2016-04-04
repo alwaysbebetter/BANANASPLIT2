@@ -9,17 +9,18 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
+import fr.upem.net.tcp.protocol.Writters;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
-	private final ConcurrentHashMap<Integer, SelectionKey> map = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
 	private int co = 0;
 	static private final int BUFSIZ = 200;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
@@ -45,21 +46,86 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 	}
 
+	/* --------------------- PACKET TYPE ENUM ------------------- */
+
+	public enum TypePacket {
+
+		// TO ESTABLISH CONNECTION TO TCHAT
+		ASC_CO_SERV(0), // Demande de connection au serveux C1 ->S
+		ACC_CO_SERV(1), // Acception de connection au serveur S -> C1
+		REF_CO_SERV(2), // Refue de connection au serveur S -> C1
+
+		// TO ESTABLISH CONNECTION PRIVATE TO MESSAGE
+		ASC_CO_PRV_CS(3), // Demande de connection privé C1 -> S (vers C2)
+		ASC_CO_PRV_SC(4), // Demande de connection privé part2 S -> C2 (venant
+							// de
+		// C1)
+		ACC_CO_PRV_CS(5), // Acceptation connection privé C2 -> S (vers C1)
+		REF_CO_PRV_CS(6), // Refue de connection privé C2 -> S (vers C1)
+		ACC_CO_PRV_SC(7), // Acceptation connection privé parte2 S -> C1 (venant
+							// de
+		// C2)
+		REF_CO_PRV_SC(8), // Refue de connection privé part2 S -> C1 (venant de
+							// C2)
+
+		// TO ESTABLISH CONNECTION PRIVATE TO FILE
+		ASC_CO_FIL_CC(9), // Demande de connection privé fichier C1 -> S (vers
+							// C2)
+		ACC_CO_FIL_CC(10), // Acceptation de connection privé pour fichier C2 ->
+							// S
+		// (vers C1)
+		ASC_SEND_FIL_CC(11), // Demande d’envoie de fichié C1 -> C2
+		ACC_SEND_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2
+								// -> C1
+		REF_SEND_FIL_CC(13), // Refu de la demande d’envoie de fichier
+
+		// TO SEND FILE
+		FILE(14),
+
+		// TO SEND MESSAGE
+		MESSAGE(15);
+		private final int value;
+
+		public int getValue() {
+			return value;
+		}
+
+		private TypePacket(int value) {
+			this.value = value;
+		}
+	}
+
+	/*
+	 * ---------------------------------- ATTACHMENT
+	 * ------------------------------------------------
+	 */
+
+	private boolean isAUniqLogin(String login) {
+		if (map.get(login) == null) {
+			return true;
+		}
+		return false;
+	}
+
 	private class Attachement {
 
-		ByteBuffer in;
+		ByteBuffer in, out;
 		boolean isClosed = false;
+		String login;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
 		public DataPacketRead dataPacketRead;
 		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV;
 		StatusTreatment statusTreatment = StatusTreatment.TYPE_READING;
 		TypePacket typeLastPacketReceiv;
-		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,readerASC_CO_SERV,
-				readerMESSAGE, currentReader;
+		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
+				readerASC_CO_SERV, readerMESSAGE, currentReader;
+		long id;
+		Random rand = new Random();
 
 		public Attachement() {
 
 			in = ByteBuffer.allocate(BUFSIZ * 4);
+			out = ByteBuffer.allocate(BUFSIZ * 4);
 		}
 
 		/**
@@ -121,13 +187,20 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			return true;
 		}
 
-		
 		private void readType() {// CHECKED
 			if ((statusTreatment == StatusTreatment.TYPE_READING)
 					&& (in.position() >= 1)) {
-				
-				//System.out.print("Received format packet:");Loggers.test(in);//TODO : displaying to debbug, after remove it
-				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
+
+				// System.out.print("Received format packet:");Loggers.test(in);//TODO
+				// : displaying to debbug, after remove it
+				System.out.println("statusTreatement : " + statusTreatment);// TODO
+																			// :
+																			// displaying
+																			// to
+																			// debbug,
+																			// after
+																			// remove
+																			// it
 				in.flip();
 				// get type
 				typeLastPacketReceiv = TypePacket.values()[in.get()];
@@ -135,38 +208,69 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				in.compact();
 				// change status
 				if (!isAnExpectedTypePacket(typeLastPacketReceiv)) {
-					System.out.println("UNEXCPECTED PACKET -> close and remove");//TODO : displaying to debbug, after remove it	
+					System.out
+							.println("UNEXCPECTED PACKET -> close and remove");// TODO
+																				// :
+																				// displaying
+																				// to
+																				// debbug,
+																				// after
+																				// remove
+																				// it
 				}
-				
-				System.out.println("readType() -> "+typeLastPacketReceiv);//TODO : displaying to debbug, after remove it
+
+				System.out.println("readType() -> " + typeLastPacketReceiv);// TODO
+																			// :
+																			// displaying
+																			// to
+																			// debbug,
+																			// after
+																			// remove
+																			// it
 				statusTreatment = StatusTreatment.TYPE_KNOWN;
-				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
+				System.out.println("statusTreatement : " + statusTreatment);// TODO
+																			// :
+																			// displaying
+																			// to
+																			// debbug,
+																			// after
+																			// remove
+																			// it
 			}
-		
-			
+
 		}
 
-		// CHECKED but need to be finsh ( default with close 
-		// socket and remove client ( make a method closing socket and deleteing client )
+		// CHECKED but need to be finsh ( default with close
+		// socket and remove client ( make a method closing socket and deleteing
+		// client )
 		// TO CHECK the updating of reader !!
 		public void findReader() {
 
-			System.out.println("findReader -> reader"+typeLastPacketReceiv);//TODO : displaying to debbug, after remove it
+			System.out.println("findReader -> reader" + typeLastPacketReceiv);// TODO
+																				// :
+																				// displaying
+																				// to
+																				// debbug,
+																				// after
+																				// remove
+																				// it
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 					if (readerASC_CO_SERV == null) {
-						readerASC_CO_SERV = new ReaderString(SRC_DATA);
+						readerASC_CO_SERV = new ReaderString(SRC_DATA,
+								typeLastPacketReceiv);
 					}
 					currentReader = readerASC_CO_SERV;
-					
+
 					break;
 
 				case ASC_CO_PRV_CS:// Code : 3
 
 					if (readerASC_CO_PRV_CS == null) {
-						readerASC_CO_PRV_CS = new ReaderString(new ReaderLong(
-								new ReaderString(SRC_DATA)), DEST_DATA);
+						readerASC_CO_PRV_CS = new ReaderString(
+								new ReaderLong(new ReaderString(SRC_DATA,
+										typeLastPacketReceiv)), DEST_DATA);
 					}
 					currentReader = readerASC_CO_PRV_CS;
 					break;
@@ -174,75 +278,283 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					if (readerACC_CO_PRV_CS == null) {
 						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
-								new ReaderLong(new ReaderString(SRC_DATA)),
-								DEST_DATA_SRC));
+								new ReaderLong(new ReaderString(SRC_DATA,
+										typeLastPacketReceiv)), DEST_DATA_SRC));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
 				case REF_CO_PRV_CS:// Code : 5
-					
+
 					if (readerREF_CO_PRV_CS == null) {
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
-								SRC_DATA));
+								SRC_DATA, typeLastPacketReceiv));
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
 				case MESSAGE:// Code :15
 
 					if (readerMESSAGE == null) {
-						readerMESSAGE = new ReaderString(new ReaderLong(
-								new ReaderString(SRC_DATA)), DEST_DATA);
+						readerMESSAGE = new ReaderString(
+								new ReaderLong(new ReaderString(SRC_DATA,
+										typeLastPacketReceiv)), DEST_DATA);
 					}
 					currentReader = readerMESSAGE;
 					break;
 
 				default: // close
-					System.out.println("UNKNOWN PACKET -> close and remove!!");//TODO : displaying to debbug, after remove it);
+					System.out.println("UNKNOWN PACKET -> close and remove!!");// TODO
+																				// :
+																				// displaying
+																				// to
+																				// debbug,
+																				// after
+																				// remove
+																				// it);
 				}
 				statusTreatment = StatusTreatment.READER_KNOWN;
-				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
+				System.out.println("statusTreatement : " + statusTreatment);// TODO
+																			// :
+																			// displaying
+																			// to
+																			// debbug,
+																			// after
+																			// remove
+																			// it
 			}
-			
 
 		}
-		
-		
-		
+
 		public void applyReader() {
-			
+
 			if (statusTreatment == StatusTreatment.READER_KNOWN) {
 
 				switch (currentReader.process(in)) {
-				case DONE://TRAITEMENT
-			
-					System.out.println("applyReader -> DONE");//TODO : displaying to debbug, after remove it
+				case DONE:// TRAITEMENT
+
+					System.out.println("applyReader -> DONE");// TODO :
+																// displaying to
+																// debbug, after
+																// remove it
 					statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
 					// reset Datzpz
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					break;
 				case ERROR:
-					System.out.println("applyReader -> ERROR");//TODO : displaying to debbug, after remove it
+					System.out.println("applyReader -> ERROR");// TODO :
+																// displaying to
+																// debbug, after
+																// remove it
 					// TODO : close
 					break;
 				case REFILL:
-					System.out.println("applyReader -> REFILL");//TODO : displaying to debbug, after remove it
+					System.out.println("applyReader -> REFILL");// TODO :
+																// displaying to
+																// debbug, after
+																// remove it
 					return;
 				}
 			}
 		}
+
+		public void writeString(ByteBuffer bb, String s) {
+			ByteBuffer tmp = UTF_8.encode(s);
+			bb.putInt(tmp.remaining()).put(tmp);
+		}
+
+		public void writePacketToSend(DataPacketRead data,
+				TypePacket typePacketToSend, ByteBuffer bb) {
+			bb.put((byte) typePacketToSend.getValue());
+			switch (typePacketToSend) {
+			case ACC_CO_SERV:
+				// not here
+				bb.putLong(id = rand.nextLong());
+				break;
+			case REF_CO_SERV:
+				// Do nothing execepte initialize e close ( without remove )
+				break;
+			case ASC_CO_PRV_SC:
+				writeString(bb, data.getLoginSrc());
+				break;
+
+			case REF_CO_PRV_SC:
+				// Do nothing
+				break;
+			case ACC_CO_PRV_SC:
+				writeString(bb, data.getAdrSrc());
+				bb.putInt(data.getPortSrc());
+				break;
+			case MESSAGE:
+				writeString(bb, data.getLoginSrc());
+				// login dst is here the message
+				writeString(bb, data.getLoginDst());
+			}
+
+		}
+
 		public void treatData() {
-			if( statusTreatment == StatusTreatment.DATA_PACKET_KNOWN ){
-				System.out.println("statusTreatment -> "+statusTreatment);//TODO : displaying to debbug, after remove it
-				System.out.println("treatData -> "+dataPacketRead.toString());//TODO : displaying to debbug, after remove it
-				System.exit(1);
+			if (statusTreatment == StatusTreatment.DATA_PACKET_KNOWN) {
+				System.out.println("statusTreatment -> " + statusTreatment);
 				dataPacketRead = currentReader.get();
-				in.clear();
-				in.putInt(dataPacketRead
-						.getSizeLoginSrc());
-				in.put(UTF_8
-						.encode(dataPacketRead.getLoginSrc()));
+				System.out.println("Packet to treat :"
+						+ dataPacketRead.toString());
+				/*
+				 * if (bbWaitingsToBeUsed.isEmpty()) return; DataPacketRead data
+				 * = bbWaitingsToBeUsed.poll();
+				 */
+				System.exit(1);
+				TypePacket typePacket = TypePacket.values()[dataPacketRead.getTypePacket().getValue()];
+				if (!isAnExpectedTypePacket(typePacket)) {/* close */
+				}
+				switch (typePacket) {
+				case ASC_CO_SERV:
+					// je test la car ça pourrait êre faut au moment ou on le
+					// recupere de lafile
+					login = dataPacketRead.getLoginSrc();
+					if (!isAUniqLogin(login)) {
+						// TODO : if false login we refused connexion ?
+						// appeler la fonction qui va remplir le out avec le
+						// packet de refu ( et fermer la connection ? )
+						writePacketToSend(dataPacketRead,
+								TypePacket.REF_CO_SERV, out);
+						return;// and close se socket
+					}
+					// TODO: do we have to manage the unicity with a comparason
+
+					id = rand.nextLong();
+
+					// TODO ; add the client, here ?
+					map.put(login, this);
+
+					// TODO : Appeler la fonction qui va remplir le out avec
+					// le paquet d'acceptation.
+					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
+							out);
+
+					// change status of exchange
+					statusExchange = StatusExchange.CONNECTED_TO_SERV;
+					// TODO: Verifier si c'est pas la qu'on change l'état
+					// WRITE ou READ ( je pense pas non )
+
+					statusTreatment = StatusTreatment.END_TREATMENT;
+
+					break;
+				case ASC_CO_PRV_CS:// code 3
+					// if client doesn't existe
+					// if it's the same client
+
+					if ((!dataPacketRead.getLoginSrc().equals(login))
+							|| (id != dataPacketRead.getId())) {
+						// si il s'agit d'une usurpation d'identité on ferme la
+						// connection
+						// TODO: close
+					}
+
+					String loginDest = dataPacketRead.getLoginDst();
+					if (map.get(loginDest) == null) {
+						// TODO: ne rien faire car il se peut que le
+						// destinataire ce
+						// soit déconnecté,
+						// on aura alors une gestion du time out pour l'attente
+						// de
+						// l'aquitemetn deml par du client
+						// on pourarait faire en sort que ce soit le serveur qui
+						// dans ce cas renvoit uenun paquet
+						// pour dirt que l'utilisateur n'est plus disponible
+						// ouaalors simplement pour marqué
+						// le refu mais depuis le serveur,
+					}
+
+					// WRITTER
+					// realBuildOut(TypePacket.ACC_CO_SERV);
+					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
+							out);
+					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
+
+					statusTreatment = StatusTreatment.END_TREATMENT;
+
+					break;
+
+				case ACC_CO_PRV_CS:
+
+					if ((!dataPacketRead.getLoginSrc().equals(login))
+							|| (id != dataPacketRead.getId())) {
+						// si il s'agit d'une usurpation d'identité on ferme la
+						// connection
+						// TODO: close
+					}
+
+					// attention c'est l'adresse privé c'est pour ça que debase
+					// le serveur ne la connait aps et qu'il la communique.
+					// TODO/ dans le rapport il faudra bien mettre en avant ce
+					// que gere le serveur, notemment il empeche l'usurapation
+					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
+							out);
+
+					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
+					// qu'on compose !!!!!
+
+					// --------------------------------------------------
+					// |int| int | String | int |
+					// |7 | taille address | address | port |
+					// ---------------------------------------------------
+
+					statusExchange = StatusExchange.CONNECTED_TO_PRV;
+					// TODO : on doit accede a l'autre client poru envoyer la
+					// trame sur ça socket et aussi pour changer son statu
+
+					statusTreatment = StatusTreatment.END_TREATMENT;
+					break;
+				case REF_CO_PRV_CS:
+					if ((!dataPacketRead.getLoginSrc().equals(login))
+							|| (id != dataPacketRead.getId())) {
+						// si il s'agit d'une usurpation d'identité on ferme la
+						// connection
+						// TODO: close
+					}
+					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
+							out);
+
+					/*
+					 * 
+					 * ----------------------------------------- |int| int |
+					 * String | id | 6 | taille pseudo c1 |pseudo c1| long
+					 * -----------------------------------------
+					 */
+
+					statusExchange = StatusExchange.CONNECTED_TO_SERV;
+
+					statusTreatment = StatusTreatment.END_TREATMENT;
+					break;
+				case MESSAGE:
+					/*
+					 * 
+					 * ----------------------------------------------------------
+					 * --------------------------------- |int | int | String |
+					 * long | int | String | |15 | taille pseudo |pseudo | id |
+					 * taille message | Message|
+					 * --------------------------------
+					 * --------------------------
+					 * ---------------------------------
+					 */
+					if ((!dataPacketRead.getLoginSrc().equals(login))
+							|| (id != dataPacketRead.getId())) {
+						// si il s'agit d'une usurpation d'identité on ferme la
+						// connection
+						// TODO: close
+					}
+					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
+					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
+					// loginDest, port, out);
+					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
+					// message*/);
+
+					break;
+
+				}
+
 			}
 		}
+
 	}
 
 	public ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(int port)
@@ -300,9 +612,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-		map.put(co++,
-				sc.register(selector, SelectionKey.OP_READ
-						| SelectionKey.OP_WRITE, new Attachement()));
+		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
+				new Attachement());
 
 	}
 
@@ -320,10 +631,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 	}
 
-
-	
-
-	
 	private void doRead(SelectionKey key) throws IOException {
 		Attachement theAttachement = (Attachement) key.attachment();
 
@@ -342,14 +649,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		theAttachement.findReader();
 		theAttachement.applyReader();
 		theAttachement.treatData();
-		
-		
-		
+
 		key.interestOps(theAttachement.getInterest());
 	}
-
-
-
 
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();

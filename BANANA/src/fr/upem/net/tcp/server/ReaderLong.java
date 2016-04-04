@@ -3,6 +3,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class ReaderLong implements Reader {
 
@@ -14,9 +15,11 @@ public class ReaderLong implements Reader {
 		this.reader = reader;
 	}
 
-	public ReaderLong() {
+	public ReaderLong(TypePacket typePacket) {
 		data = new DataPacketRead();
+		data.setTypePacket(typePacket);
 	}
+	
 
 	@Override
 	public StatusProcessing process(ByteBuffer in) {

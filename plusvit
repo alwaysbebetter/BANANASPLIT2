@@ -1,0 +1,8 @@
+"\ttypePacket = "+typePacket
++"\n\tsizeLoginSrc  = "+sizeLoginSrc  
++"\n\tloginSrc = "+loginSrc
++"\n\n\tid = "+id
++"\n\n\tsizeLoginDst = "+sizeLoginDst
++"\n\tloginDst  = "+loginDst
++"\t\nadrSrc = "+adrSrc
++"\tportSrc = "+portSrc

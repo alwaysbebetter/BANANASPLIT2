@@ -4,6 +4,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class ReaderInt implements Reader {
 
@@ -15,11 +16,10 @@ public class ReaderInt implements Reader {
 		this.reader = reader;
 	}
 
-	public ReaderInt() {
+	public ReaderInt(TypePacket typePacket) {
 		data = new DataPacketRead();
-
+		data.setTypePacket(typePacket);
 	}
-
 	
 
 	@Override
