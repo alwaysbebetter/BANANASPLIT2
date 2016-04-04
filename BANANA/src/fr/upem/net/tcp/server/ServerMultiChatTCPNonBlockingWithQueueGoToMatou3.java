@@ -694,6 +694,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			break;
 		case MESSAGE:
 			publish(key, theAttachement);
+			theAttachement.in.compact();
 			break;
 		
 		}
