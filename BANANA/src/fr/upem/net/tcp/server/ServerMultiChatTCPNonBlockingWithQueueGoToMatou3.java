@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.protocol.Writters;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
@@ -388,6 +389,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				// login dst is here the message
 				writeString(bb, data.getLoginDst());
 			}
+			System.out.println("SERVER SEND :");Loggers.test(bb);
 
 		}
 
@@ -588,7 +590,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private void processSelectedKeys() throws IOException {
 
 		for (SelectionKey key : selectedKeys) {
-			Attachement theAttachement = (Attachement) key.attachment();
 
 			if (key.isValid() && key.isAcceptable()) {
 				doAccept(key);// on ne catrch pas cette exception parce que si
