@@ -56,7 +56,7 @@ public class Writters {
 
 		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
 		
-		buff.put((byte)3).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
+		buff.put((byte)3).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(destBuff.remaining()).put(destBuff);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -88,7 +88,7 @@ public class Writters {
 		ByteBuffer buff = allocate(3,Byte.BYTES + Long.BYTES + srcBuff.remaining() + adressBuff.remaining());
 
 		
-		buff.put((byte)5).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+		buff.put((byte)5).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(adressBuff.remaining()).put(adressBuff);
 		buff.putInt(adress.getPort());
 		
 		Loggers.test(buff);
@@ -110,7 +110,7 @@ public class Writters {
 
 		ByteBuffer buff = allocate(1,Byte.BYTES + Long.BYTES + srcBuff.remaining() );
 		
-		buff.put((byte)6).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff);
+		buff.put((byte)6).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -188,9 +188,9 @@ public class Writters {
 	}
 	/**
 	 * Send a private message
-	 * @param sc
-	 * @param src
-	 * @param msg
+	 * @param sc The privateChannel
+	 * @param src The name of the sender
+	 * @param msg The message to send
 	 * @throws IOException
 	 */
 	public static void sendPrivateMessage(SocketChannel sc, String src, String msg) throws IOException{
