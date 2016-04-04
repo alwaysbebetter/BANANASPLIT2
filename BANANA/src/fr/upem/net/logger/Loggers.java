@@ -18,7 +18,7 @@ public class Loggers {
 		}
 		StringBuilder sb = new StringBuilder();
 		buff.flip();
-		int id = buff.getInt();
+		byte id = buff.get();
 		int size,limit;
 		sb.append(id).append(" ");
 		switch(id){
