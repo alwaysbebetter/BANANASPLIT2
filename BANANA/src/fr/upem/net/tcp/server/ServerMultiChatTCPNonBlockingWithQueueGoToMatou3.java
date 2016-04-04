@@ -417,7 +417,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
-								TypePacket.REF_CO_SERV, out);
+								TypePacket.REF_CO_SERV, in);
 						System.out.println("IS NOT UNIQUE LOGIN");//TODO : delete
 						return;// and close se socket
 					}
@@ -431,7 +431,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// TODO : Appeler la fonction qui va remplir le out avec
 					// le paquet d'acceptation.
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
-							out);
+							in);
 
 					// change status of exchange
 	
@@ -471,7 +471,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// WRITTER
 					// realBuildOut(TypePacket.ACC_CO_SERV);
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
-							out);
+							in);
 					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
 					statusTreatment = StatusTreatment.TYPE_READING;
@@ -492,7 +492,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// TODO/ dans le rapport il faudra bien mettre en avant ce
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
-							out);
+							in);
 
 					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
 					// qu'on compose !!!!!
@@ -516,7 +516,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
-							out);
+							in);
 
 					/*
 					 * 
@@ -546,7 +546,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// connection
 						// TODO: close
 					}
-					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
+					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
 					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
 					// loginDest, port, out);
 					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
