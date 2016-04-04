@@ -155,7 +155,8 @@ public class ServerEcho2 {
 			theAttachement.status = 0;
 		}
 
-		key.interestOps(theAttachement.getInterest());
+		//key.interestOps(theAttachement.getInterest());
+		key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 	}
 
 	private void doWrite(SelectionKey key) throws IOException {
@@ -177,7 +178,7 @@ public class ServerEcho2 {
 		theAttachement.buff.compact();// pour bien se repositionner sans ecraser
 										// ce que l'on a lu
 		if (theAttachement.isClosed) {
-			client.close();
+			//client.close();
 			theAttachement.isClosed = true;
 		}
 		
