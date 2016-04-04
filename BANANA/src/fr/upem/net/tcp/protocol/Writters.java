@@ -176,9 +176,9 @@ public class Writters {
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
 
-		ByteBuffer buff = allocate(3,Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
+		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
 		
-		buff.putInt(15).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
 		
 		Loggers.test(buff);
 		
@@ -186,7 +186,28 @@ public class Writters {
 		
 		sc.write(buff);
 	}
-	
+	/**
+	 * Send a private message
+	 * @param sc
+	 * @param src
+	 * @param msg
+	 * @throws IOException
+	 */
+	public static void sendPrivateMessage(SocketChannel sc, String src, String msg) throws IOException{
+		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer msgBuff = UTF8.encode(msg);
+
+
+		ByteBuffer buff = allocate(2,Byte.BYTES  + srcBuff.remaining() + msgBuff.remaining() );
+		
+		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		
+		Loggers.test(buff);
+		
+		buff.flip();
+		
+		sc.write(buff);
+	}
 	public static void sendSimpleMessage(SocketChannel sc, String msg) throws IOException{
 
 		ByteBuffer msgBuff = UTF8.encode(msg);

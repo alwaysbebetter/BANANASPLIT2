@@ -37,7 +37,7 @@ public class Loggers {
 		case 12:
 		case 13 : System.out.println(sb);
 		case 3:
-		case 15:
+		case 15://TODO distingué message privé et général car il y a des long maintenant
 			size = buff.getInt();
 			sb.append(size).append(" ");
 			//Get the first string
