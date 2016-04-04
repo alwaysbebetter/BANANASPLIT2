@@ -283,11 +283,13 @@ public class ClientTCPMatou {
 			}
 			
 		}
-		System.out.println(line + " envoyé !");
+		
 		if(currentChannel != privateChannel)
 			Writters.sendMessage(currentChannel, clientID, myName, line);
 		else
 			Writters.sendPrivateMessage(currentChannel, myName, line);
+		
+		System.out.println(line + " envoyé !");
 
 	}
 

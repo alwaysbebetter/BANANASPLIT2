@@ -196,7 +196,7 @@ public class Writters {
 	 */
 
 	public static void sendMessage(SocketChannel sc, long clientID, String src,
-			String msg) throws IOException {
+		String msg) throws IOException {
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
@@ -204,7 +204,7 @@ public class Writters {
 		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
 		
 		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
-		
+
 		Loggers.testChatMessage(buff);
 		
 		buff.flip();

@@ -95,7 +95,11 @@ public class Loggers {
 
 	public static void testChatMessage(ByteBuffer buff){
 		StringBuilder sb = new StringBuilder();
+		buff.flip();
+		byte id = buff.get();
 		int size,limit;
+		sb.append(id).append(" ");
+		
 		size = buff.getInt();
 		sb.append(size).append(" ");
 		//Get the first string (name)
