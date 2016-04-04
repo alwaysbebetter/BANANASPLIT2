@@ -180,7 +180,7 @@ public class Writters {
 		
 		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
 		
-		Loggers.test(buff);
+		Loggers.testChatMessage(buff);
 		
 		buff.flip();
 		

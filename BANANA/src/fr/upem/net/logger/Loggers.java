@@ -37,16 +37,16 @@ public class Loggers {
 		case 12:
 		case 13 : System.out.println(sb);
 		case 3:
-		case 15://TODO distingué message privé et général car il y a des long maintenant
+		case 15://Message Client to client and server to client only
 			size = buff.getInt();
 			sb.append(size).append(" ");
-			//Get the first string
+			//Get the first string (name)
 			limit = buff.limit();
 			buff.limit(buff.position() + size );
 			sb.append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
 
-			//Get the second String
+			//Get the second String (message)
 			size = buff.getInt();
 
 			sb.append(size).append(" ").append(utf8.decode(buff));
@@ -93,6 +93,24 @@ public class Loggers {
 		
 	}
 
+	public static void testChatMessage(ByteBuffer buff){
+		StringBuilder sb = new StringBuilder();
+		int size,limit;
+		size = buff.getInt();
+		sb.append(size).append(" ");
+		//Get the first string (name)
+		limit = buff.limit();
+		buff.limit(buff.position() + size );
+		sb.append(utf8.decode(buff)).append(" ");
+		buff.limit(limit);
+		sb.append(buff.getLong() + " ");
+
+		//Get the second String (message)
+		size = buff.getInt();
+
+		sb.append(size).append(" ").append(utf8.decode(buff));
+		System.out.println(sb);
+	}
 	
 	
 
