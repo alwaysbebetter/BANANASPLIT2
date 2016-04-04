@@ -51,10 +51,12 @@ public class ReaderString implements Reader {
 
 	@Override
 	public StatusProcessing process(ByteBuffer in) {
+
 		switch (status) {
 
 		case BEGIN:
 			if (reader == null) {
+				System.out.println("here");
 				status = StatusReaderTreatment.READER_USED;
 			} else {
 				StatusProcessing statusCalledReader = reader.process(in);
@@ -69,11 +71,17 @@ public class ReaderString implements Reader {
 			if (in.position() >= Integer.BYTES) {
 				in.flip();
 				sizeString = in.getInt();
-				
-				if( ( sizeString >= BUFSIZ ) || ( sizeString <= 0 ) ){// that handle to check all size of login and of message.
+
+				if ((sizeString >= BUFSIZ) || (sizeString <= 0)) {// that handle
+																	// to check
+																	// all size
+																	// of login
+																	// and of
+																	// message.
+					System.out.println("sizeString :=" + sizeString);
 					return StatusProcessing.ERROR;
 				}
-				
+
 				switch (concernedData) {
 				case SRC_DATA:
 					data.setSizeLoginSrc(sizeString);

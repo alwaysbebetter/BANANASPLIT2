@@ -12,7 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class ServerEcho2 {
+public class ServerMultiChatTCPNonBlockingWithQueue {
 
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
@@ -44,7 +44,7 @@ public class ServerEcho2 {
 		}
 	}
 
-	public ServerEcho2(int port) throws IOException {
+	public ServerMultiChatTCPNonBlockingWithQueue(int port) throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
 		serverSocketChannel.bind(new InetSocketAddress(port));
 		selector = Selector.open();
@@ -110,11 +110,7 @@ public class ServerEcho2 {
 		SocketChannel client = (SocketChannel) key.channel();
 
 		if (-1 == client.read(theAttachement.buff)) {
-
 			theAttachement.isClosed = true;
-
-			// si il a deja finis d'écrire ce n'est pas la peine
-			// il a
 			if (theAttachement.buff.position() == 0) {
 
 				client.close();
@@ -122,42 +118,45 @@ public class ServerEcho2 {
 
 		}
 
+		for (SelectionKey key2 : selector.keys()) {
+			if (key2.isValid() && ( key2.channel() instanceof SocketChannel ) && ( !key2.equals(key))) {
+				theAttachement.buff.flip();
+				SocketChannel sch = (SocketChannel) key2.channel();
+				sch.write(theAttachement.buff);
+				
+			}
 
-			for (Integer i : map.keySet()) {
-				SelectionKey selectionKey = map.get(i);
-				if (!client.equals(selectionKey.channel())) {
-					Attachement at = (Attachement) selectionKey.attachment();
-					System.out.println("coucou");
-					if (at != null) {
-						System.out.println("coucou2");
-						theAttachement.buff.flip();
-						ByteBuffer bb = ByteBuffer.allocate(theAttachement.buff
-								.remaining());
-						bb.put(theAttachement.buff);
-						at.queue.add(bb);
-					}
-				}
-			
 		}
+		/*
+		 * for (Integer i : map.keySet()) {// TODO: virer la clef lors d'une
+		 * deconnexion SelectionKey selectionKey = map.get(i); if
+		 * (!client.equals(selectionKey.channel())) { Attachement at =
+		 * (Attachement) selectionKey.attachment();
+		 * System.out.println("coucou"); if (at != null) {
+		 * System.out.println("coucou2"); theAttachement.buff.flip(); ByteBuffer
+		 * bb = ByteBuffer.allocate(theAttachement.buff .remaining());
+		 * bb.put(theAttachement.buff); at.queue.add(bb); } }
+		 * 
+		 * }
+		 */
 
-		//key.interestOps(theAttachement.getInterest());
-		key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+		key.interestOps(theAttachement.getInterest());
 	}
 
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
-		
-		while (!theAttachement.queue.isEmpty()) {
-			ByteBuffer tmp = theAttachement.queue.poll();
-			tmp.flip();
-			SocketChannel client2 = (SocketChannel) key.channel();
 
-			client2.write(tmp);
+		/*
+		 * while (!theAttachement.queue.isEmpty()) { ByteBuffer tmp =
+		 * theAttachement.queue.poll(); tmp.flip(); SocketChannel client2 =
+		 * (SocketChannel) key.channel();
+		 * 
+		 * client2.write(tmp);
+		 * 
+		 * }
+		 */
 
-		}
-		
-		
 		// theAttachement.buff.flip();
 
 		// theAttachement.buff.flip();
@@ -165,20 +164,16 @@ public class ServerEcho2 {
 		theAttachement.buff.compact();// pour bien se repositionner sans ecraser
 										// ce que l'on a lu
 		if (theAttachement.isClosed) {
-			//client.close();
+			client.close();
 			theAttachement.isClosed = true;
 		}
-	
-			
-
-		
 
 		key.interestOps(theAttachement.getInterest());
 	}
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
-		new ServerEcho2(Integer.parseInt(args[0])).launch();
+		new ServerMultiChatTCPNonBlockingWithQueue(Integer.parseInt(args[0])).launch();
 
 	}
 
