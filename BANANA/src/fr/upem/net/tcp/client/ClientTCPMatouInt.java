@@ -84,7 +84,7 @@ public class ClientTCPMatouInt {
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
 								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 								fileChannel = SocketChannel.open();
-								Writters.askPrivateFileConnection(privateChannel,9,fileChannel);
+								//Writters.askPrivateFileConnection(privateChannel,9,fileChannel);
 							}
 							//In this case we are c2 because we already had accept and open a channel for c1.
 							//We just have to connect to c1
@@ -113,7 +113,7 @@ public class ClientTCPMatouInt {
 					//Here we are c2, we open the channel and connect then send our address and port.
 						case 9 : 
 							fileChannel = SocketChannel.open(Readers.readAddress(privateChannel));
-							Writters.askPrivateFileConnection(privateChannel,10,fileChannel);
+						//	Writters.askPrivateFileConnection(privateChannel,10,fileChannel);
 							break;
 						//Here we are c1 and connect to c2
 						case 10 :

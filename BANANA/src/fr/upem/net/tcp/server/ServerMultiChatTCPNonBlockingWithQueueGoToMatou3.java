@@ -8,13 +8,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.time.DayOfWeek;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
-import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
@@ -134,11 +131,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				in.flip();
 				// get type
 				typeLastPacketReceiv = TypePacket.values()[in.get()];
-				System.out.println("size ----: "+in.getInt());
+
 				in.compact();
 				// change status
 				if (!isAnExpectedTypePacket(typeLastPacketReceiv)) {
-
+					System.out.println("UNEXCPECTED PACKET -> close and remove");//TODO : displaying to debbug, after remove it	
 				}
 				
 				System.out.println("readType() -> "+typeLastPacketReceiv);//TODO : displaying to debbug, after remove it
