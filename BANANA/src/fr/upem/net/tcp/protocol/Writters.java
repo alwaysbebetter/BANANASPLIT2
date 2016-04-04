@@ -64,6 +64,13 @@ public class Writters {
 		buff.put((byte) 3).putLong(clientID).putInt(srcBuff.remaining())
 				.put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
 
+<<<<<<< HEAD
+=======
+		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
+		
+		buff.put((byte)3).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(destBuff.remaining()).put(destBuff);
+		
+>>>>>>> 2000a97315da9859755ed0145c7f008dadce51a8
 		Loggers.test(buff);
 		buff.flip();
 
@@ -99,8 +106,13 @@ public class Writters {
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ adressBuff.remaining());
 
+<<<<<<< HEAD
 		buff.put((byte) 5).putLong(clientID).putInt(srcBuff.remaining())
 				.put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+=======
+		
+		buff.put((byte)5).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(adressBuff.remaining()).put(adressBuff);
+>>>>>>> 2000a97315da9859755ed0145c7f008dadce51a8
 		buff.putInt(adress.getPort());
 
 		Loggers.test(buff);
@@ -127,6 +139,13 @@ public class Writters {
 		buff.put((byte) 6).putLong(clientID).putInt(srcBuff.remaining())
 				.put(srcBuff);
 
+<<<<<<< HEAD
+=======
+		ByteBuffer buff = allocate(1,Byte.BYTES + Long.BYTES + srcBuff.remaining() );
+		
+		buff.put((byte)6).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID);
+		
+>>>>>>> 2000a97315da9859755ed0145c7f008dadce51a8
 		Loggers.test(buff);
 		buff.flip();
 
@@ -204,15 +223,48 @@ public class Writters {
 		buff.putInt(15).putLong(clientID).putInt(srcBuff.remaining())
 				.put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
 
+<<<<<<< HEAD
+=======
+		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
+		
+		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
+		
+		Loggers.testChatMessage(buff);
+		
+		buff.flip();
+		
+		sc.write(buff);
+	}
+	/**
+	 * Send a private message
+	 * @param sc The privateChannel
+	 * @param src The name of the sender
+	 * @param msg The message to send
+	 * @throws IOException
+	 */
+	public static void sendPrivateMessage(SocketChannel sc, String src, String msg) throws IOException{
+		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer msgBuff = UTF8.encode(msg);
+
+
+		ByteBuffer buff = allocate(2,Byte.BYTES  + srcBuff.remaining() + msgBuff.remaining() );
+		
+		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		
+>>>>>>> 2000a97315da9859755ed0145c7f008dadce51a8
 		Loggers.test(buff);
 
 		buff.flip();
 
 		sc.write(buff);
 	}
+<<<<<<< HEAD
 
 	public static void sendSimpleMessage(SocketChannel sc, String msg)
 			throws IOException {
+=======
+	public static void sendSimpleMessage(SocketChannel sc, String msg) throws IOException{
+>>>>>>> 2000a97315da9859755ed0145c7f008dadce51a8
 
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
