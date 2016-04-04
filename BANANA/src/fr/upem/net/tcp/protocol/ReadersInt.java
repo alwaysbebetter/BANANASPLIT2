@@ -7,10 +7,9 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 
-public class Readers {
+public class ReadersInt {
 	private final static ByteBuffer BUFFINT = ByteBuffer.allocateDirect(Integer.BYTES);
 	private final static ByteBuffer BUFFLONG = ByteBuffer.allocateDirect(Long.BYTES);
-	private final static ByteBuffer BUFFBYTE = ByteBuffer.allocateDirect(Byte.BYTES);
 	private final static Charset UTF8 = Charset.forName("utf-8");
 	
 	
@@ -46,21 +45,6 @@ public class Readers {
 		return BUFFINT.getInt();
 	}
 	
-	/** Read an int on sc and return it.
-	 * 
-	 * @param sc
-	 * @return
-	 * @throws IOException
-	 */
-	public static byte readByte(SocketChannel sc) throws IOException {
-		BUFFBYTE.clear();
-		if (!readFully(sc, BUFFBYTE)) {
-			throw new ReadersException("Connection lost during readInt");
-		}
-		BUFFBYTE.flip();
-		return BUFFBYTE.get();
-	}
-	
 	/** Read a long on sc and return it.
 	 * 
 	 * @param sc
@@ -84,10 +68,10 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static boolean nameAccepted(SocketChannel sc) throws IOException{
-		byte answer = readByte(sc);
-		if(answer == (byte)1)
+		int answer = readInt(sc);
+		if(answer == 1)
 			return true;
-		else if(answer == (byte)2)
+		else if(answer == 2)
 			return false;
 		throw new ReadersException("Problem, unknow response");
 	}

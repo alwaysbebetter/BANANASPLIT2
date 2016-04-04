@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
 
-public class Writters {
+public class WrittersInt {
 	
 	private static final Charset UTF8 = Charset.forName("utf-8");
 	
@@ -25,10 +25,10 @@ public class Writters {
 	 */
 	public static void requestName(SocketChannel sc, String name) throws IOException{
 		ByteBuffer buff = UTF8.encode(name);
-		ByteBuffer buff2 = allocate(1 , Byte.BYTES + buff.remaining());
+		ByteBuffer buff2 = allocate(2 , buff.remaining());
 		
 		//Code 0 ask for connection
-		buff2.put((byte)0);
+		buff2.putInt(0);
 		
 		//Name size in bytes. It's not name.length !
 		buff2.putInt(buff.remaining());
@@ -54,9 +54,9 @@ public class Writters {
 		ByteBuffer destBuff = UTF8.encode(dest);
 
 
-		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
+		ByteBuffer buff = allocate(3,Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
 		
-		buff.put((byte)3).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
+		buff.putInt(3).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(destBuff.remaining()).put(destBuff);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -85,10 +85,10 @@ public class Writters {
 		InetSocketAddress adress = (InetSocketAddress)privateSc.getLocalAddress();
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
-		ByteBuffer buff = allocate(3,Byte.BYTES + Long.BYTES + srcBuff.remaining() + adressBuff.remaining());
+		ByteBuffer buff = allocate(4,Long.BYTES + srcBuff.remaining() + adressBuff.remaining());
 
 		
-		buff.put((byte)5).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
+		buff.putInt(5).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff).putInt(adressBuff.remaining()).put(adressBuff);
 		buff.putInt(adress.getPort());
 		
 		Loggers.test(buff);
@@ -108,9 +108,9 @@ public class Writters {
 		ByteBuffer srcBuff = UTF8.encode(src);
 
 
-		ByteBuffer buff = allocate(1,Byte.BYTES + Long.BYTES + srcBuff.remaining() );
+		ByteBuffer buff = allocate(2,Long.BYTES + srcBuff.remaining() );
 		
-		buff.put((byte)6).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff);
+		buff.putInt(6).putLong(clientID).putInt(srcBuff.remaining()).put(srcBuff);
 		
 		Loggers.test(buff);
 		buff.flip();
@@ -123,15 +123,15 @@ public class Writters {
 	 * @param sc The socket use for file.
 	 * @param type 9 for asking and 10 to respond.
 	 */
-	public static void askPrivateFileConnection(SocketChannel sc,byte type, SocketChannel fileChannel) throws IOException, IllegalStateException{
-		if( (type == (byte)9) || (type == (byte)10)){
+	public static void askPrivateFileConnection(SocketChannel sc,int type, SocketChannel fileChannel) throws IOException, IllegalStateException{
+		if( (type == 9) || (type == 10)){
 
 
 			ByteBuffer adressBuff = UTF8.encode(fileChannel.getLocalAddress().toString());
 
-			ByteBuffer buff = allocate(1,Byte.BYTES + adressBuff.remaining());
+			ByteBuffer buff = allocate(2,adressBuff.remaining());
 			
-			buff.put(type).putInt(adressBuff.remaining()).put(adressBuff);
+			buff.putInt(type).putInt(adressBuff.remaining()).put(adressBuff);
 			
 			Loggers.test(buff);
 			buff.flip();
@@ -158,11 +158,11 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void acceptFile(SocketChannel sc) throws IOException{
-		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte)12));
+		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(12));
 	}
 	
 	public static void refuseFile(SocketChannel sc) throws IOException{
-		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte)13));
+		sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(13));
 	}
 	
 	/**
