@@ -84,7 +84,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		FILE(14),
 
 		// TO SEND MESSAGE
-		MESSAGE(15);
+		MESSAGE(15),
+		
+		INITIAL_TYPE(16);
 		private final int value;
 
 		public int getValue() {
@@ -117,7 +119,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public DataPacketRead dataPacketRead;
 		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV;
 		StatusTreatment statusTreatment = StatusTreatment.TYPE_READING;
-		TypePacket typeLastPacketReceiv;
+		TypePacket typeLastPacketReceiv = TypePacket.INITIAL_TYPE;
 		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
 				readerASC_CO_SERV, readerMESSAGE, currentReader;
 		long id;
@@ -682,15 +684,20 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// besoin de reallouer.
 
 		// publish(key, theAttachement);
-		
-		if (theAttachement.typeLastPacketReceiv == TypePacket.ASC_CO_SERV) {
+		switch( theAttachement.typeLastPacketReceiv){
+		case ASC_CO_SERV:
+			
 			
 			theAttachement.in.flip();
 			client.write(theAttachement.in);
-			theAttachement.in.compact();// pour bien se repositionner sans
-										// ecraser
-										// ce que l'on a lu
+			theAttachement.in.compact();
+			break;
+		case MESSAGE:
+			publish(key, theAttachement);
+			break;
+		
 		}
+
 		if (theAttachement.isClosed) {
 			client.close();
 			theAttachement.isClosed = true;
