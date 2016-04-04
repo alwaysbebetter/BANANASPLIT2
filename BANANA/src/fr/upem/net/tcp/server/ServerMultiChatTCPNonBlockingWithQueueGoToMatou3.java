@@ -495,7 +495,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
 							in);
-
+				
 					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
 					// qu'on compose !!!!!
 
@@ -549,6 +549,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
+					
 					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
 					// loginDest, port, out);
 					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
@@ -668,8 +669,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
 		// besoin de reallouer.
 
-		publish(key, theAttachement);
-
+		//publish(key, theAttachement);
+		theAttachement.in.flip();
+		client.write(theAttachement.in);
 		theAttachement.in.compact();// pour bien se repositionner sans ecraser
 									// ce que l'on a lu
 		if (theAttachement.isClosed) {
