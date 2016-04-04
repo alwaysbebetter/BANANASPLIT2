@@ -35,7 +35,7 @@ public class Loggers {
 		case 2:
 		case 8:
 		case 12:
-		case 13 : System.out.println(sb);
+		case 13 : System.out.println(sb);return;
 		case 3:
 		case 15://Message Client to client and server to client only
 			size = buff.getInt();
