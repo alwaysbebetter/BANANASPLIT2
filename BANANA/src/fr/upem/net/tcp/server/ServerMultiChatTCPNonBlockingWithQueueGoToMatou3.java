@@ -28,7 +28,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	private enum StatusTreatment {
 
-		TYPE_READING, TYPE_KNOWN, CHOOSE_TREATING, READ_LOGIN, END_READING, END_TREATMENT, REFILL, ERROR, DONE, READER_KNOWN, DATA_PACKET_KNOWN
+		TYPE_READING, TYPE_KNOWN, CHOOSE_TREATING, READ_LOGIN, END_READING, REFILL, ERROR, DONE, READER_KNOWN, DATA_PACKET_KNOWN
 
 	}
 
@@ -396,16 +396,18 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				System.out.println("statusTreatment -> " + statusTreatment);
 				dataPacketRead = currentReader.get();
 				System.out.println("Packet to treat :"
-						+ dataPacketRead.toString());
+						+ dataPacketRead);
 				/*
 				 * if (bbWaitingsToBeUsed.isEmpty()) return; DataPacketRead data
 				 * = bbWaitingsToBeUsed.poll();
 				 */
-				System.exit(1);
-				TypePacket typePacket = TypePacket.values()[dataPacketRead.getTypePacket().getValue()];
-				if (!isAnExpectedTypePacket(typePacket)) {/* close */
+		
+				TypePacket theTypePacket = TypePacket.values()[dataPacketRead.getTypePacket().getValue()];
+				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
+					System.out.println("Is an expectedTypePacket !!");//TODO : delete
 				}
-				switch (typePacket) {
+				System.out.println("SERVER WILL TREAT :"+theTypePacket);
+				switch (theTypePacket) {
 				case ASC_CO_SERV:
 					// je test la car ça pourrait êre faut au moment ou on le
 					// recupere de lafile
@@ -416,6 +418,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_SERV, out);
+						System.out.println("IS NOT UNIQUE LOGIN");//TODO : delete
 						return;// and close se socket
 					}
 					// TODO: do we have to manage the unicity with a comparason
@@ -431,11 +434,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 							out);
 
 					// change status of exchange
+	
 					statusExchange = StatusExchange.CONNECTED_TO_SERV;
 					// TODO: Verifier si c'est pas la qu'on change l'état
 					// WRITE ou READ ( je pense pas non )
-
-					statusTreatment = StatusTreatment.END_TREATMENT;
+				
+					statusTreatment = StatusTreatment.TYPE_READING;
 
 					break;
 				case ASC_CO_PRV_CS:// code 3
@@ -470,7 +474,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 							out);
 					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
-					statusTreatment = StatusTreatment.END_TREATMENT;
+					statusTreatment = StatusTreatment.TYPE_READING;
 
 					break;
 
@@ -502,7 +506,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// TODO : on doit accede a l'autre client poru envoyer la
 					// trame sur ça socket et aussi pour changer son statu
 
-					statusTreatment = StatusTreatment.END_TREATMENT;
+					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
 				case REF_CO_PRV_CS:
 					if ((!dataPacketRead.getLoginSrc().equals(login))
@@ -523,7 +527,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					statusExchange = StatusExchange.CONNECTED_TO_SERV;
 
-					statusTreatment = StatusTreatment.END_TREATMENT;
+					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
 				case MESSAGE:
 					/*
@@ -551,6 +555,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					break;
 
 				}
+				System.out.println("statusExchange : "+statusExchange);
+				System.out.println("statusTreatment : "+statusTreatment);
 
 			}
 		}
