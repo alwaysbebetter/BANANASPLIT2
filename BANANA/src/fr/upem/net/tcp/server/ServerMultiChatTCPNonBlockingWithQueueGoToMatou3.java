@@ -172,12 +172,14 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		public int getInterest() {
 			int interest = 0;// initialize
+
 			if (in.position() > 0) {
 				interest = interest | SelectionKey.OP_WRITE;
 			}
 			if (!isClosed) {
 				interest |= SelectionKey.OP_READ;
 			}
+			
 			return interest;
 
 		}
@@ -189,9 +191,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 
 		private void readType() {// CHECKED
+			System.out.println("coco");
 			if ((statusTreatment == StatusTreatment.TYPE_READING)
 					&& (in.position() >= 1)) {
-
+				System.out.println("coco2");
 				// System.out.print("Received format packet:");Loggers.test(in);//TODO
 				// : displaying to debbug, after remove it
 				System.out.println("statusTreatement : " + statusTreatment);// TODO
@@ -247,15 +250,16 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// TO CHECK the updating of reader !!
 		public void findReader() {
 
-			System.out.println("findReader -> reader" + typeLastPacketReceiv);// TODO
-																				// :
-																				// displaying
-																				// to
-																				// debbug,
-																				// after
-																				// remove
-																				// it
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
+				System.out.println("findReader -> reader"
+						+ typeLastPacketReceiv);// TODO
+				// :
+				// displaying
+				// to
+				// debbug,
+				// after
+				// remove
+				// it
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 					if (readerASC_CO_SERV == null) {
@@ -389,26 +393,29 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				// login dst is here the message
 				writeString(bb, data.getLoginDst());
 			}
-			System.out.println("SERVER SEND :");Loggers.test(bb);
+			System.out.println("SERVER SEND :");
+			Loggers.test(bb);
 
 		}
 
 		public void treatData() {
+			
 			if (statusTreatment == StatusTreatment.DATA_PACKET_KNOWN) {
 				System.out.println("statusTreatment -> " + statusTreatment);
 				dataPacketRead = currentReader.get();
-				System.out.println("Packet to treat :"
-						+ dataPacketRead);
+				System.out.println("Packet to treat :" + dataPacketRead);
 				/*
 				 * if (bbWaitingsToBeUsed.isEmpty()) return; DataPacketRead data
 				 * = bbWaitingsToBeUsed.poll();
 				 */
-		
-				TypePacket theTypePacket = TypePacket.values()[dataPacketRead.getTypePacket().getValue()];
+
+				TypePacket theTypePacket = TypePacket.values()[dataPacketRead
+						.getTypePacket().getValue()];
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
-					System.out.println("Is an expectedTypePacket !!");//TODO : delete
+					System.out.println("Is an expectedTypePacket !!");// TODO :
+																		// delete
 				}
-				System.out.println("SERVER WILL TREAT :"+theTypePacket);
+				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
 				case ASC_CO_SERV:
 					// je test la car ça pourrait êre faut au moment ou on le
@@ -420,7 +427,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_SERV, in);
-						System.out.println("IS NOT UNIQUE LOGIN");//TODO : delete
+						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
+																	// delete
 						return;// and close se socket
 					}
 					// TODO: do we have to manage the unicity with a comparason
@@ -436,11 +444,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 							in);
 
 					// change status of exchange
-	
+
 					statusExchange = StatusExchange.CONNECTED_TO_SERV;
 					// TODO: Verifier si c'est pas la qu'on change l'état
 					// WRITE ou READ ( je pense pas non )
-				
+
 					statusTreatment = StatusTreatment.TYPE_READING;
 
 					break;
@@ -495,7 +503,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
 							in);
-				
+
 					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
 					// qu'on compose !!!!!
 
@@ -549,7 +557,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
-					
+
 					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
 					// loginDest, port, out);
 					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
@@ -558,10 +566,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					break;
 
 				}
-				System.out.println("statusExchange : "+statusExchange);
-				System.out.println("statusTreatment : "+statusTreatment);
+				System.out.println("statusExchange : " + statusExchange);
+				System.out.println("statusTreatment : " + statusTreatment);
 
 			}
+			
 		}
 
 	}
@@ -643,8 +652,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		Attachement theAttachement = (Attachement) key.attachment();
 
 		SocketChannel client = (SocketChannel) key.channel();
-
+		
+		// le problem c'est que el read renoie -1 et que la position est a 0 
+		
 		if (-1 == client.read(theAttachement.in)) {
+			
 			theAttachement.isClosed = true;
 			if (theAttachement.in.position() == 0) {
 
@@ -652,7 +664,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			}
 
 		}
-
+		System.out.println("INTEREST_OPS :"+theAttachement.getInterest());
 		theAttachement.readType();
 		theAttachement.findReader();
 		theAttachement.applyReader();
@@ -664,16 +676,21 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
-
+		
 		// faire le techeck sur la taille avant et il fatu faire en sorte que la
 		// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
 		// besoin de reallouer.
 
-		//publish(key, theAttachement);
-		theAttachement.in.flip();
-		client.write(theAttachement.in);
-		theAttachement.in.compact();// pour bien se repositionner sans ecraser
-									// ce que l'on a lu
+		// publish(key, theAttachement);
+		
+		if (theAttachement.typeLastPacketReceiv == TypePacket.ASC_CO_SERV) {
+			
+			theAttachement.in.flip();
+			client.write(theAttachement.in);
+			theAttachement.in.compact();// pour bien se repositionner sans
+										// ecraser
+										// ce que l'on a lu
+		}
 		if (theAttachement.isClosed) {
 			client.close();
 			theAttachement.isClosed = true;
