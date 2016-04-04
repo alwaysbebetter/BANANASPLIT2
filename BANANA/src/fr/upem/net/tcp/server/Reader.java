@@ -9,7 +9,7 @@ import fr.upem.net.tcp.server.DataPacketRead;
 
 public interface Reader {
 	public static final Charset UTF_8 = Charset.forName("utf-8");
-	public static final int BUFSIZ = 1024 ;
+	public static final int BUFSIZ = 200 ;
 	public final static int SRC_DATA= 0, DEST_DATA= 1,DEST_DATA_SRC=2; 
 	public final static int MAX_VALUE_PORT =  65535, MIN_VALUE_PORT = 1025 ;
 

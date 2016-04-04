@@ -12,7 +12,9 @@ import java.time.DayOfWeek;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
+import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
@@ -51,12 +53,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		ByteBuffer in;
 		boolean isClosed = false;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
-		public Reader reader;
 		public DataPacketRead dataPacketRead;
 		StatusExchange statusExchange = StatusExchange.WAITING_TO_CO_SERV;
 		StatusTreatment statusTreatment = StatusTreatment.TYPE_READING;
 		TypePacket typeLastPacketReceiv;
-		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
+		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,readerASC_CO_SERV,
 				readerMESSAGE, currentReader;
 
 		public Attachement() {
@@ -123,28 +124,45 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			return true;
 		}
 
-		private void readType() {
+		
+		private void readType() {// CHECKED
 			if ((statusTreatment == StatusTreatment.TYPE_READING)
 					&& (in.position() >= 1)) {
+				
+				//System.out.print("Received format packet:");Loggers.test(in);//TODO : displaying to debbug, after remove it
+				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
 				in.flip();
 				// get type
 				typeLastPacketReceiv = TypePacket.values()[in.get()];
+				System.out.println("size ----: "+in.getInt());
 				in.compact();
 				// change status
 				if (!isAnExpectedTypePacket(typeLastPacketReceiv)) {
 
 				}
+				
+				System.out.println("readType() -> "+typeLastPacketReceiv);//TODO : displaying to debbug, after remove it
 				statusTreatment = StatusTreatment.TYPE_KNOWN;
+				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
 			}
+		
+			
 		}
 
-		private void findReader() {
+		// CHECKED but need to be finsh ( default with close 
+		// socket and remove client ( make a method closing socket and deleteing client )
+		// TO CHECK the updating of reader !!
+		public void findReader() {
 
+			System.out.println("findReader -> reader"+typeLastPacketReceiv);//TODO : displaying to debbug, after remove it
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
-					currentReader = new ReaderString(SRC_DATA);
-
+					if (readerASC_CO_SERV == null) {
+						readerASC_CO_SERV = new ReaderString(SRC_DATA);
+					}
+					currentReader = readerASC_CO_SERV;
+					
 					break;
 
 				case ASC_CO_PRV_CS:// Code : 3
@@ -165,7 +183,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					currentReader = readerACC_CO_PRV_CS;
 					break;
 				case REF_CO_PRV_CS:// Code : 5
-
+					
 					if (readerREF_CO_PRV_CS == null) {
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
 								SRC_DATA));
@@ -182,10 +200,51 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					break;
 
 				default: // close
+					System.out.println("UNKNOWN PACKET -> close and remove!!");//TODO : displaying to debbug, after remove it);
 				}
 				statusTreatment = StatusTreatment.READER_KNOWN;
+				System.out.println("statusTreatement : "+statusTreatment);//TODO : displaying to debbug, after remove it
 			}
+			
 
+		}
+		
+		
+		
+		public void applyReader() {
+			
+			if (statusTreatment == StatusTreatment.READER_KNOWN) {
+
+				switch (currentReader.process(in)) {
+				case DONE://TRAITEMENT
+			
+					System.out.println("applyReader -> DONE");//TODO : displaying to debbug, after remove it
+					statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
+					// reset Datzpz
+					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
+					break;
+				case ERROR:
+					System.out.println("applyReader -> ERROR");//TODO : displaying to debbug, after remove it
+					// TODO : close
+					break;
+				case REFILL:
+					System.out.println("applyReader -> REFILL");//TODO : displaying to debbug, after remove it
+					return;
+				}
+			}
+		}
+		public void treatData() {
+			if( statusTreatment == StatusTreatment.DATA_PACKET_KNOWN ){
+				System.out.println("statusTreatment -> "+statusTreatment);//TODO : displaying to debbug, after remove it
+				System.out.println("treatData -> "+dataPacketRead.toString());//TODO : displaying to debbug, after remove it
+				System.exit(1);
+				dataPacketRead = currentReader.get();
+				in.clear();
+				in.putInt(dataPacketRead
+						.getSizeLoginSrc());
+				in.put(UTF_8
+						.encode(dataPacketRead.getLoginSrc()));
+			}
 		}
 	}
 
@@ -264,38 +323,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 	}
 
-	
-	
-	private void applyReader(Attachement theAttachement) {
-		if (theAttachement.statusTreatment == StatusTreatment.READER_KNOWN) {
-			switch (theAttachement.reader.process(theAttachement.in)) {
-			case DONE://TRAITEMENT
-			//	System.exit(1);
 
-				theAttachement.statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
-				// reset Datzpz
-				// dataPacketRead.setTypePacket(typeLastPacketReceiv);
-				break;
-			case ERROR:
-				// TODO : close
-				break;
-			case REFILL:
-				return;
-			}
-		}
-	}
 	
 
-	private void treatData(Attachement theAttachement) {
-		if( theAttachement.statusTreatment == StatusTreatment.DATA_PACKET_KNOWN ){
-			theAttachement.dataPacketRead = theAttachement.reader.get();
-			theAttachement.in.clear();
-			theAttachement.in.putInt(theAttachement.dataPacketRead
-					.getSizeLoginSrc());
-			theAttachement.in.put(UTF_8
-					.encode(theAttachement.dataPacketRead.getLoginSrc()));
-		}
-	}
+	
 	private void doRead(SelectionKey key) throws IOException {
 		Attachement theAttachement = (Attachement) key.attachment();
 
@@ -312,8 +343,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		theAttachement.readType();
 		theAttachement.findReader();
-		applyReader(theAttachement);
-		treatData(theAttachement);
+		theAttachement.applyReader();
+		theAttachement.treatData();
+		
 		
 		
 		key.interestOps(theAttachement.getInterest());
