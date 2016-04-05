@@ -1,10 +1,17 @@
 package fr.upem.net.tcp.protocol;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import fr.upem.net.logger.Loggers;
 
 
 public class Readers {
@@ -175,6 +182,38 @@ public class Readers {
 		String message = UTF8.decode(buff).toString();
 		
 		System.out.println("Message reçu : " + message);
+	}
+	
+	public static void readFile(SocketChannel sc, String fileName) throws IOException{
+		byte id = readByte(sc);
+		long size = readLong(sc);
+		int count =0 ;
+		Path path = Paths.get(fileName);
+		File file = path.toFile();
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES + Integer.BYTES + (int)size);
+		//Data use for debug with logger
+		buff.put(id).putLong(size);
+		//If we can't create file, we just change the name by adding a number
+		while(!file.createNewFile()){
+			file = new File(path.getFileName().toString() + count);
+			count++;
+		}
+		if(!readFully(sc,buff)){
+			throw new ReadersException("Connection lost during readFile");
+		}
+		Loggers.test(buff);
+		buff.flip();
+		//Ignore first data, just write byte of file
+		buff.position(Byte.BYTES + Integer.BYTES);
+		FileOutputStream fi = new FileOutputStream(file);
+		FileChannel fc = fi.getChannel();
+		
+		while(buff.hasRemaining()){
+			fc.write(buff);
+		}
+		
+		fc.close();
+		fi.close();
 	}
 }
 

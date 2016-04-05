@@ -1,14 +1,15 @@
 package fr.upem.net.tcp.protocol;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import fr.upem.net.logger.Loggers;
-import fr.upem.net.tcp.server.DataPacketRead;
 import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
 
 public class Writters {
@@ -56,13 +57,13 @@ public class Writters {
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer destBuff = UTF8.encode(dest);
 
-	
+		ByteBuffer buff = allocate(
+				2,
+				Byte.BYTES + Long.BYTES + srcBuff.remaining()
+						+ destBuff.remaining());
 
-
-		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + destBuff.remaining() );
-		
-		buff.put((byte)3).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(destBuff.remaining()).put(destBuff);
-		
+		buff.put((byte) 3).putInt(srcBuff.remaining()).put(srcBuff)
+				.putLong(clientID).putInt(destBuff.remaining()).put(destBuff);
 
 		Loggers.test(buff);
 		buff.flip();
@@ -95,12 +96,13 @@ public class Writters {
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
 		ByteBuffer buff = allocate(
-				3,
+				2,
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ adressBuff.remaining());
 
-		
-		buff.put((byte)5).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(adressBuff.remaining()).put(adressBuff);
+		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)
+				.putLong(clientID).putInt(adressBuff.remaining())
+				.put(adressBuff);
 
 		buff.putInt(adress.getPort());
 
@@ -122,12 +124,11 @@ public class Writters {
 			String src) throws IOException {
 		ByteBuffer srcBuff = UTF8.encode(src);
 
+		ByteBuffer buff = allocate(1,
+				Byte.BYTES + Long.BYTES + srcBuff.remaining());
 
-
-		ByteBuffer buff = allocate(1,Byte.BYTES + Long.BYTES + srcBuff.remaining() );
-		
-		buff.put((byte)6).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID);
-		
+		buff.put((byte) 6).putInt(srcBuff.remaining()).put(srcBuff)
+				.putLong(clientID);
 
 		Loggers.test(buff);
 		buff.flip();
@@ -165,18 +166,29 @@ public class Writters {
 
 	}
 
-
 	/**
 	 * Ask authorization to send a file.
 	 * 
 	 * @param sc
 	 */
-	public static void askToSendFile(SocketChannel sc, Path path) {
-		System.out.println("askTosendFile");
+	public static void askToSendFile(SocketChannel sc, String fileName)
+			throws IOException {
+
+		ByteBuffer fileBuff = UTF8.encode(fileName);
+
+		ByteBuffer buff = allocate(1, Byte.BYTES + fileBuff.remaining());
+
+		buff.put((byte) 11).putInt(fileBuff.remaining()).put(fileBuff);
+
+		Loggers.test(buff);
+
+		buff.flip();
+
+		sc.write(buff);
 	}
 
 	/**
-	 * Send acceptation for file.
+	 * Send agreement for file.
 	 * 
 	 * @param sc
 	 * @throws IOException
@@ -185,8 +197,40 @@ public class Writters {
 		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte) 12));
 	}
 
+	/**
+	 * Send disagreement for file.
+	 * 
+	 * @param sc
+	 * @throws IOException
+	 */
 	public static void refuseFile(SocketChannel sc) throws IOException {
 		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte) 13));
+	}
+
+	/**
+	 * Send a file.
+	 * 
+	 * @param sc
+	 * @param path
+	 * @throws IOException
+	 */
+	public static void sendFile(SocketChannel sc, Path path) throws IOException {
+		// TODO Fix max size of buff
+		FileInputStream fIn;
+		FileChannel fChan;
+		long fSize;
+		ByteBuffer buff;
+		fIn = new FileInputStream(path.getFileName().toString());
+		fChan = fIn.getChannel();
+		fSize = fChan.size();
+		buff = allocate(0, Byte.BYTES + Long.BYTES +(int)fSize);
+		buff.put((byte)14).putLong(fSize);
+		while(fChan.read(buff) != -1);		
+		buff.flip();
+		
+		fChan.close();
+		fIn.close();
+		sc.write(buff);
 	}
 
 	/**
@@ -196,36 +240,46 @@ public class Writters {
 	 */
 
 	public static void sendMessage(SocketChannel sc, long clientID, String src,
-		String msg) throws IOException {
+			String msg) throws IOException {
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
+		ByteBuffer buff = allocate(
+				2,
+				Byte.BYTES + Long.BYTES + srcBuff.remaining()
+						+ msgBuff.remaining());
 
-		ByteBuffer buff = allocate(2,Byte.BYTES + Long.BYTES + srcBuff.remaining() + msgBuff.remaining() );
-		
-		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
+		buff.put((byte) 15).putInt(srcBuff.remaining()).put(srcBuff)
+				.putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
 
 		Loggers.testChatMessage(buff);
-		
+
 		buff.flip();
-		
+
 		sc.write(buff);
 	}
+
 	/**
 	 * Send a private message
-	 * @param sc The privateChannel
-	 * @param src The name of the sender
-	 * @param msg The message to send
+	 * 
+	 * @param sc
+	 *            The privateChannel
+	 * @param src
+	 *            The name of the sender
+	 * @param msg
+	 *            The message to send
 	 * @throws IOException
 	 */
-	public static void sendPrivateMessage(SocketChannel sc, String src, String msg) throws IOException{
+	public static void sendPrivateMessage(SocketChannel sc, String src,
+			String msg) throws IOException {
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
+		ByteBuffer buff = allocate(2, Byte.BYTES + srcBuff.remaining()
+				+ msgBuff.remaining());
 
-		ByteBuffer buff = allocate(2,Byte.BYTES  + srcBuff.remaining() + msgBuff.remaining() );
-		
-		buff.put((byte)15).putInt(srcBuff.remaining()).put(srcBuff).putInt(msgBuff.remaining()).put(msgBuff);
+		buff.put((byte) 15).putInt(srcBuff.remaining()).put(srcBuff)
+				.putInt(msgBuff.remaining()).put(msgBuff);
 
 		Loggers.test(buff);
 
@@ -234,8 +288,8 @@ public class Writters {
 		sc.write(buff);
 	}
 
-	public static void sendSimpleMessage(SocketChannel sc, String msg) throws IOException{
-
+	public static void sendSimpleMessage(SocketChannel sc, String msg)
+			throws IOException {
 
 		ByteBuffer msgBuff = UTF8.encode(msg);
 
@@ -246,15 +300,6 @@ public class Writters {
 		buff.flip();
 
 		sc.write(buff);
-	}
-
-	/**
-	 * 
-	 * @param sc
-	 * @param path
-	 */
-	public static void sendFile(SocketChannel sc, Path path) {
-		// TODO
 	}
 
 }
