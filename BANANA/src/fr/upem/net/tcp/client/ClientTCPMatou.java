@@ -348,7 +348,7 @@ public class ClientTCPMatou {
 		System.out.println("/no : refuser une demande.");
 		System.out.println("/p : basculer sur le chat privé.");
 		System.out.println("/g : basculer sur le chat général.");
-		System.out.println("/help : afficher la liste des commandes.");
+		System.out.println("/help : afficher la liste des commandes.\n");
 	}
 
 		
