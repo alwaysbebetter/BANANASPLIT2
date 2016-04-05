@@ -82,9 +82,13 @@ public class ClientTCPMatou {
 							//In this case we are c1 because c2 have open a channel for us.
 							if(privateChannel == null){
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+								privateChannel.bind(null);
+								System.out.println("Votre demande a été accepté !");
 								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 								fileChannel = SocketChannel.open();
+								fileChannel.bind(null);
 								Writters.askPrivateFileConnection(privateChannel,(byte)9,fileChannel);
+								System.out.println("Demande de connexion pour le fichier...");
 							}
 							//In this case we are c2 because we already had accept and open a channel for c1.
 							//We just have to connect to c1
@@ -267,6 +271,7 @@ public class ClientTCPMatou {
 					//We prepare the channel here and send our address and port to c1.
 					//We need to connect to c1 after, the tread generalListener will do this.
 					privateChannel = SocketChannel.open();
+					privateChannel.bind(null);
 					Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 					System.out.println("Vous avez accepté l'invitation");
 				}
