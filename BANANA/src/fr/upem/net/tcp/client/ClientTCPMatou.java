@@ -29,16 +29,16 @@ public class ClientTCPMatou {
 	
 	private final String myName;
 	private String destName = "destTest";
-	private String fileName;
+	private String fileToSend,fileReceived;
 	private Scanner sc ;
 	//To prevent identity stealing.
 	private final long clientID;
 	// If we have been invite by someone
-	private  boolean receivedInvite = true;
-	private  boolean receivedFile = true;
+	private  boolean receivedInvite = false;
+	private  boolean receivedFile = false,fileSending = false;
 	
 	private final Object lock = new Object();
-	private Thread generalListener, privateListener;
+	private Thread generalListener, privateListener,fileListener,fileWritter;
 	
 	
 
@@ -64,7 +64,7 @@ public class ClientTCPMatou {
 	private void initListener(){
 		this.generalListener = new Thread( () -> {
 			try{
-				while(true){
+				while(!Thread.interrupted()){
 					byte id = Readers.readByte(generalChannel);
 					switch(id){
 						
@@ -105,7 +105,7 @@ public class ClientTCPMatou {
 		
 		this.privateListener = new Thread( () -> {
 			try{
-				while(true){
+				while(!Thread.interrupted()){
 					int id = Readers.readInt(privateChannel);
 					switch(id){
 						
@@ -126,11 +126,15 @@ public class ClientTCPMatou {
 							synchronized(lock){
 								receivedFile = true;
 							}
-							this.fileName = Readers.readDemand(privateChannel);
-							System.out.println(destName + " wants to send you " + this.fileName);
+							this.fileReceived = Readers.readDemand(privateChannel);
+							System.out.println(destName + " wants to send you " + this.fileReceived);
 							System.out.println("Tape /yes to accept or /no to refuse.");
 							break;
-						
+						//case the person has accepted our demand
+						case 12:
+							fileWritter.start();break;
+						//case the person has refused our demand
+						case 13: fileSending = false;break;
 						case 15 : Readers.readMessage(privateChannel);break;
 					}
 
@@ -138,6 +142,29 @@ public class ClientTCPMatou {
 			}catch (IOException e){
 				
 			}			
+		});
+		
+		this.fileListener = new Thread(()-> {
+			try{
+					Readers.readFile(fileChannel,fileReceived);
+					receivedFile = false;
+				
+			}catch(IOException e){
+				
+			}
+			
+			
+		});
+		this.fileWritter = new Thread(()-> {
+			try{
+					Writters.sendFile(fileChannel, Paths.get(fileToSend));
+					fileSending = false;
+				
+			}catch(IOException e){
+				
+			}
+			
+			
 		});
 	}
 	
@@ -196,10 +223,23 @@ public class ClientTCPMatou {
 			case "/send":
 			String[] fileName = line.split(" ", 3);
 			if(fileName.length >= 2){
-				System.out.println("Envoi du fichier " + fileName[1] + " en cours...");
-				//TODO
-				//Create a thread to send the file.
-				Writters.sendFile(generalChannel,Paths.get(fileName[1]));
+				
+				//If we are not already sending a file
+				if(!fileSending){
+					//Test if the file exist before asking to send
+					if(Paths.get(fileName[1]).toFile().exists()){
+						fileSending = true;
+						fileToSend = fileName[1];
+						Writters.askToSendFile(privateChannel,fileName[1]);
+						System.out.println("Demande d'envoi du fichier " + fileName[1] + " en cours...");
+					}
+					else{
+						System.out.println("Le fichier " + fileName[1] + " n'existe pas ! Demande annulé.");
+					}
+				}
+				else{
+					System.out.println("Le fichier " + fileToSend + " est en attente d'une réponde de " + destName);
+				}
 			}
 			else
 				System.out.println("Précisez un fichier à envoyer !");
@@ -211,7 +251,9 @@ public class ClientTCPMatou {
 				if(privateChannel != null){
 					System.out.println("Vous avez quitté le chat privé.");
 					silentlyClose(privateChannel);
+					silentlyClose(fileChannel);
 					privateChannel = null;
+					fileChannel = null;
 					currentChannel = generalChannel;
 				}
 				else
@@ -221,16 +263,18 @@ public class ClientTCPMatou {
 			//accept an invite
 			case "/yes":
 				//In this case we are c2, and accept the connection to c1.
-				if(receivedInvite){
-					System.out.println("Vous avez accepté l'invitation");
+				if(receivedInvite && (privateChannel == null)){
 					//We prepare the channel here and send our address and port to c1.
 					//We need to connect to c1 after, the tread generalListener will do this.
 					privateChannel = SocketChannel.open();
 					Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+					System.out.println("Vous avez accepté l'invitation");
 				}
 				if(receivedFile && (privateChannel != null) ){
-					System.out.println("Vous avez accepté le fichier.");
 					Writters.acceptFile(privateChannel);
+					System.out.println("Vous avez accepté le fichier.");
+					//Start the thread to receive file, the tread stop after reading.
+					fileListener.start();
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation");
@@ -239,12 +283,14 @@ public class ClientTCPMatou {
 			//Deny an invite	
 			case "/no":
 				if(receivedInvite && (privateChannel == null) ){
-					System.out.println("Vous avez refusé l'invitation.");
 					Writters.denyPrivateConnection(generalChannel,clientID,destName);
+					receivedInvite = false;
+					System.out.println("Vous avez refusé l'invitation.");
 				}
 				if(receivedFile && (privateChannel != null)){
-					System.out.println("Vous avez refusé le fichier.");
 					Writters.refuseFile(privateChannel);
+					receivedFile = false;
+					System.out.println("Vous avez refusé le fichier.");
 				}
 				else
 					System.out.println("Vous n'avez pas reçu d'invitation.");

@@ -36,7 +36,22 @@ public class Loggers {
 		case 8:
 		case 12:
 		case 13 : System.out.println(sb);return;
-		case 3:
+		case 3: 
+		
+		size = buff.getInt();
+		sb.append(size).append(" ");
+		//Get the first string (name)
+		limit = buff.limit();
+		buff.limit(buff.position() + size );
+		sb.append(utf8.decode(buff)).append(" ");
+		buff.limit(limit);
+		sb.append(buff.getLong() + " ");
+
+		//Get the second String (message)
+		size = buff.getInt();
+
+		sb.append(size).append(" ").append(utf8.decode(buff));
+		System.out.println(sb);return;
 		case 15://Message Client to client and server to client only
 			size = buff.getInt();
 			sb.append(size).append(" ");
@@ -85,7 +100,19 @@ public class Loggers {
 			sb.append(buff.getInt());
 			System.out.println(sb);
 			return;
-		
+		case 14 :
+			long length;
+			length = buff.getLong();
+			sb.append(length).append(" ");
+			//We don't print all the byte, but we check if the number of byte is respected
+			//It is the what we want to know
+			if(buff.remaining() != length)
+				sb.append("error, maybe data is missing");
+			else
+				sb.append("data is ok");
+			//Set the position to the end like we had read it.
+			buff.position(buff.limit());
+			return;
 		default :
 			System.out.println("Erreur id.");
 			return;
