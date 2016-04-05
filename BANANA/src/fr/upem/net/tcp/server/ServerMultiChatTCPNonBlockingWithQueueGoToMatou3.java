@@ -311,8 +311,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					if (readerACC_CO_PRV_CS == null) {
 						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
-								new ReaderLong(new ReaderString(SRC_DATA,
-										typeLastPacketReceiv)), DEST_DATA_ADR));
+								new ReaderString(new ReaderLong(
+										new ReaderString(SRC_DATA,
+												typeLastPacketReceiv)),
+										DEST_DATA), DEST_DATA_ADR));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -446,9 +448,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
 					System.out.println("Is an expectedTypePacket !!");// TODO :
 																		// delete
-					silentlyClose(sc);// TODO: ET METTRE A NUL L LA VARIABLE
-										// CLIENT POUR QU'ELLE SOIT PRISE PAR LE
-										// GARBAGE COLLECTORS
+					silentlyClose(sc);
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
