@@ -26,7 +26,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private int debug = 0;
 	static private final int BUFSIZ = 200;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
-	public final static int SRC_DATA = 0, DEST_DATA = 1, DEST_DATA_ADR = 2;
+	public final static int SRC_DATA = 0, DEST_DATA = 1, SRC_DATA_ADR = 2;
 	private Random rand = new Random();
 
 	private enum StatusTreatment {
@@ -158,12 +158,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				return false;
 			case CONNECTED_TO_SERV:
 				if (typePacket.equals(TypePacket.ASC_CO_PRV_CS)
+						|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
 						|| typePacket.equals(TypePacket.MESSAGE))
 					return true;
 				return false;
 			case WAITING_TO_CO_PRV:
 				if (typePacket.equals(TypePacket.REF_CO_PRV_CS)
-						|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
+					//	|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
 						|| typePacket.equals(TypePacket.MESSAGE))
 					return true;
 				return false;
@@ -310,11 +311,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+						readerACC_CO_PRV_CS = new ReaderInt(
 								new ReaderString(new ReaderLong(
-										new ReaderString(SRC_DATA,
-												typeLastPacketReceiv)),
-										DEST_DATA), DEST_DATA_ADR));
+										new ReaderString(DEST_DATA,
+												typeLastPacketReceiv))
+										, SRC_DATA_ADR));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -322,7 +323,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					if (readerREF_CO_PRV_CS == null) {
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
-								SRC_DATA, typeLastPacketReceiv));
+								DEST_DATA, typeLastPacketReceiv));
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
@@ -448,7 +449,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
 					System.out.println("Is an expectedTypePacket !!");// TODO :
 																		// delete
-					silentlyClose(sc);
+					silentlyClose(sc);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
@@ -499,7 +500,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 
-					loginDest = dataPacketRead.getLoginDst();
+					String loginDest = dataPacketRead.getLoginDst();
 					if (map.get(loginDest) == null) {
 						// TODO: ne rien faire car il se peut que le
 						// destinataire ce
@@ -528,8 +529,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				case ACC_CO_PRV_CS:
 
-					if ((!dataPacketRead.getLoginSrc().equals(login))
-							|| (id != dataPacketRead.getId())) {
+					if (/*(!dataPacketRead.getLoginSrc().equals(login))
+							||*/ (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
@@ -738,7 +739,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			break;
 		case ACC_CO_PRV_CS:
 		case REF_CO_PRV_CS:
-			at = map.get(theAttachement.loginDest);
+			at = map.get(theAttachement.dataPacketRead.getLoginDst());
 			theAttachement.out.flip();
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
