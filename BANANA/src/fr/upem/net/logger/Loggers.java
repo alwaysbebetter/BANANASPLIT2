@@ -5,7 +5,6 @@ import java.nio.charset.Charset;
 
 public class Loggers {
 	
-
 	private static final Charset utf8 = Charset.forName("utf-8");
 	
 
@@ -99,7 +98,7 @@ public class Loggers {
 			
 			limit = buff.limit();
 			buff.limit(buff.position() + size);
-			sb.append(utf8.decode(buff));
+			sb.append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
 			sb.append(buff.getInt());
 			System.out.println(sb);
