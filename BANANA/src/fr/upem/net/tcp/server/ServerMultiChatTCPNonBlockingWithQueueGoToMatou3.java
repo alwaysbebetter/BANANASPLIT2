@@ -23,7 +23,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private final Set<SelectionKey> selectedKeys;
 	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
 	private int co = 0;
-	private int debug = 0 ;
+	private int debug = 0;
 	static private final int BUFSIZ = 200;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public final static int SRC_DATA = 0, DEST_DATA = 1, DEST_DATA_ADR = 2;
@@ -96,7 +96,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 
 		private TypePacket(int value) {
-			this.value =(byte) value;
+			this.value = (byte) value;
 		}
 	}
 
@@ -125,11 +125,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
 				readerASC_CO_SERV, readerMESSAGE, currentReader;
 		long id;
-		SocketChannel sc ;
-		String loginDest ;
+		SocketChannel sc;
+		String loginDest;
 
 		public Attachement(SocketChannel sc) {
-			this.sc = sc ;
+			this.sc = sc;
 			in = ByteBuffer.allocate(BUFSIZ * 4);
 			out = ByteBuffer.allocate(BUFSIZ * 4);
 		}
@@ -189,8 +189,24 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		}
 
-		
-		
+		public void silentlyClose(SocketChannel sc) {
+			if (sc != null) {
+				try {
+
+					sc.close();
+
+				} catch (IOException e) {
+					// Ignor
+				}
+			}
+		}
+
+		public void CloseAnRejectClient(String login) {
+			silentlyClose(map.get(login).sc);
+			// TODO : desalouer
+			map.remove(login);
+		}
+
 		private boolean isValideTypePacket(byte typePacket) {
 			if (typePacket < 0 || typePacket > 15)
 				return false;
@@ -256,10 +272,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// client )
 		// TO CHECK the updating of reader !!
 		public void findReader() {
-			
+
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
-				if( dataPacketRead != null ){
-				//dataPacketRead.reset();// on ricte les donné avant chaque nouvelle lecture
+				if (dataPacketRead != null) {
+					// dataPacketRead.reset();// on ricte les donné avant chaque
+					// nouvelle lecture
 					dataPacketRead.reset();
 				}
 				System.out.println("findReader -> reader"
@@ -293,8 +310,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(new ReaderString(new ReaderLong(new ReaderString(SRC_DATA,
-										typeLastPacketReceiv)),DEST_DATA), DEST_DATA_ADR));
+						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+								new ReaderString(new ReaderLong(
+										new ReaderString(SRC_DATA,
+												typeLastPacketReceiv)),
+										DEST_DATA), DEST_DATA_ADR));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -351,7 +371,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 																// debbug, after
 																// remove it
 					statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
-					
+
 					// reset Datzpz
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					break;
@@ -379,7 +399,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		public void writePacketToSend(DataPacketRead data,
 				TypePacket typePacketToSend, ByteBuffer bb) {
-			System.out.println("TYPE "+ typePacketToSend.getValue());
+			System.out.println("TYPE " + typePacketToSend.getValue());
 			bb.put((byte) typePacketToSend.getValue());
 			switch (typePacketToSend) {
 			case ACC_CO_SERV:
@@ -401,11 +421,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				bb.putInt(data.getPortSrc());
 				break;
 			case MESSAGE:
-				
+
 				writeString(bb, data.getLoginSrc());
 				// login dst is here the message
 				writeString(bb, data.getLoginDst());
-				
+
 			}
 			System.out.println("SERVER SEND :");
 			Loggers.test(bb);
@@ -423,12 +443,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				 * = bbWaitingsToBeUsed.poll();
 				 */
 
-
 				TypePacket theTypePacket = TypePacket.values()[dataPacketRead
 						.getTypePacket().getValue()];
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
 					System.out.println("Is an expectedTypePacket !!");// TODO :
 																		// delete
+					silentlyClose(sc);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
@@ -455,7 +475,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					// TODO : Appeler la fonction qui va remplir le out avec
 					// le paquet d'acceptation.
-				
+
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
 							out);
 
@@ -492,9 +512,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// pour dirt que l'utilisateur n'est plus disponible
 						// ouaalors simplement pour marqué
 						// le refu mais depuis le serveur,
-						System.out.println("LOGIN DOESN'T EXIST ");//TODO : delete
+						System.out.println("LOGIN DOESN'T EXIST ");// TODO :
+																	// delete
 					}
-					
+
 					// WRITTER
 					// realBuildOut(TypePacket.ACC_CO_SERV);
 					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
@@ -576,8 +597,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
 
-
-
 					statusTreatment = StatusTreatment.TYPE_READING;
 					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
 					// loginDest, port, out);
@@ -654,7 +673,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-		
+
 		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
 				new Attachement(sc));
 
@@ -715,7 +734,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.flip();
 			client.write(theAttachement.out);
 			theAttachement.out.compact();
-			
+
 			break;
 		case ACC_CO_PRV_CS:
 		case REF_CO_PRV_CS:
@@ -723,8 +742,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.flip();
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
-			
-			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+
+			System.out.println("remaaaiinning :"
+					+ theAttachement.out.remaining());
 			break;
 		case ASC_CO_PRV_CS:
 
@@ -732,21 +752,23 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.flip();
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
-			
-			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+
+			System.out.println("remaaaiinning :"
+					+ theAttachement.out.remaining());
 
 			break;
 		case MESSAGE:
 			if (map.size() > 1) {
 				publish(key, theAttachement);
 			}
-			
+
 			// synthetethetic clear
 			theAttachement.out.clear();
 			theAttachement.out.position(theAttachement.out.remaining());
 			theAttachement.out.compact();
-			
-			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+
+			System.out.println("remaaaiinning :"
+					+ theAttachement.out.remaining());
 			break;
 
 		}
