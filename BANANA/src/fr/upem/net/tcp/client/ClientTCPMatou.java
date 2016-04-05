@@ -339,7 +339,7 @@ public class ClientTCPMatou {
 	}
 	
 	private void printCommand(){
-		System.out.println("Voici la liste des commandes :");
+		System.out.println("Voici la liste des commandes :\n");
 		System.out.println("/log : Pas encore disponible.");
 		System.out.println("/invite name : demande une connexion privé à \"name\".");
 		System.out.println("/send file : envoi le fichier \"file\" à la personne connecté en privé.");
