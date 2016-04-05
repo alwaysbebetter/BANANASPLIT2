@@ -178,7 +178,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public int getInterest() {
 			int interest = 0;// initialize
 
-			if (out.position() > 0) {
+			if (in.position() > 0) {
 				interest = interest | SelectionKey.OP_WRITE;
 			}
 			if (!isClosed) {
@@ -437,7 +437,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
-								TypePacket.REF_CO_SERV, out);
+								TypePacket.REF_CO_SERV, in);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
 																	// delete
 						return;// and close se socket
@@ -453,7 +453,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// le paquet d'acceptation.
 				
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
-							out);
+							in);
 
 					// change status of exchange
 
@@ -494,7 +494,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// WRITTER
 					// realBuildOut(TypePacket.ACC_CO_SERV);
 					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
-							out);
+							in);
 					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
 					statusTreatment = StatusTreatment.TYPE_READING;
@@ -515,7 +515,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// TODO/ dans le rapport il faudra bien mettre en avant ce
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
-							out);
+							in);
 
 					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
 					// qu'on compose !!!!!
@@ -539,7 +539,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
-							out);
+							in);
 
 					/*
 					 * 
@@ -570,7 +570,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// connection
 						// TODO: close
 					}
-					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
+					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
 
 
 
@@ -657,9 +657,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		for (SelectionKey key2 : selector.keys()) {
 			if (key2.isValid() && (key2.channel() instanceof SocketChannel)
 					&& (!key2.equals(key))) {
-				theAttachement.out.flip();
+				theAttachement.in.flip();
 				SocketChannel sch = (SocketChannel) key2.channel();
-				sch.write(theAttachement.out);
+				sch.write(theAttachement.in);
 
 			}
 
@@ -704,28 +704,28 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		switch (theAttachement.typeLastPacketReceiv) {
 		case ASC_CO_SERV:
 
-			theAttachement.out.flip();
-			client.write(theAttachement.out);
-			theAttachement.out.compact();
+			theAttachement.in.flip();
+			client.write(theAttachement.in);
+			theAttachement.in.compact();
 			
 			break;
 		case ACC_CO_PRV_CS:
 		case REF_CO_PRV_CS:
 			at = map.get(theAttachement.loginDest);
-			theAttachement.out.flip();
-			at.sc.write(theAttachement.out);
-			theAttachement.out.compact();
+			theAttachement.in.flip();
+			at.sc.write(theAttachement.in);
+			theAttachement.in.compact();
 			
-			System.out.println("REF_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
 			break;
 		case ASC_CO_PRV_CS:
 
 			at = map.get(theAttachement.dataPacketRead.getLoginDst());
-			theAttachement.out.flip();
-			at.sc.write(theAttachement.out);
-			theAttachement.out.compact();
+			theAttachement.in.flip();
+			at.sc.write(theAttachement.in);
+			theAttachement.in.compact();
 			
-			System.out.println("ASC_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
 
 			break;
 		case MESSAGE:
@@ -734,11 +734,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			}
 			
 			// synthetethetic clear
-			theAttachement.out.clear();
-			theAttachement.out.position(theAttachement.out.remaining());
-			theAttachement.out.compact();
+			theAttachement.in.clear();
+			theAttachement.in.position(theAttachement.in.remaining());
+			theAttachement.in.compact();
 			
-			System.out.println("MESSAGE remaaaiinning :"+theAttachement.out.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
 			break;
 
 		}

@@ -79,6 +79,8 @@ public class Loggers {
 			sb.append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
 			
+			sb.append(buff.getLong()).append(" ");
+			
 			//Get the second String
 			size = buff.getInt();
 			limit = buff.limit();

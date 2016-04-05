@@ -94,10 +94,11 @@ public class Writters {
 		InetSocketAddress adress = (InetSocketAddress) privateSc
 				.getLocalAddress();
 		ByteBuffer srcBuff = UTF8.encode(src);
+
+		System.out.println(adress.getHostName());
 		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
-		ByteBuffer buff = allocate(
-				2,
-				Byte.BYTES + Long.BYTES + srcBuff.remaining()
+		ByteBuffer buff = 
+				allocate(3,Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ adressBuff.remaining());
 
 		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)
@@ -148,13 +149,14 @@ public class Writters {
 			SocketChannel fileChannel) throws IOException,
 			IllegalStateException {
 		if ((type == (byte) 9) || (type == (byte) 10)) {
+			InetSocketAddress adress = (InetSocketAddress) fileChannel
+					.getLocalAddress();
 
-			ByteBuffer adressBuff = UTF8.encode(fileChannel.getLocalAddress()
-					.toString());
+			ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
 
 			ByteBuffer buff = allocate(1, Byte.BYTES + adressBuff.remaining());
 
-			buff.put(type).putInt(adressBuff.remaining()).put(adressBuff);
+			buff.put(type).putInt(adressBuff.remaining()).put(adressBuff).putInt(adress.getPort());
 
 			Loggers.test(buff);
 			buff.flip();
