@@ -28,7 +28,7 @@ public class ClientTCPMatou {
 	//private final LinkedList<String> listPeople = new LinkedList<>();
 	
 	private final String myName;
-	private String destName = "destTest";
+	private String destName;
 	private String fileToSend,fileReceived;
 	private Scanner sc ;
 	//To prevent identity stealing.
@@ -83,7 +83,7 @@ public class ClientTCPMatou {
 							if(privateChannel == null){
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
 								privateChannel.bind(null);
-								System.out.println("Votre demande a été accepté !");
+								System.out.println("Votre demande a été accepté par " + destName +" !");
 								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 								fileChannel = SocketChannel.open();
 								fileChannel.bind(null);
