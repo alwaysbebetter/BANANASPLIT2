@@ -101,6 +101,10 @@ public class Writters {
 		ByteBuffer buff = allocate(
 				3,
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
+<<<<<<< HEAD
+=======
+
+>>>>>>> 19c404621b520d93621dda3f939380f651e26e70
 						+ adressBuff.remaining());
 
 		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)

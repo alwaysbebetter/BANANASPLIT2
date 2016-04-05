@@ -75,7 +75,7 @@ public class ReaderString implements Reader {
 				in.flip();
 				sizeString = in.getInt();
 				System.out.println("ReaderString sizeString = "+sizeString);
-				if ((sizeString >= BUFSIZ) || (sizeString <= 0)) {// that handle
+				if ((sizeString >= BUFSIZ) || (sizeString < 0)) {// that handle
 																	// to check
 																	// all size
 																	// of login
