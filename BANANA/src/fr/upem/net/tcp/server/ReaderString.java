@@ -43,7 +43,7 @@ public class ReaderString implements Reader {
 		case DEST_DATA:
 			data.setLoginDst(UTF_8.decode(in).toString());
 			break;
-		case DEST_DATA_SRC:
+		case DEST_DATA_ADR:
 			data.setAdrDest(UTF_8.decode(in).toString());
 			break;
 		}
@@ -91,7 +91,7 @@ public class ReaderString implements Reader {
 				case DEST_DATA:
 					data.setSizeLoginDst(sizeString);
 					break;
-				case DEST_DATA_SRC:
+				case DEST_DATA_ADR:
 					data.setSizeAdressDst(sizeString);
 					break;
 				}

@@ -23,9 +23,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private final Set<SelectionKey> selectedKeys;
 	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
 	private int co = 0;
+	private int debug = 0 ;
 	static private final int BUFSIZ = 200;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
-	public final static int SRC_DATA = 0, DEST_DATA = 1, DEST_DATA_SRC = 2;
+	public final static int SRC_DATA = 0, DEST_DATA = 1, DEST_DATA_ADR = 2;
+	private Random rand = new Random();
 
 	private enum StatusTreatment {
 
@@ -85,16 +87,16 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		// TO SEND MESSAGE
 		MESSAGE(15),
-		
-		INITIAL_TYPE(16);
-		private final int value;
 
-		public int getValue() {
+		INITIAL_TYPE(16);
+		private final byte value;
+
+		public byte getValue() {
 			return value;
 		}
 
 		private TypePacket(int value) {
-			this.value = value;
+			this.value =(byte) value;
 		}
 	}
 
@@ -123,10 +125,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		Reader readerACC_CO_PRV_CS, readerASC_CO_PRV_CS, readerREF_CO_PRV_CS,
 				readerASC_CO_SERV, readerMESSAGE, currentReader;
 		long id;
-		Random rand = new Random();
+		SocketChannel sc ;
+		String loginDest ;
 
-		public Attachement() {
-
+		public Attachement(SocketChannel sc) {
+			this.sc = sc ;
 			in = ByteBuffer.allocate(BUFSIZ * 4);
 			out = ByteBuffer.allocate(BUFSIZ * 4);
 		}
@@ -181,11 +184,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			if (!isClosed) {
 				interest |= SelectionKey.OP_READ;
 			}
-			
+
 			return interest;
 
 		}
 
+		
+		
 		private boolean isValideTypePacket(byte typePacket) {
 			if (typePacket < 0 || typePacket > 15)
 				return false;
@@ -284,13 +289,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
-								new ReaderLong(new ReaderString(SRC_DATA,
-										typeLastPacketReceiv)), DEST_DATA_SRC));
+						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(new ReaderString(new ReaderLong(new ReaderString(SRC_DATA,
+										typeLastPacketReceiv)),DEST_DATA), DEST_DATA_ADR));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
-				case REF_CO_PRV_CS:// Code : 5
+				case REF_CO_PRV_CS:// Code : 6
 
 					if (readerREF_CO_PRV_CS == null) {
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
@@ -370,6 +374,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		public void writePacketToSend(DataPacketRead data,
 				TypePacket typePacketToSend, ByteBuffer bb) {
+			System.out.println("TYPE "+ typePacketToSend.getValue());
 			bb.put((byte) typePacketToSend.getValue());
 			switch (typePacketToSend) {
 			case ACC_CO_SERV:
@@ -391,9 +396,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				bb.putInt(data.getPortSrc());
 				break;
 			case MESSAGE:
+				
 				writeString(bb, data.getLoginSrc());
 				// login dst is here the message
 				writeString(bb, data.getLoginDst());
+				
 			}
 			System.out.println("SERVER SEND :");
 			Loggers.test(bb);
@@ -401,7 +408,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		}
 
 		public void treatData() {
-			
+
 			if (statusTreatment == StatusTreatment.DATA_PACKET_KNOWN) {
 				System.out.println("statusTreatment -> " + statusTreatment);
 				dataPacketRead = currentReader.get();
@@ -410,6 +417,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				 * if (bbWaitingsToBeUsed.isEmpty()) return; DataPacketRead data
 				 * = bbWaitingsToBeUsed.poll();
 				 */
+
 
 				TypePacket theTypePacket = TypePacket.values()[dataPacketRead
 						.getTypePacket().getValue()];
@@ -442,6 +450,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					// TODO : Appeler la fonction qui va remplir le out avec
 					// le paquet d'acceptation.
+				
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
 							in);
 
@@ -465,7 +474,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 
-					String loginDest = dataPacketRead.getLoginDst();
+					loginDest = dataPacketRead.getLoginDst();
 					if (map.get(loginDest) == null) {
 						// TODO: ne rien faire car il se peut que le
 						// destinataire ce
@@ -478,11 +487,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// pour dirt que l'utilisateur n'est plus disponible
 						// ouaalors simplement pour marqué
 						// le refu mais depuis le serveur,
+						System.out.println("LOGIN DOESN'T EXIST ");//TODO : delete
 					}
-
+					
 					// WRITTER
 					// realBuildOut(TypePacket.ACC_CO_SERV);
-					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
+					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
 							in);
 					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
@@ -552,6 +562,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					 * --------------------------
 					 * ---------------------------------
 					 */
+
 					if ((!dataPacketRead.getLoginSrc().equals(login))
 							|| (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
@@ -560,6 +571,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
 
+
+
+					statusTreatment = StatusTreatment.TYPE_READING;
 					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
 					// loginDest, port, out);
 					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
@@ -572,7 +586,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				System.out.println("statusTreatment : " + statusTreatment);
 
 			}
-			
+
 		}
 
 	}
@@ -631,8 +645,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
+		
 		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
-				new Attachement());
+				new Attachement(sc));
 
 	}
 
@@ -654,11 +669,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		Attachement theAttachement = (Attachement) key.attachment();
 
 		SocketChannel client = (SocketChannel) key.channel();
-		
-		// le problem c'est que el read renoie -1 et que la position est a 0 
-		
+
+		// le problem c'est que el read renoie -1 et que la position est a 0
+
 		if (-1 == client.read(theAttachement.in)) {
-			
+
 			theAttachement.isClosed = true;
 			if (theAttachement.in.position() == 0) {
 
@@ -666,7 +681,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			}
 
 		}
-		System.out.println("INTEREST_OPS :"+theAttachement.getInterest());
+		System.out.println("INTEREST_OPS :" + theAttachement.getInterest());
 		theAttachement.readType();
 		theAttachement.findReader();
 		theAttachement.applyReader();
@@ -678,25 +693,53 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private void doWrite(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
 		Attachement theAttachement = (Attachement) key.attachment();
-		
+		Attachement at;
+
 		// faire le techeck sur la taille avant et il fatu faire en sorte que la
 		// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
 		// besoin de reallouer.
 
 		// publish(key, theAttachement);
-		switch( theAttachement.typeLastPacketReceiv){
+		switch (theAttachement.typeLastPacketReceiv) {
 		case ASC_CO_SERV:
-			
-			
+
 			theAttachement.in.flip();
 			client.write(theAttachement.in);
 			theAttachement.in.compact();
+			
+			break;
+		case ACC_CO_PRV_CS:
+		case REF_CO_PRV_CS:
+			at = map.get(theAttachement.loginDest);
+			theAttachement.in.flip();
+			at.sc.write(theAttachement.in);
+			theAttachement.in.compact();
+			
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
+			break;
+		case ASC_CO_PRV_CS:
+
+			at = map.get(theAttachement.dataPacketRead.getLoginDst());
+			theAttachement.in.flip();
+			at.sc.write(theAttachement.in);
+			theAttachement.in.compact();
+			
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
+
 			break;
 		case MESSAGE:
-			publish(key, theAttachement);
+			if (map.size() > 1) {
+				publish(key, theAttachement);
+			}
+			
+			// synthetethetic clear
+			theAttachement.in.clear();
+			theAttachement.in.position(theAttachement.in.remaining());
 			theAttachement.in.compact();
+			
+			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
 			break;
-		
+
 		}
 
 		if (theAttachement.isClosed) {

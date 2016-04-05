@@ -36,7 +36,23 @@ public class Loggers {
 		case 8:
 		case 12:
 		case 13 : System.out.println(sb);return;
-		case 3:
+		case 3: 
+			  
+			  size = buff.getInt();
+			  sb.append(size).append(" ");
+			  //Get the first string (name)
+			  limit = buff.limit();
+			  buff.limit(buff.position() + size );
+			  sb.append(utf8.decode(buff)).append(" ");
+			  buff.limit(limit);
+			  sb.append(buff.getLong() + " ");
+
+			  //Get the second String (message)
+			  size = buff.getInt();
+
+			  sb.append(size).append(" ").append(utf8.decode(buff));
+			  System.out.println(sb);
+			  return;
 		case 15://Message Client to client and server to client only
 			size = buff.getInt();
 			sb.append(size).append(" ");
@@ -87,7 +103,7 @@ public class Loggers {
 			return;
 		
 		default :
-			System.out.println("Erreur id.");
+			System.out.println("Erreur id. : "+id);
 			return;
 		}
 		

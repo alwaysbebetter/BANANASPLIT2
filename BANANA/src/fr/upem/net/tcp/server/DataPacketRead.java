@@ -3,7 +3,7 @@ package fr.upem.net.tcp.server;
 import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class DataPacketRead {
-	private TypePacket typePacket;
+	private TypePacket typePacket = TypePacket.INITIAL_TYPE;
 	private int sizeLoginSrc = -1;
 	private int sizeLoginDst = -1;
 	private int sizeAdressSrc = -1;
@@ -90,19 +90,26 @@ public class DataPacketRead {
 		this.id = id;
 	}
 
+	void reset(){
+		 loginSrc =null;
+		 loginDst=null;
+		 adrSrc=null;
+		 portSrc=-1;
+		 id = -1;
+		 typePacket=TypePacket.INITIAL_TYPE;
+		 sizeLoginSrc = -1;
+		 sizeLoginDst = -1;
+		 sizeAdressSrc = -1;
+	}
+
 	@Override
 	public String toString() {
-		return "\n\ttypePacket = "+typePacket
-				+"\n\tsizeLoginSrc  = "+sizeLoginSrc  
-				+"\n\tloginSrc = "+loginSrc
-				+"\n\tid = "+id
-				+"\n\tsizeLoginDst = "+sizeLoginDst
-				+"\n\tloginDst  = "+loginDst
-				+"\n\tadrSrc = "+adrSrc
-				+"\n\tportSrc = "+portSrc+"";
-				
-				
+		return "\n\ttypePacket = " + typePacket + "\n\tsizeLoginSrc  = "
+				+ sizeLoginSrc + "\n\tloginSrc = " + loginSrc + "\n\tid = "
+				+ id + "\n\tsizeLoginDst = " + sizeLoginDst
+				+ "\n\tloginDst  = " + loginDst + "\n\tadrSrc = " + adrSrc
+				+ "\n\tportSrc = " + portSrc + "";
+
 	}
-	
 
 }
