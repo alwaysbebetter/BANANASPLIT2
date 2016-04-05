@@ -318,8 +318,7 @@ public class ClientTCPMatou {
 				}
 				return;
 			case "/help" :
-				System.out.println("Voici la liste des commandes :");
-				//printCommand();
+				printCommand();
 				return;
 			
 			default :
@@ -338,6 +337,19 @@ public class ClientTCPMatou {
 		System.out.println(line + " envoyé !");
 
 	}
+	
+	private void printCommand(){
+		System.out.println("Voici la liste des commandes :");
+		System.out.println("/log : Pas encore disponible.");
+		System.out.println("/invite name : demande une connexion privé à \"name\".");
+		System.out.println("/send file : envoi le fichier \"file\" à la personne connecté en privé.");
+		System.out.println("/quit : quitter le chat privé.");
+		System.out.println("/yes : accepter une demande.");
+		System.out.println("/no : refuser une demande.");
+		System.out.println("/p : basculer sur le chat privé.");
+		System.out.println("/g : basculer sur le chat général.");
+		System.out.println("/help : afficher la liste des commandes.");
+	}
 
 		
 	/**
@@ -348,6 +360,7 @@ public class ClientTCPMatou {
 	public void launch() throws IOException, InterruptedException {
 		
 		System.out.println("Client is ready.");
+		System.out.println("Tapez /help pour voir les commandes disponibles !");
 		String line;
 		try{
 			while (true) {
