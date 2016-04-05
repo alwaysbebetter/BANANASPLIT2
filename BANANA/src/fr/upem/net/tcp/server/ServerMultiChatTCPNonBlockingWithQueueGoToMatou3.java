@@ -742,15 +742,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.flip();
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
-<<<<<<< HEAD
+
 			
 			System.out.println("REF_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
 
-=======
 
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
->>>>>>> 19c404621b520d93621dda3f939380f651e26e70
 			break;
 		case ASC_CO_PRV_CS:
 
@@ -758,16 +754,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.flip();
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
-<<<<<<< HEAD
+
 			
 
 			System.out.println("ASC_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
 
-=======
-
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
->>>>>>> 19c404621b520d93621dda3f939380f651e26e70
 
 			break;
 		case MESSAGE:
@@ -779,16 +770,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.clear();
 			theAttachement.out.position(theAttachement.out.remaining());
 			theAttachement.out.compact();
-<<<<<<< HEAD
+
 			
 
 			System.out.println("MESSAGE remaaaiinning :"+theAttachement.out.remaining());
 
-=======
 
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
->>>>>>> 19c404621b520d93621dda3f939380f651e26e70
 			break;
 
 		}
