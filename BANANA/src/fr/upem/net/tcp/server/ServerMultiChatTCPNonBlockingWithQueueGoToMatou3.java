@@ -178,7 +178,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public int getInterest() {
 			int interest = 0;// initialize
 
-			if (in.position() > 0) {
+			if (out.position() > 0) {
 				interest = interest | SelectionKey.OP_WRITE;
 			}
 			if (!isClosed) {
@@ -256,8 +256,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// client )
 		// TO CHECK the updating of reader !!
 		public void findReader() {
-
+			
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
+				if( dataPacketRead != null ){
+				//dataPacketRead.reset();// on ricte les donné avant chaque nouvelle lecture
+					dataPacketRead.reset();
+				}
 				System.out.println("findReader -> reader"
 						+ typeLastPacketReceiv);// TODO
 				// :
@@ -347,6 +351,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 																// debbug, after
 																// remove it
 					statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
+					
 					// reset Datzpz
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					break;
@@ -436,7 +441,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
-								TypePacket.REF_CO_SERV, in);
+								TypePacket.REF_CO_SERV, out);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
 																	// delete
 						return;// and close se socket
@@ -452,7 +457,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// le paquet d'acceptation.
 				
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
-							in);
+							out);
 
 					// change status of exchange
 
@@ -493,7 +498,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// WRITTER
 					// realBuildOut(TypePacket.ACC_CO_SERV);
 					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
-							in);
+							out);
 					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
 					statusTreatment = StatusTreatment.TYPE_READING;
@@ -514,7 +519,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// TODO/ dans le rapport il faudra bien mettre en avant ce
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
-							in);
+							out);
 
 					// ON A CONNAISSANCE DU LOGIN ne confond pas avec la trame
 					// qu'on compose !!!!!
@@ -538,7 +543,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 					}
 					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
-							in);
+							out);
 
 					/*
 					 * 
@@ -569,7 +574,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// connection
 						// TODO: close
 					}
-					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, in);
+					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
 
 
 
@@ -606,8 +611,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		while (!Thread.interrupted()) {
 
+			System.out.println("avant selecte");
 			selector.select();
-
+			System.out.println("aprés selecte");
 			processSelectedKeys();
 			selectedKeys.clear();
 		}
@@ -622,16 +628,19 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 								// le accept
 				// pete c'et que le serveur est mor
 			}
+			System.out.println("aaaaa0");
 
 			try { // on la catch ici car on arrete pas le serveur pour ça
 				if (key.isValid() && key.isWritable()) {
+					System.out.println("START DOWRITE");
 					doWrite(key);
 				}
-
+				System.out.println("aaaaa1");
 				if (key.isValid() && key.isReadable()) {
+					System.out.println("START DOREAD");
 					doRead(key);
 				}
-
+				System.out.println("aaaaa2");
 			} catch (IOException e) {
 				;
 			}
@@ -656,9 +665,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		for (SelectionKey key2 : selector.keys()) {
 			if (key2.isValid() && (key2.channel() instanceof SocketChannel)
 					&& (!key2.equals(key))) {
-				theAttachement.in.flip();
+				theAttachement.out.flip();
 				SocketChannel sch = (SocketChannel) key2.channel();
-				sch.write(theAttachement.in);
+				sch.write(theAttachement.out);
 
 			}
 
@@ -703,28 +712,28 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		switch (theAttachement.typeLastPacketReceiv) {
 		case ASC_CO_SERV:
 
-			theAttachement.in.flip();
-			client.write(theAttachement.in);
-			theAttachement.in.compact();
+			theAttachement.out.flip();
+			client.write(theAttachement.out);
+			theAttachement.out.compact();
 			
 			break;
 		case ACC_CO_PRV_CS:
 		case REF_CO_PRV_CS:
 			at = map.get(theAttachement.loginDest);
-			theAttachement.in.flip();
-			at.sc.write(theAttachement.in);
-			theAttachement.in.compact();
+			theAttachement.out.flip();
+			at.sc.write(theAttachement.out);
+			theAttachement.out.compact();
 			
-			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
 			break;
 		case ASC_CO_PRV_CS:
 
 			at = map.get(theAttachement.dataPacketRead.getLoginDst());
-			theAttachement.in.flip();
-			at.sc.write(theAttachement.in);
-			theAttachement.in.compact();
+			theAttachement.out.flip();
+			at.sc.write(theAttachement.out);
+			theAttachement.out.compact();
 			
-			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
 
 			break;
 		case MESSAGE:
@@ -733,14 +742,15 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			}
 			
 			// synthetethetic clear
-			theAttachement.in.clear();
-			theAttachement.in.position(theAttachement.in.remaining());
-			theAttachement.in.compact();
+			theAttachement.out.clear();
+			theAttachement.out.position(theAttachement.out.remaining());
+			theAttachement.out.compact();
 			
-			System.out.println("remaaaiinning :"+theAttachement.in.remaining());
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
 			break;
 
 		}
+		System.out.println("raaa");
 
 		if (theAttachement.isClosed) {
 			client.close();
