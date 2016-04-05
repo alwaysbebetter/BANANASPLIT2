@@ -3,6 +3,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
+import fr.upem.net.tcp.server.Reader.StatusReaderTreatment;
 import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class ReaderLong implements Reader {
@@ -44,7 +45,8 @@ public class ReaderLong implements Reader {
 				in.flip();
 				data.setId(in.getLong());
 				in.compact();
-
+				System.out.println("LONG READ BY ReaderLong : "+data.getId());
+				status = StatusReaderTreatment.BEGIN;
 				return StatusProcessing.DONE;
 			}
 			break;// on envel volontairement le break dans le but de passer a la

@@ -4,6 +4,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
+import fr.upem.net.tcp.server.Reader.StatusReaderTreatment;
 import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class ReaderInt implements Reader {
@@ -49,8 +50,8 @@ public class ReaderInt implements Reader {
 				}
 				data.setPortDst(theInteger);
 				in.compact();
-				
-
+				System.out.println("PORT READ BY ReaderInt : "+data.getPortSrc());
+				status = StatusReaderTreatment.BEGIN;
 				return StatusProcessing.DONE;
 			}
 			break;// on envel volontairement le break dans le but de passer a la

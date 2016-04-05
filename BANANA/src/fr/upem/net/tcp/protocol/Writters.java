@@ -97,8 +97,14 @@ public class Writters {
 
 		System.out.println(adress.getHostName());
 		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
+<<<<<<< HEAD
 		ByteBuffer buff = 
 				allocate(3,Byte.BYTES + Long.BYTES + srcBuff.remaining()
+=======
+		ByteBuffer buff = allocate(
+				3,
+				Byte.BYTES + Long.BYTES + srcBuff.remaining()
+>>>>>>> e35860a73ae8352289f3032425aae35194a71d8f
 						+ adressBuff.remaining());
 
 		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)

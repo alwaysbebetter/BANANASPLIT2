@@ -96,7 +96,6 @@ public class DataPacketRead {
 		 adrSrc=null;
 		 portSrc=-1;
 		 id = -1;
-		 typePacket=TypePacket.INITIAL_TYPE;
 		 sizeLoginSrc = -1;
 		 sizeLoginDst = -1;
 		 sizeAdressSrc = -1;

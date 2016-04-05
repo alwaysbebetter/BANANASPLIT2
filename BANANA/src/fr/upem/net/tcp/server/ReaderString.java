@@ -44,6 +44,7 @@ public class ReaderString implements Reader {
 			data.setLoginDst(UTF_8.decode(in).toString());
 			break;
 		case DEST_DATA_ADR:
+			
 			data.setAdrDest(UTF_8.decode(in).toString());
 			break;
 		}
@@ -73,7 +74,7 @@ public class ReaderString implements Reader {
 			if (in.position() >= Integer.BYTES) {
 				in.flip();
 				sizeString = in.getInt();
-
+				System.out.println("ReaderString sizeString = "+sizeString);
 				if ((sizeString >= BUFSIZ) || (sizeString <= 0)) {// that handle
 																	// to check
 																	// all size
@@ -103,6 +104,8 @@ public class ReaderString implements Reader {
 		case SIZE_STRING_KNOWN:
 			if (in.position() >= sizeString) {
 				treatment(in);
+				System.out.println("DATA READ BY ReaderString : "+data);
+				status = StatusReaderTreatment.BEGIN;
 				return StatusProcessing.DONE;
 			}
 			break;

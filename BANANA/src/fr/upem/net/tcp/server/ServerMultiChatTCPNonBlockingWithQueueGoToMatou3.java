@@ -256,8 +256,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		// client )
 		// TO CHECK the updating of reader !!
 		public void findReader() {
-
+			
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
+				if( dataPacketRead != null ){
+				//dataPacketRead.reset();// on ricte les donné avant chaque nouvelle lecture
+					dataPacketRead.reset();
+				}
 				System.out.println("findReader -> reader"
 						+ typeLastPacketReceiv);// TODO
 				// :
@@ -348,6 +352,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 																// debbug, after
 																// remove it
 					statusTreatment = StatusTreatment.DATA_PACKET_KNOWN;
+					
 					// reset Datzpz
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					break;
@@ -607,8 +612,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		while (!Thread.interrupted()) {
 
+			System.out.println("avant selecte");
 			selector.select();
-
+			System.out.println("aprés selecte");
 			processSelectedKeys();
 			selectedKeys.clear();
 		}
@@ -623,16 +629,19 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 								// le accept
 				// pete c'et que le serveur est mor
 			}
+			System.out.println("aaaaa0");
 
 			try { // on la catch ici car on arrete pas le serveur pour ça
 				if (key.isValid() && key.isWritable()) {
+					System.out.println("START DOWRITE");
 					doWrite(key);
 				}
-
+				System.out.println("aaaaa1");
 				if (key.isValid() && key.isReadable()) {
+					System.out.println("START DOREAD");
 					doRead(key);
 				}
-
+				System.out.println("aaaaa2");
 			} catch (IOException e) {
 				;
 			}
@@ -716,7 +725,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
 			
+<<<<<<< HEAD
 			System.out.println("REF_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
+=======
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+>>>>>>> e35860a73ae8352289f3032425aae35194a71d8f
 			break;
 		case ASC_CO_PRV_CS:
 
@@ -725,7 +738,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			at.sc.write(theAttachement.out);
 			theAttachement.out.compact();
 			
+<<<<<<< HEAD
 			System.out.println("ASC_CO_PRV_CS remaaaiinning :"+theAttachement.out.remaining());
+=======
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+>>>>>>> e35860a73ae8352289f3032425aae35194a71d8f
 
 			break;
 		case MESSAGE:
@@ -738,10 +755,15 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			theAttachement.out.position(theAttachement.out.remaining());
 			theAttachement.out.compact();
 			
+<<<<<<< HEAD
 			System.out.println("MESSAGE remaaaiinning :"+theAttachement.out.remaining());
+=======
+			System.out.println("remaaaiinning :"+theAttachement.out.remaining());
+>>>>>>> e35860a73ae8352289f3032425aae35194a71d8f
 			break;
 
 		}
+		System.out.println("raaa");
 
 		if (theAttachement.isClosed) {
 			client.close();
