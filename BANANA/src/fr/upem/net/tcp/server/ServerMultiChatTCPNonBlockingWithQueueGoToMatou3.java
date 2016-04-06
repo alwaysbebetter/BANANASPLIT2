@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fr.upem.net.logger.Loggers;
-import fr.upem.net.tcp.protocol.Writters;
+import fr.upem.net.tcp.server.Reader.StatusProcessing;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
@@ -245,6 +245,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 																				// after
 																				// remove
 																				// it
+					CloseAnRejectClient(login);
 				}
 
 				System.out.println("readType() -> " + typeLastPacketReceiv);// TODO
@@ -346,6 +347,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 																				// after
 																				// remove
 																				// it);
+					CloseAnRejectClient(login);
 				}
 				statusTreatment = StatusTreatment.READER_KNOWN;
 				System.out.println("statusTreatement : " + statusTreatment);// TODO
@@ -360,7 +362,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		}
 
-		public void applyReader() {
+		public StatusProcessing applyReader() {
 
 			if (statusTreatment == StatusTreatment.READER_KNOWN) {
 
@@ -375,22 +377,24 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					// reset Datzpz
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
-					break;
+					return StatusProcessing.DONE;
 				case ERROR:
 					System.out.println("applyReader -> ERROR");// TODO :
 																// displaying to
 																// debbug, after
 																// remove it
 					// TODO : close
-					break;
+					CloseAnRejectClient(login);
+					return StatusProcessing.ERROR;
 				case REFILL:
 					System.out.println("applyReader -> REFILL");// TODO :
 																// displaying to
 																// debbug, after
 																// remove it
-					return;
+					return StatusProcessing.REFILL;
 				}
 			}
+			return StatusProcessing.ERROR;//TODO: find other solution
 		}
 
 		public void writeString(ByteBuffer bb, String s) {
@@ -449,7 +453,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
 					System.out.println("Is an expectedTypePacket !!");// TODO :
 																		// delete
-					silentlyClose(sc);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
+					CloseAnRejectClient(login);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
@@ -464,7 +468,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_SERV, out);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
-																	// delete
+						silentlyClose(sc);
 						return;// and close se socket
 					}
 					// TODO: do we have to manage the unicity with a comparason
@@ -498,6 +502,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
+						CloseAnRejectClient(login);
 					}
 
 					String loginDest = dataPacketRead.getLoginDst();
@@ -515,6 +520,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// le refu mais depuis le serveur,
 						System.out.println("LOGIN DOESN'T EXIST ");// TODO :
 																	// delete
+						// TODO : envoyer la trame de notification de reffu ( ce couop, si, depuis le server )
 					}
 
 					// WRITTER
@@ -534,6 +540,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
+						CloseAnRejectClient(login);
 					}
 
 					// attention c'est l'adresse privé c'est pour ça que debase
@@ -563,6 +570,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
+						CloseAnRejectClient(login);
 					}
 					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
 							out);
@@ -595,6 +603,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
+						CloseAnRejectClient(login);
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
 
@@ -661,7 +670,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					doRead(key);
 				}
 				System.out.println("aaaaa2");
-			} catch (IOException e) {
+			} catch (Exception e) {
 				;
 			}
 
@@ -713,7 +722,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		System.out.println("INTEREST_OPS :" + theAttachement.getInterest());
 		theAttachement.readType();
 		theAttachement.findReader();
-		theAttachement.applyReader();
+		if( StatusProcessing.ERROR == theAttachement.applyReader()){
+			return ;
+		}
 		theAttachement.treatData();
 
 		key.interestOps(theAttachement.getInterest());

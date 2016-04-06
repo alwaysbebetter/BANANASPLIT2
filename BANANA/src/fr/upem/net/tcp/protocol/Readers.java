@@ -135,15 +135,18 @@ public class Readers {
 		System.out.println(adress);
 		
 		int port = readInt(sc);
+
 		System.out.println(port);
 
 		InetSocketAddress inet = new InetSocketAddress(adress,port);
 
 		return inet ;
 
+
 	
 	}
 	
+
 	
 	/**
 	 * Read a message and print.

@@ -1,12 +1,14 @@
 package fr.upem.net.tcp.client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.Scanner;
+
 
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
@@ -85,10 +87,12 @@ public class ClientTCPMatou {
 							break;
 							
 						case 7 :
+
 							//In this case we are c1 because we are not yet connected like c2.
 							//c2 has received our demand so his privateChannel is open.
 							if(null == this.privateChannel){
 								
+
 								System.out.println("Votre demande a été accepté par " + destName +" !");
 								//Here we receive the server address of c2 so we can connect to him.
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
