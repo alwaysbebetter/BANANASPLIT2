@@ -81,8 +81,8 @@ public class ClientTCPMatou {
 								this.receivedInvite = true;
 							}
 							this.destName = Readers.readDemand(generalChannel);
-							System.out.println(destName + " has invited you.");
-							System.out.println("Tape /yes to accept or /no to refuse.");
+							System.out.println(destName + " vous a invité en chat privé.");
+							System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 							
 							break;
 							
@@ -143,8 +143,8 @@ public class ClientTCPMatou {
 								receivedFile = true;
 							}
 							this.fileReceived = Readers.readDemand(privateChannel);
-							System.out.println(destName + " wants to send you " + this.fileReceived);
-							System.out.println("Tape /yes to accept or /no to refuse.");
+							System.out.println(destName + " veut vous envoyer " + this.fileReceived);
+							System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 							break;
 						//case the person has accepted our demand
 						case 12:
