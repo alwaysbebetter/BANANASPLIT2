@@ -125,18 +125,21 @@ public class Readers {
 	 */
 	public static InetSocketAddress readAddress(SocketChannel sc) throws IOException{
 		int adressSize = readInt(sc);
-		
+		System.out.println(adressSize);
 		ByteBuffer buff = ByteBuffer.allocate(adressSize);
 		if (!readFully(sc, buff)) {
 			throw new ReadersException("Connection lost during readAdress");
 		}
 		buff.flip();
 		String adress = UTF8.decode(buff).toString();
+		System.out.println(adress);
 		
 		int port = readInt(sc);
+		System.out.println(port);
 
+		InetSocketAddress inet = new InetSocketAddress(adress,port);
 
-		return new InetSocketAddress(adress,port);
+		return inet ;
 
 	
 	}

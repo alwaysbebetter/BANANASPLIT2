@@ -3,6 +3,7 @@ package fr.upem.net.tcp.client;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.Scanner;
@@ -16,6 +17,9 @@ public class ClientTCPMatou {
 	
 	//General message come here
 	private final SocketChannel generalChannel;
+	
+	//Need to accept connection
+	private final ServerSocketChannel ssc;
 	
 	//Private message come here
 	private SocketChannel privateChannel = null;
@@ -53,6 +57,8 @@ public class ClientTCPMatou {
 			throws UnknownHostException, IOException {
 		generalChannel = SocketChannel.open();
 		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
+		ssc = ServerSocketChannel.open();
+		ssc.bind(null);
 		this.sc = new Scanner(System.in);
 		myName = askName();
 		this.clientID = Readers.readLong(generalChannel);
@@ -79,12 +85,17 @@ public class ClientTCPMatou {
 							break;
 							
 						case 7 :
-							//In this case we are c1 because c2 have open a channel for us.
-							if(privateChannel == null){
-								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-								privateChannel.bind(null);
+							//In this case we are c1 because we are not yet connected like c2.
+							//c2 has received our demand so his privateChannel is open.
+							if(null == this.privateChannel){
+								
 								System.out.println("Votre demande a été accepté par " + destName +" !");
-								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+								//Here we receive the server address of c2 so we can connect to him.
+								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+								//We send our address to c2.
+								Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
+								//We let c2 connect to us.
+								ssc.accept();
 								fileChannel = SocketChannel.open();
 								fileChannel.bind(null);
 								Writters.askPrivateFileConnection(privateChannel,(byte)9,fileChannel);
@@ -93,6 +104,7 @@ public class ClientTCPMatou {
 							//In this case we are c2 because we already had accept and open a channel for c1.
 							//We just have to connect to c1
 							else{
+								System.out.println("Connexion établie avec " + destName);
 								this.privateChannel.connect(Readers.readAddress(generalChannel));
 							}
 							privateListener.start();
@@ -102,7 +114,7 @@ public class ClientTCPMatou {
 
 				}
 			}catch (IOException e){
-				
+				e.printStackTrace();
 			}			
 		});
 		generalListener.start();
@@ -272,10 +284,11 @@ public class ClientTCPMatou {
 					//We need to connect to c1 after, the tread generalListener will do this.
 					privateChannel = SocketChannel.open();
 					privateChannel.bind(null);
-					Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+					Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
+					ssc.accept();
 					System.out.println("Vous avez accepté l'invitation");
 				}
-				if(receivedFile && (privateChannel != null) ){
+				else if(receivedFile && (privateChannel != null) ){
 					Writters.acceptFile(privateChannel);
 					System.out.println("Vous avez accepté le fichier.");
 					//Start the thread to receive file, the tread stop after reading.
@@ -292,7 +305,7 @@ public class ClientTCPMatou {
 					receivedInvite = false;
 					System.out.println("Vous avez refusé l'invitation.");
 				}
-				if(receivedFile && (privateChannel != null)){
+				else if(receivedFile && (privateChannel != null)){
 					Writters.refuseFile(privateChannel);
 					receivedFile = false;
 					System.out.println("Vous avez refusé le fichier.");

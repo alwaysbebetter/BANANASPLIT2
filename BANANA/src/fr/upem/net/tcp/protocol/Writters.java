@@ -3,8 +3,10 @@ package fr.upem.net.tcp.protocol;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -90,13 +92,12 @@ public class Writters {
 	 */
 
 	public static void acceptPrivateConnection(SocketChannel sc, long clientID,
-			String src, SocketChannel privateSc) throws IOException {
-		InetSocketAddress adress = (InetSocketAddress) privateSc
-				.getLocalAddress();
+			String src, ServerSocketChannel ssc) throws IOException {
+		ServerSocket socket =  ssc.socket();
+
 		ByteBuffer srcBuff = UTF8.encode(src);
 
-		System.out.println(adress.getHostName());
-		ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
+		ByteBuffer adressBuff = UTF8.encode(socket.getInetAddress().getHostAddress());
 
 		ByteBuffer buff = allocate(
 				3,
@@ -107,7 +108,7 @@ public class Writters {
 				.putLong(clientID).putInt(adressBuff.remaining())
 				.put(adressBuff);
 
-		buff.putInt(adress.getPort());
+		buff.putInt(socket.getLocalPort());
 
 		Loggers.test(buff);
 		buff.flip();
