@@ -1,11 +1,13 @@
 package fr.upem.net.tcp.client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.Scanner;
+
 
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
@@ -81,8 +83,11 @@ public class ClientTCPMatou {
 						case 7 :
 							//In this case we are c1 because c2 have open a channel for us.
 							if(privateChannel == null){
-								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-								privateChannel.bind(null);
+								System.out.println("C LA 1");
+								privateChannel = SocketChannel.open();
+								
+								privateChannel.connect(Readers.readAddress(generalChannel));
+								System.out.println("C LA");
 								System.out.println("Votre demande a été accepté par " + destName +" !");
 								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 								fileChannel = SocketChannel.open();
@@ -102,7 +107,7 @@ public class ClientTCPMatou {
 
 				}
 			}catch (IOException e){
-				
+				e.printStackTrace();
 			}			
 		});
 		generalListener.start();

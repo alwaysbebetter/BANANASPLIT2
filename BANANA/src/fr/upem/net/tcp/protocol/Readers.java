@@ -134,13 +134,13 @@ public class Readers {
 		String adress = UTF8.decode(buff).toString();
 		
 		int port = readInt(sc);
-
-
-		return new InetSocketAddress(adress,port);
+		System.out.println("port  "+port);
+		return new InetSocketAddress("127.0.0.1",port);
 
 	
 	}
 	
+
 	
 	/**
 	 * Read a message and print.
