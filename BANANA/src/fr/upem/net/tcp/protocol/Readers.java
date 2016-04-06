@@ -62,7 +62,7 @@ public class Readers {
 	public static byte readByte(SocketChannel sc) throws IOException {
 		BUFFBYTE.clear();
 		if (!readFully(sc, BUFFBYTE)) {
-			throw new ReadersException("Connection lost during readInt");
+			throw new ReadersException("Connection lost during readByte");
 		}
 		BUFFBYTE.flip();
 		return BUFFBYTE.get();
@@ -125,18 +125,17 @@ public class Readers {
 	 */
 	public static InetSocketAddress readAddress(SocketChannel sc) throws IOException{
 		int adressSize = readInt(sc);
-		System.out.println(adressSize);
+
 		ByteBuffer buff = ByteBuffer.allocate(adressSize);
 		if (!readFully(sc, buff)) {
 			throw new ReadersException("Connection lost during readAdress");
 		}
 		buff.flip();
 		String adress = UTF8.decode(buff).toString();
-		System.out.println(adress);
+
 		
 		int port = readInt(sc);
 
-		System.out.println(port);
 
 		InetSocketAddress inet = new InetSocketAddress(adress,port);
 
@@ -196,21 +195,25 @@ public class Readers {
 		int count =0 ;
 		Path path = Paths.get(fileName);
 		File file = path.toFile();
-		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES + Integer.BYTES + (int)size);
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES + Long.BYTES + (int)size);
 		//Data use for debug with logger
 		buff.put(id).putLong(size);
-		//If we can't create file, we just change the name by adding a number
-		while(!file.createNewFile()){
-			file = new File(path.getFileName().toString() + count);
-			count++;
-		}
 		if(!readFully(sc,buff)){
 			throw new ReadersException("Connection lost during readFile");
 		}
+		String newFileName;
+		
+		//If we can't create file, we just change the name by adding a number
+		while(!file.createNewFile()){
+			newFileName = count + path.getFileName().toString();
+			file = new File(newFileName);
+			count++;
+		}
+		System.out.println(file.getAbsolutePath());
 		Loggers.test(buff);
 		buff.flip();
 		//Ignore first data, just write byte of file
-		buff.position(Byte.BYTES + Integer.BYTES);
+		buff.position(Byte.BYTES + Long.BYTES);
 		FileOutputStream fi = new FileOutputStream(file);
 		FileChannel fc = fi.getChannel();
 		

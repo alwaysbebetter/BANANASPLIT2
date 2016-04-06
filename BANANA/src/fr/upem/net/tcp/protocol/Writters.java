@@ -149,7 +149,7 @@ public class Writters {
 	 *            9 for asking and 10 to respond.
 	 */
 	public static void askPrivateFileConnection(SocketChannel sc, byte type,
-			SocketChannel fileChannel) throws IOException,
+			ServerSocketChannel fileChannel) throws IOException,
 			IllegalStateException {
 		if ((type == (byte) 9) || (type == (byte) 10)) {
 			InetSocketAddress adress = (InetSocketAddress) fileChannel
@@ -157,7 +157,7 @@ public class Writters {
 
 			ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
 
-			ByteBuffer buff = allocate(1, Byte.BYTES + adressBuff.remaining());
+			ByteBuffer buff = allocate(2, Byte.BYTES + adressBuff.remaining());
 
 			buff.put(type).putInt(adressBuff.remaining()).put(adressBuff).putInt(adress.getPort());
 
@@ -199,7 +199,10 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void acceptFile(SocketChannel sc) throws IOException {
-		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte) 12));
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) 12);
+		Loggers.test(buff);
+		buff.flip();
+		sc.write(buff);
 	}
 
 	/**
@@ -209,7 +212,10 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void refuseFile(SocketChannel sc) throws IOException {
-		sc.write(ByteBuffer.allocate(Byte.BYTES).put((byte) 13));
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) 13);
+		Loggers.test(buff);
+		buff.flip();
+		sc.write(buff);
 	}
 
 	/**
@@ -224,17 +230,23 @@ public class Writters {
 		FileInputStream fIn;
 		FileChannel fChan;
 		long fSize;
+
 		ByteBuffer buff;
-		fIn = new FileInputStream(path.getFileName().toString());
+		fIn = new FileInputStream(path.toFile());
 		fChan = fIn.getChannel();
 		fSize = fChan.size();
 		buff = allocate(0, Byte.BYTES + Long.BYTES +(int)fSize);
 		buff.put((byte)14).putLong(fSize);
-		while(fChan.read(buff) != -1);		
-		buff.flip();
-		
+		int read;
+		while((read = fChan.read(buff)) != 0){
+			if(read == -1)
+				break;
+		}
+
 		fChan.close();
 		fIn.close();
+		Loggers.test(buff);
+		buff.flip();
 		sc.write(buff);
 	}
 

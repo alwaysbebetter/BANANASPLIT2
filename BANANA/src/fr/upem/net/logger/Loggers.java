@@ -21,9 +21,19 @@ public class Loggers {
 		int size,limit;
 		sb.append(id).append(" ");
 		switch(id){
+		case 6:
+			size = buff.getInt();
+			sb.append(size).append(" ");
+			
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
+			sb.append(buff.getLong());
+			System.out.println(sb);
+			return;
 		case 0:
 		case 4:
-		case 6:
 		case 11 :
 			size = buff.getInt();
 			sb.append(size).append(" ");
@@ -115,6 +125,7 @@ public class Loggers {
 				sb.append("data is ok");
 			//Set the position to the end like we had read it.
 			buff.position(buff.limit());
+			System.out.println(sb);
 			return;
 		default :
 			System.out.println("Erreur id. : "+id);

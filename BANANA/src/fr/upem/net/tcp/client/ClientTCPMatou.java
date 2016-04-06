@@ -96,22 +96,18 @@ public class ClientTCPMatou {
 								System.out.println("Votre demande a été accepté par " + destName +" !");
 								//Here we receive the server address of c2 so we can connect to him.
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-								//We send our address to c2.
-								Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
-								//We let c2 connect to us.
-								ssc.accept();
-								fileChannel = SocketChannel.open();
-								fileChannel.bind(null);
-								Writters.askPrivateFileConnection(privateChannel,(byte)9,fileChannel);
-								System.out.println("Demande de connexion pour le fichier...");
+								privateListener.start();
+								Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
+								System.out.println("Demande de connexion pour envoyer des fichiers...");
+								fileChannel = ssc.accept();
+								System.out.println("Connexion pour envoi de fichier établie !");
+								
 							}
 							//In this case we are c2 because we already had accept and open a channel for c1.
 							//We just have to connect to c1
 							else{
-								System.out.println("Connexion établie avec " + destName);
-								this.privateChannel.connect(Readers.readAddress(generalChannel));
+								System.out.println("Erreur connexion déjà établie avec " + destName);
 							}
-							privateListener.start();
 							break;
 						case 15 : Readers.readMessage(generalChannel);break;
 					}
@@ -126,16 +122,16 @@ public class ClientTCPMatou {
 		this.privateListener = new Thread( () -> {
 			try{
 				while(!Thread.interrupted()){
-					int id = Readers.readInt(privateChannel);
+					byte id = Readers.readByte(privateChannel);
 					switch(id){
 						
 					//Exchange address and port between the two clients
 					//Here we are c2, we open the channel and connect then send our address and port.
 						case 9 : 
 							fileChannel = SocketChannel.open(Readers.readAddress(privateChannel));
-							Writters.askPrivateFileConnection(privateChannel,(byte)10,fileChannel);
+							System.out.println("Connexion pour envoi de fichier établie !");
 							break;
-						//Here we are c1 and connect to c2
+						//TODO remove because useless
 						case 10 :
 							fileChannel.connect(Readers.readAddress(privateChannel));
 							break;
@@ -152,6 +148,7 @@ public class ClientTCPMatou {
 							break;
 						//case the person has accepted our demand
 						case 12:
+							System.out.println("Demande accepté, envoi en cours...");
 							fileWritter.start();break;
 						//case the person has refused our demand
 						case 13: fileSending = false;break;
@@ -168,9 +165,11 @@ public class ClientTCPMatou {
 			try{
 					Readers.readFile(fileChannel,fileReceived);
 					receivedFile = false;
+					System.out.println("Fichier reçu");
+					return;
 				
 			}catch(IOException e){
-				
+				e.printStackTrace();
 			}
 			
 			
@@ -179,9 +178,11 @@ public class ClientTCPMatou {
 			try{
 					Writters.sendFile(fileChannel, Paths.get(fileToSend));
 					fileSending = false;
+					System.out.println("Envoi terminé");
+					return;
 				
 			}catch(IOException e){
-				
+				e.printStackTrace();
 			}
 			
 			
@@ -286,11 +287,12 @@ public class ClientTCPMatou {
 				if(receivedInvite && (privateChannel == null)){
 					//We prepare the channel here and send our address and port to c1.
 					//We need to connect to c1 after, the tread generalListener will do this.
-					privateChannel = SocketChannel.open();
-					privateChannel.bind(null);
+
 					Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
-					ssc.accept();
+					//Let c1 connect to us
+					privateChannel = ssc.accept();
 					System.out.println("Vous avez accepté l'invitation");
+					privateListener.start();
 				}
 				else if(receivedFile && (privateChannel != null) ){
 					Writters.acceptFile(privateChannel);
