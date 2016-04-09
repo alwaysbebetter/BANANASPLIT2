@@ -11,7 +11,6 @@ import java.util.Scanner;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
-
 public class ClientTCPMatou {
 	
 	private SocketChannel currentChannel;
@@ -41,9 +40,9 @@ public class ClientTCPMatou {
 	//Those 3 variables are shared between thread to notify others
 	//So we use synchronized on them
 	private  boolean receivedInvite = false;
-	private  boolean receivedFile = false,fileSending = false, acceptFile = false;
+	private  boolean receivedFile = false,fileSending = false;
 	
-	private final Object lock = new Object(),lockPrivate = new Object(),lockReadFile = new Object(),lockWriteFile = new Object();
+	private final Object lock = new Object();
 	private Thread generalListener, privateListener,fileListener,fileWritter;
 	
 	
@@ -95,12 +94,8 @@ public class ClientTCPMatou {
 
 								System.out.println("Votre demande a été accepté par " + destName +" !");
 								//Here we receive the server address of c2 so we can connect to him.
-								synchronized(lockPrivate){
-									privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-									lockPrivate.notify();
-								}
-								//privateListener.start();
-								
+								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+								privateListener.start();
 								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 								currentChannel = privateChannel;
 								Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
@@ -132,11 +127,6 @@ public class ClientTCPMatou {
 		this.privateListener = new Thread( () -> {
 			try{
 				while(!Thread.interrupted()){
-					//The thread wait until a connection is make.
-					synchronized(lockPrivate){
-						while(privateChannel == null)
-							lockPrivate.wait();
-					}
 					byte id = Readers.readByte(privateChannel);
 					switch(id){
 						
@@ -163,16 +153,10 @@ public class ClientTCPMatou {
 							break;
 						//case the person has accepted our demand
 						case 12:
-							synchronized(lockWriteFile){
-								acceptFile = true;
-								lockWriteFile.notify();
-							}
 							System.out.println("Demande accepté, envoi en cours...");
-							//fileWritter.start();
-;
-							break;
+							fileWritter.start();break;
 						//case the person has refused our demand
-						case 13:
+						case 13: 
 							fileSending = false;
 							System.out.println("Votre demande d'envoi de fichier a été refusé.");
 							break;
@@ -181,65 +165,38 @@ public class ClientTCPMatou {
 
 				}
 			}catch (IOException e){
-				//TODO
-			}
-			catch(InterruptedException ie){
-				ie.printStackTrace();
-				Thread.currentThread().interrupt();
-			}
+				
+			}			
 		});
-		privateListener.start();
 		
 		this.fileListener = new Thread(()-> {
 			try{
-				while(!Thread.interrupted()){
-					//Wait until a connection is make
-					synchronized(lockReadFile){
-						while(fileChannel == null || !receivedFile)
-							lockReadFile.wait();
-					}
 					Readers.readFile(fileChannel,fileReceived);
-					//Share with general Thread and main, so use simple lock
 					synchronized(lock){
 						receivedFile = false;
 					}
 					System.out.println("Fichier reçu");
-				}
+					return;
 				
 			}catch(IOException e){
 				e.printStackTrace();
-			}catch(InterruptedException ie){
-				ie.printStackTrace();
-				Thread.currentThread().interrupt();
-			}				
+			}
+			
+			
 		});
-		fileListener.start();
-		
 		this.fileWritter = new Thread(()-> {
 			try{
-				while(!Thread.interrupted()){
-					synchronized(lockWriteFile){
-						while(!fileSending || !acceptFile)
-							lockWriteFile.wait();
-					}
-							
 					Writters.sendFile(fileChannel, Paths.get(fileToSend));
-					synchronized(lockWriteFile){
-						fileSending = false;
-					}
+					fileSending = false;
 					System.out.println("Envoi terminé");
-				}
-
-
+					return;
 				
 			}catch(IOException e){
 				e.printStackTrace();
-			}catch(InterruptedException ie){
-				ie.printStackTrace();
-				Thread.currentThread().interrupt();
-			}	
+			}
+			
+			
 		});
-		fileWritter.start();
 	}
 	
 	
@@ -250,9 +207,12 @@ public class ClientTCPMatou {
 
 			while (true) {
 				System.out.println("What is your pseudo ?");
-				if (sc.hasNextLine()) {		
+				if (sc.hasNextLine()) {
+					// Ask name				
 					name = sc.nextLine();
 					Writters.requestName(generalChannel, name);
+					//TODO
+					//if à commenter pour tester le client sans serveur
 					if(Readers.nameAccepted(generalChannel)){
 
 						return name;
@@ -299,9 +259,7 @@ public class ClientTCPMatou {
 				if(!fileSending){
 					//Test if the file exist before asking to send
 					if(Paths.get(fileName[1]).toFile().exists()){
-						synchronized(lockWriteFile){
-							fileSending = true;
-						}
+						fileSending = true;
 						fileToSend = fileName[1];
 						Writters.askToSendFile(privateChannel,fileName[1]);
 						System.out.println("Demande d'envoi du fichier " + fileName[1] + " en cours...");
@@ -343,13 +301,9 @@ public class ClientTCPMatou {
 	
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
 						//Let c1 connect to us
-						synchronized(lockPrivate){
-							privateChannel = ssc.accept();
-							lockPrivate.notify();
-						}
+						privateChannel = ssc.accept();
 						System.out.println("Vous avez accepté l'invitation");
-						//privateListener.start();
-
+						privateListener.start();
 						System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 						currentChannel = privateChannel;
 					}
@@ -357,10 +311,7 @@ public class ClientTCPMatou {
 						Writters.acceptFile(privateChannel);
 						System.out.println("Vous avez accepté le fichier.");
 						//Start the thread to receive file, the tread stop after reading.
-						//fileListener.start();
-						synchronized(lockReadFile){
-							lockReadFile.notify();
-						}
+						fileListener.start();
 					}
 					else
 						System.out.println("Vous n'avez pas reçu d'invitation");
@@ -387,10 +338,7 @@ public class ClientTCPMatou {
 			
 			//switch to private message
 			case "/p" :
-				if(currentChannel == privateChannel){
-					System.out.println("Vous êtes déjà sur le chat privé.");
-				}
-				else if(privateChannel != null){
+				if(privateChannel != null){
 					currentChannel = privateChannel;
 					System.out.println("Vous avez basculé sur le chat privé.");
 				}

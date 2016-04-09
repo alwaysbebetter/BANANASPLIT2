@@ -258,6 +258,9 @@ public class Writters {
 
 	public static void sendMessage(SocketChannel sc, long clientID, String src,
 			String msg) throws IOException {
+		//Avoid flood
+		if(msg.isEmpty())
+			return;
 		ByteBuffer srcBuff = UTF8.encode(src);
 		ByteBuffer msgBuff = UTF8.encode(msg);
 

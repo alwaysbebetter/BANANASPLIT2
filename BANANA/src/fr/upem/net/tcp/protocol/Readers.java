@@ -15,9 +15,8 @@ import fr.upem.net.logger.Loggers;
 
 
 public class Readers {
-	private final static ByteBuffer BUFFINT = ByteBuffer.allocateDirect(Integer.BYTES);
-	private final static ByteBuffer BUFFLONG = ByteBuffer.allocateDirect(Long.BYTES);
-	private final static ByteBuffer BUFFBYTE = ByteBuffer.allocateDirect(Byte.BYTES);
+	
+	//The class Charset is thread-safe as the javadoc says
 	private final static Charset UTF8 = Charset.forName("utf-8");
 	
 	
@@ -45,12 +44,13 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static int readInt(SocketChannel sc) throws IOException {
-		BUFFINT.clear();
-		if (!readFully(sc, BUFFINT)) {
+		ByteBuffer buffInt = ByteBuffer.allocateDirect(Integer.BYTES);
+		buffInt.clear();
+		if (!readFully(sc, buffInt)) {
 			throw new ReadersException("Connection lost during readInt");
 		}
-		BUFFINT.flip();
-		return BUFFINT.getInt();
+		buffInt.flip();
+		return buffInt.getInt();
 	}
 	
 	/** Read an int on sc and return it.
@@ -60,12 +60,13 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static byte readByte(SocketChannel sc) throws IOException {
-		BUFFBYTE.clear();
-		if (!readFully(sc, BUFFBYTE)) {
+		ByteBuffer buff = ByteBuffer.allocateDirect(Byte.BYTES);
+		buff.clear();
+		if (!readFully(sc, buff)) {
 			throw new ReadersException("Connection lost during readByte");
 		}
-		BUFFBYTE.flip();
-		return BUFFBYTE.get();
+		buff.flip();
+		return buff.get();
 	}
 	
 	/** Read a long on sc and return it.
@@ -75,12 +76,13 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static long readLong(SocketChannel sc) throws IOException{
-		BUFFLONG.clear();
-		if (!readFully(sc, BUFFLONG)) {
+		ByteBuffer buffLong = ByteBuffer.allocateDirect(Long.BYTES);
+		buffLong.clear();
+		if (!readFully(sc, buffLong)) {
 			throw new ReadersException("Connection lost during readLong");
 		}
-		BUFFLONG.flip();
-		return BUFFLONG.getLong();
+		buffLong.flip();
+		return buffLong.getLong();
 	
 	}
 	
@@ -173,6 +175,11 @@ public class Readers {
 		System.out.println(pseudo +" : " + message);
 		
 		
+	}
+	
+	public static void readPrivateMessage(SocketChannel sc) throws IOException{
+		System.out.print("(privé) ");
+		readMessage(sc);
 	}
 	
 	public static void readSimpleMessage(SocketChannel sc) throws IOException{
