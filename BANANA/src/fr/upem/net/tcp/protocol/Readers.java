@@ -20,18 +20,11 @@ public class Readers {
 	private final static Charset UTF8 = Charset.forName("utf-8");
 	
 	
-	/**
-	 * 
-	 * @param sc
-	 * @param buff
-	 * @return
-	 * @throws IOException
-	 */
-	public static boolean readFully(SocketChannel sc, ByteBuffer buff)
+	
+	private static boolean readFully(SocketChannel sc, ByteBuffer buff)
 			throws IOException {
 		while(buff.hasRemaining())
-		if (sc.read(buff) == -1) {
-			System.err.println("Connection lost");
+		if (sc.read(buff) == -1) {;
 			return false;
 		}
 		return true;
