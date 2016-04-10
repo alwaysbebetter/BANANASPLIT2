@@ -73,180 +73,193 @@ public class ClientTCPMatou {
 	
 	private void initListener(){
 		this.generalListener = new Thread( () -> {
-			try{
+			
 				while(!Thread.interrupted()){
-					byte id = Readers.readByte(generalChannel);
-					switch(id){
-						
-						case 4 : 
-							synchronized(lock){
-								this.receivedInvite = true;
-							}
-							this.destName = Readers.readDemand(generalChannel);
-							System.out.println(destName + " vous a invité en chat privé.");
-							System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
+					try{
+						byte id = Readers.readByte(generalChannel);
+						switch(id){
 							
-							break;
-							
-						case 7 :
-
-							//In this case we are c1 because we are not yet connected like c2.
-							//c2 has received our demand so his privateChannel is open.
-							if(null == this.privateChannel){
-								
-
-								System.out.println("Votre demande a été accepté par " + destName +" !");
-								//Here we receive the server address of c2 so we can connect to him.
-								synchronized(lockPrivate){
-									privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-									lockPrivate.notify();
+							case 4 : 
+								synchronized(lock){
+									this.receivedInvite = true;
 								}
-								//privateListener.start();
+								this.destName = Readers.readDemand(generalChannel);
+								System.out.println(destName + " vous a invité en chat privé.");
+								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								
-								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
-								currentChannel = privateChannel;
-								Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
-								System.out.println("Demande de connexion pour envoyer des fichiers...");
-								fileChannel = ssc.accept();
-								System.out.println("Connexion pour envoi de fichier établie !");
+								break;
 								
-							}
-							//In this case we are c2 because we already had accept and open a channel for c1.
-							//We just have to connect to c1
-							else{
-								System.out.println("Erreur connexion déjà établie avec " + destName);
-							}
-							break;
-						case 8:
-							this.destName = null;
-							System.out.println("Votre demande a été refusé.");
-							break;
-						case 15 : Readers.readMessage(generalChannel);break;
-					}
+							case 7 :
+	
+								//In this case we are c1 because we are not yet connected like c2.
+								//c2 has received our demand so his privateChannel is open.
+								if(null == this.privateChannel){
+									
+	
+									System.out.println("Votre demande a été accepté par " + destName +" !");
+									//Here we receive the server address of c2 so we can connect to him.
+									synchronized(lockPrivate){
+										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+										lockPrivate.notify();
+										currentChannel = privateChannel;
+									}
+									//privateListener.start();
+									
+									System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
+									
+									Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
+									System.out.println("Demande de connexion pour envoyer des fichiers...");
+									fileChannel = ssc.accept();
+									System.out.println("Connexion pour envoi de fichier établie !");
+									
+								}
+								//In this case we are c2 because we already had accept and open a channel for c1.
+								//We just have to connect to c1
+								else{
+									System.out.println("Erreur connexion déjà établie avec " + destName);
+								}
+								break;
+							case 8:
+								this.destName = null;
+								System.out.println("Votre demande a été refusé.");
+								break;
+							case 15 : Readers.readMessage(generalChannel);break;
+						}
+					}catch (IOException e){
+						System.err.println("Deconnexion du server.");
+						silentlyCloseClient();
+					}	
 
 				}
-			}catch (IOException e){
-				System.err.println("Deconnexion du server.");
-				silentlyCloseClient();
-			}			
+		
 		});
 		generalListener.start();
 		
 		this.privateListener = new Thread( () -> {
-			try{
+			
 				while(!Thread.interrupted()){
-					//The thread wait until a connection is make.
-					synchronized(lockPrivate){
-						while(privateChannel == null)
-							lockPrivate.wait();
+					try{
+						//The thread wait until a connection is make.
+						synchronized(lockPrivate){
+							while(privateChannel == null)
+								lockPrivate.wait();
+						}
+						System.out.println("readByte");
+						byte id = Readers.readByte(privateChannel);
+						switch(id){
+							
+						//Exchange address and port between the two clients
+						//Here we are c2, we open the channel and connect then send our address and port.
+							case 9 : 
+								System.out.println("Demande fichier reçu");
+								fileChannel = SocketChannel.open();
+								fileChannel.connect(Readers.readAddress(privateChannel));
+								System.out.println("Connexion pour envoi de fichier établie !");
+								break;
+							//TODO remove because useless
+							case 10 :
+								fileChannel.connect(Readers.readAddress(privateChannel));
+								break;
+							
+							//case we have a demand for file.
+							case 11:
+								//TODO
+								synchronized(lock){
+									receivedFile = true;
+								}
+								this.fileReceived = Readers.readDemand(privateChannel);
+								System.out.println(destName + " veut vous envoyer " + this.fileReceived);
+								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
+								break;
+							//case the person has accepted our demand
+							case 12:
+								synchronized(lockWriteFile){
+									acceptFile = true;
+									lockWriteFile.notify();
+								}
+								System.out.println("Demande accepté, envoi en cours...");
+								//fileWritter.start();
+	;
+								break;
+							//case the person has refused our demand
+							case 13:
+								fileSending = false;
+								System.out.println("Votre demande d'envoi de fichier a été refusé.");
+								break;
+							case 15 : Readers.readPrivateMessage(privateChannel);break;
+						}
+					}catch (IOException e){
+						//TODO
+						System.err.println("Deconnexion du chat privé.");
+						silentlyClosePrivate();
+						this.currentChannel = this.generalChannel;
+						this.fileChannel = null;
 					}
-					byte id = Readers.readByte(privateChannel);
-					switch(id){
-						
-					//Exchange address and port between the two clients
-					//Here we are c2, we open the channel and connect then send our address and port.
-						case 9 : 
-							fileChannel = SocketChannel.open(Readers.readAddress(privateChannel));
-							System.out.println("Connexion pour envoi de fichier établie !");
-							break;
-						//TODO remove because useless
-						case 10 :
-							fileChannel.connect(Readers.readAddress(privateChannel));
-							break;
-						
-						//case we have a demand for file.
-						case 11:
-							//TODO
-							synchronized(lock){
-								receivedFile = true;
-							}
-							this.fileReceived = Readers.readDemand(privateChannel);
-							System.out.println(destName + " veut vous envoyer " + this.fileReceived);
-							System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
-							break;
-						//case the person has accepted our demand
-						case 12:
-							synchronized(lockWriteFile){
-								acceptFile = true;
-								lockWriteFile.notify();
-							}
-							System.out.println("Demande accepté, envoi en cours...");
-							//fileWritter.start();
-;
-							break;
-						//case the person has refused our demand
-						case 13:
-							fileSending = false;
-							System.out.println("Votre demande d'envoi de fichier a été refusé.");
-							break;
-						case 15 : Readers.readPrivateMessage(privateChannel);break;
+					catch(InterruptedException ie){
+						System.err.println("Stop listening on privateChannel");
+						Thread.currentThread().interrupt();
 					}
 
 				}
-			}catch (IOException e){
-				//TODO
-				System.err.println("Deconnexion du chat privé.");
-				silentlyClosePrivate();
-				this.currentChannel = this.generalChannel;
-			}
-			catch(InterruptedException ie){
-				System.err.println("Stop listening on privateChannel");
-				Thread.currentThread().interrupt();
-			}
+			
 		});
 		privateListener.start();
 		
 		this.fileListener = new Thread(()-> {
-			try{
+			
 				while(!Thread.interrupted()){
-					//Wait until a connection is make
-					synchronized(lockReadFile){
-						while(fileChannel == null || !receivedFile)
-							lockReadFile.wait();
-					}
-					Readers.readFile(fileChannel,fileReceived);
-					//Share with general Thread and main, so use simple lock
-					synchronized(lock){
-						receivedFile = false;
-					}
-					System.out.println("Fichier reçu");
+					try{
+						//Wait until a connection is make
+						synchronized(lockReadFile){
+							while(fileChannel == null || !receivedFile)
+								lockReadFile.wait();
+						}
+						Readers.readFile(fileChannel,fileReceived);
+						//Share with general Thread and main, so use simple lock
+						synchronized(lock){
+							receivedFile = false;
+						}
+						System.out.println("Fichier reçu");
+					}catch(IOException e){
+						System.err.println("Deconnexion pour l'envoi de fichier.");
+						silentlyClosePrivate();
+						this.currentChannel = this.generalChannel;
+					}catch(InterruptedException ie){
+						System.err.println("Stop listening on fileChannel.");
+						Thread.currentThread().interrupt();
+					}	
 				}
 				
-			}catch(IOException e){
-				System.err.println("Deconnexion pour l'envoi de fichier.");
-				silentlyClosePrivate();
-				this.currentChannel = this.generalChannel;
-			}catch(InterruptedException ie){
-				System.err.println("Stop listening on fileChannel.");
-				Thread.currentThread().interrupt();
-			}				
+						
 		});
 		fileListener.start();
 		
 		this.fileWritter = new Thread(()-> {
-			try{
+			
 				while(!Thread.interrupted()){
-					synchronized(lockWriteFile){
-						while(!fileSending || !acceptFile)
-							lockWriteFile.wait();
-					}
-							
-					Writters.sendFile(fileChannel, Paths.get(fileToSend));
-					synchronized(lockWriteFile){
-						fileSending = false;
-					}
-					System.out.println("Envoi terminé");
+					try{
+						synchronized(lockWriteFile){
+							while(!fileSending || !acceptFile)
+								lockWriteFile.wait();
+						}
+								
+						Writters.sendFile(fileChannel, Paths.get(fileToSend));
+						synchronized(lockWriteFile){
+							fileSending = false;
+						}
+						System.out.println("Envoi terminé");
+					}catch(IOException e){
+						System.out.println("Connection fermé par le destinataire.");
+						System.out.println("Déconnection du chat privé.");
+					}catch(InterruptedException ie){
+						ie.printStackTrace();
+						Thread.currentThread().interrupt();
+					}	
 				}
 
 
 				
-			}catch(IOException e){
-				System.out.println("Connection fermé par le destinataire.");
-				System.out.println("Déconnection du chat privé.");
-			}catch(InterruptedException ie){
-				ie.printStackTrace();
-				Thread.currentThread().interrupt();
-			}	
+			
 		});
 		fileWritter.start();
 	}
@@ -357,12 +370,13 @@ public class ClientTCPMatou {
 						synchronized(lockPrivate){
 							privateChannel = ssc.accept();
 							lockPrivate.notify();
+							currentChannel = privateChannel;
 						}
 						System.out.println("Vous avez accepté l'invitation");
 						//privateListener.start();
 
 						System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
-						currentChannel = privateChannel;
+						
 					}
 					else if(receivedFile && (privateChannel != null) ){
 						Writters.acceptFile(privateChannel);
@@ -433,7 +447,7 @@ public class ClientTCPMatou {
 		}
 		
 		if(currentChannel != privateChannel)
-			Writters.sendMessage(currentChannel, clientID, myName, line);
+			Writters.sendMessage(generalChannel, clientID, myName, line);
 		else
 			Writters.sendPrivateMessage(currentChannel, myName, line);
 		
