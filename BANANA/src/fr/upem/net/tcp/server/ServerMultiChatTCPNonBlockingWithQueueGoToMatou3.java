@@ -132,7 +132,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public Attachement(SocketChannel sc) {
 
 			this.sc = sc;
+			System.out.println("ALLOCATION "
+					+ Thread.currentThread().getStackTrace()[1]
+							.getLineNumber());
 			in = ByteBuffer.allocate(BUFSIZ * 4);
+			System.out.println("ALLOCATION "
+					+ Thread.currentThread().getStackTrace()[1]
+							.getLineNumber());
 			out = ByteBuffer.allocate(BUFSIZ * 4);
 		}
 
@@ -772,6 +778,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		selectedKeys = selector.selectedKeys();
 	}
 
+	public void clearUnconnectedClient( ){
+		for (String login : map.keySet()) {
+			if( ! map.get(login).sc.isConnected()){
+				map.remove(login);
+			}			
+		}
+	}
 	public void launch() throws IOException {
 		serverSocketChannel.configureBlocking(false);
 		serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -782,6 +795,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			System.out.println("avant selecte");
 			selector.select();
 			System.out.println("aprés selecte");
+			clearUnconnectedClient();
 			processSelectedKeys();
 			selectedKeys.clear();
 		}
