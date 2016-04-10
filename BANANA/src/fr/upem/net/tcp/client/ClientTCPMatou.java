@@ -134,7 +134,6 @@ public class ClientTCPMatou {
 					}catch (IOException e){
 						System.err.println("Deconnexion du server.");
 						silentlyCloseClient();
-						System.exit(0);
 					}	
 
 				}
@@ -506,6 +505,7 @@ public class ClientTCPMatou {
 		silentlyClose(generalChannel);
 		silentlyClosePrivate();
 		System.out.println("Le client va fermé.");
+		System.exit(0);
 		
 	}
 	
