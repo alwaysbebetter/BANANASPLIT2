@@ -27,6 +27,7 @@ public class ClientTCPMatou {
 	
 	//Channel uses to download/upload file
 	private SocketChannel fileChannel = null;
+	private final InetSocketAddress remoteAddress;
 	
 	//List of folks connected
 	//We use a Linked list because people will connect and disconnect(add/remove) often
@@ -58,7 +59,8 @@ public class ClientTCPMatou {
 	public ClientTCPMatou(String serverAdress, int serverPort)
 			throws UnknownHostException, IOException {
 		generalChannel = SocketChannel.open();
-		generalChannel.connect(new InetSocketAddress(serverAdress, serverPort));
+		this.remoteAddress = new InetSocketAddress(serverAdress, serverPort);
+		generalChannel.connect(this.remoteAddress);
 		ssc = ServerSocketChannel.open();
 		ssc.bind(null);
 		this.sc = new Scanner(System.in);
@@ -125,6 +127,8 @@ public class ClientTCPMatou {
 				}
 			}catch (IOException e){
 				e.printStackTrace();
+				System.err.println("Problem with server.");
+				silentlyCloseClient();
 			}			
 		});
 		generalListener.start();
@@ -182,9 +186,15 @@ public class ClientTCPMatou {
 				}
 			}catch (IOException e){
 				//TODO
+				System.err.println("Connection private lost");
+				silentlyClose(privateChannel);
+				privateChannel = null;
+				silentlyClose(fileChannel);
+				fileChannel = null;
+				this.currentChannel = this.generalChannel;
 			}
 			catch(InterruptedException ie){
-				ie.printStackTrace();
+				System.err.println("Stop listening on privateChannel");
 				Thread.currentThread().interrupt();
 			}
 		});
@@ -207,9 +217,14 @@ public class ClientTCPMatou {
 				}
 				
 			}catch(IOException e){
-				e.printStackTrace();
+				System.err.println("Connection private lost");
+				silentlyClose(privateChannel);
+				privateChannel = null;
+				silentlyClose(fileChannel);
+				fileChannel = null;
+				this.currentChannel = this.generalChannel;
 			}catch(InterruptedException ie){
-				ie.printStackTrace();
+				System.err.println("Stop listening on fileChannel.");
 				Thread.currentThread().interrupt();
 			}				
 		});
@@ -471,6 +486,10 @@ public class ClientTCPMatou {
 			silentlyClose(generalChannel);
 			sc.close();
 		}
+	}
+	
+	private void silentlyCloseClient(){
+		
 	}
 
 	private void silentlyClose(SocketChannel socket) {
