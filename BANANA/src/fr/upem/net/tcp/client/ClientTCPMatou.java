@@ -126,8 +126,7 @@ public class ClientTCPMatou {
 
 				}
 			}catch (IOException e){
-				e.printStackTrace();
-				System.err.println("Problem with server.");
+				System.err.println("Deconnexion du server.");
 				silentlyCloseClient();
 			}			
 		});
@@ -186,11 +185,8 @@ public class ClientTCPMatou {
 				}
 			}catch (IOException e){
 				//TODO
-				System.err.println("Connection private lost");
-				silentlyClose(privateChannel);
-				privateChannel = null;
-				silentlyClose(fileChannel);
-				fileChannel = null;
+				System.err.println("Deconnexion du chat privé.");
+				silentlyClosePrivate();
 				this.currentChannel = this.generalChannel;
 			}
 			catch(InterruptedException ie){
@@ -217,11 +213,8 @@ public class ClientTCPMatou {
 				}
 				
 			}catch(IOException e){
-				System.err.println("Connection private lost");
-				silentlyClose(privateChannel);
-				privateChannel = null;
-				silentlyClose(fileChannel);
-				fileChannel = null;
+				System.err.println("Deconnexion pour l'envoi de fichier.");
+				silentlyClosePrivate();
 				this.currentChannel = this.generalChannel;
 			}catch(InterruptedException ie){
 				System.err.println("Stop listening on fileChannel.");
@@ -248,7 +241,8 @@ public class ClientTCPMatou {
 
 				
 			}catch(IOException e){
-				e.printStackTrace();
+				System.out.println("Connection fermé par le destinataire.");
+				System.out.println("Déconnection du chat privé.");
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
 				Thread.currentThread().interrupt();
@@ -338,15 +332,17 @@ public class ClientTCPMatou {
 			case "/quit":
 				if(privateChannel != null){
 					System.out.println("Vous avez quitté le chat privé.");
-					silentlyClose(privateChannel);
-					silentlyClose(fileChannel);
-					privateChannel = null;
-					fileChannel = null;
+					silentlyClosePrivate();
 					currentChannel = generalChannel;
 				}
 				else
 					System.out.println("Vous n'avez pas de discussion privé en cours.");
 				return;
+				
+			case "/leave":
+				silentlyCloseClient();
+				return;
+				
 			
 			//accept an invite
 			case "/yes":
@@ -483,12 +479,24 @@ public class ClientTCPMatou {
 
 			}
 		} finally {
-			silentlyClose(generalChannel);
+			silentlyCloseClient();
 			sc.close();
 		}
 	}
 	
 	private void silentlyCloseClient(){
+		silentlyClose(generalChannel);
+		silentlyClosePrivate();
+		System.out.println("Le client va fermé.");
+		
+	}
+	
+	private void silentlyClosePrivate(){
+		silentlyClose(privateChannel);
+		silentlyClose(fileChannel);
+		this.privateChannel = null;
+		this.fileChannel = null;
+		System.out.println("Connection privé fermé.");
 		
 	}
 
