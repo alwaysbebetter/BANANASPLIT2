@@ -397,6 +397,20 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			return StatusProcessing.ERROR;//TODO: find other solution
 		}
 
+		private void publish(SelectionKey key)
+				throws IOException {
+			for (SelectionKey key2 : selector.keys()) {
+				if (key2.isValid() && (key2.channel() instanceof SocketChannel)
+						&& (!key2.equals(key))) {
+					out.flip();
+					SocketChannel sch = (SocketChannel) key2.channel();
+					sch.write(out);
+
+				}
+
+			}
+		}
+		
 		public void writeString(ByteBuffer bb, String s) {
 			ByteBuffer tmp = UTF_8.encode(s);
 			bb.putInt(tmp.remaining()).put(tmp);
@@ -436,6 +450,96 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			Loggers.test(bb);
 
 		}
+		
+		private void doRead(SelectionKey key) throws IOException {
+		
+
+			SocketChannel client = sc ;
+
+			// le problem c'est que el read renoie -1 et que la position est a 0
+
+			if (-1 == client.read(in)) {
+
+				isClosed = true;
+				if (in.position() == 0) {
+
+					client.close();
+				}
+
+			}
+			System.out.println("INTEREST_OPS :" + getInterest());
+			readType();
+			findReader();
+			if( StatusProcessing.ERROR == applyReader()){
+				return ;
+			}
+			treatData();
+
+			key.interestOps(getInterest());
+		}
+		
+		private void doWrite(SelectionKey key) throws IOException {
+
+			Attachement at;
+
+			// faire le techeck sur la taille avant et il fatu faire en sorte que la
+			// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
+			// besoin de reallouer.
+
+			switch (typeLastPacketReceiv) {
+			case ASC_CO_SERV:
+
+				out.flip();
+				sc.write(out);
+				out.compact();
+
+				break;
+			case ACC_CO_PRV_CS:
+			case REF_CO_PRV_CS:
+				at = map.get(dataPacketRead.getLoginDst());
+				out.flip();
+				at.sc.write(out);
+				out.compact();
+
+				System.out.println("remaaaiinning :"
+						+ out.remaining());
+				break;
+			case ASC_CO_PRV_CS:
+
+				at = map.get(dataPacketRead.getLoginDst());
+				out.flip();
+				at.sc.write(out);
+				out.compact();
+
+				System.out.println("remaaaiinning :"
+						+ out.remaining());
+
+				break;
+			case MESSAGE:
+				if (map.size() > 1) {
+					publish(key);
+				}
+
+				// synthetethetic clear
+				out.clear();
+				out.position(out.remaining());
+				out.compact();
+
+				System.out.println("remaaaiinning :"
+						+ out.remaining());
+				break;
+
+			}
+			System.out.println("raaa");
+
+			if (isClosed) {
+				sc.close();
+				isClosed = true;
+			}
+
+			key.interestOps(getInterest());
+		}
+
 
 		public void treatData() {
 
@@ -651,7 +755,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private void processSelectedKeys() throws IOException {
 
 		for (SelectionKey key : selectedKeys) {
-
+			Attachement at = (Attachement) key.attachment();
 			if (key.isValid() && key.isAcceptable()) {
 				doAccept(key);// on ne catrch pas cette exception parce que si
 								// le accept
@@ -662,12 +766,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			try { // on la catch ici car on arrete pas le serveur pour ça
 				if (key.isValid() && key.isWritable()) {
 					System.out.println("START DOWRITE");
-					doWrite(key);
+					at.doWrite(key);
 				}
 				System.out.println("aaaaa1");
 				if (key.isValid() && key.isReadable()) {
 					System.out.println("START DOREAD");
-					doRead(key);
+					at.doRead(key);
 				}
 				System.out.println("aaaaa2");
 			} catch (Exception e) {
@@ -689,111 +793,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	}
 
-	private void publish(SelectionKey key, Attachement theAttachement)
-			throws IOException {
-		for (SelectionKey key2 : selector.keys()) {
-			if (key2.isValid() && (key2.channel() instanceof SocketChannel)
-					&& (!key2.equals(key))) {
-				theAttachement.out.flip();
-				SocketChannel sch = (SocketChannel) key2.channel();
-				sch.write(theAttachement.out);
+	
 
-			}
+	
 
-		}
-	}
-
-	private void doRead(SelectionKey key) throws IOException {
-		Attachement theAttachement = (Attachement) key.attachment();
-
-		SocketChannel client = (SocketChannel) key.channel();
-
-		// le problem c'est que el read renoie -1 et que la position est a 0
-
-		if (-1 == client.read(theAttachement.in)) {
-
-			theAttachement.isClosed = true;
-			if (theAttachement.in.position() == 0) {
-
-				client.close();
-			}
-
-		}
-		System.out.println("INTEREST_OPS :" + theAttachement.getInterest());
-		theAttachement.readType();
-		theAttachement.findReader();
-		if( StatusProcessing.ERROR == theAttachement.applyReader()){
-			return ;
-		}
-		theAttachement.treatData();
-
-		key.interestOps(theAttachement.getInterest());
-	}
-
-	private void doWrite(SelectionKey key) throws IOException {
-		SocketChannel client = (SocketChannel) key.channel();
-		Attachement theAttachement = (Attachement) key.attachment();
-		Attachement at;
-
-		// faire le techeck sur la taille avant et il fatu faire en sorte que la
-		// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
-		// besoin de reallouer.
-
-		// publish(key, theAttachement);
-		switch (theAttachement.typeLastPacketReceiv) {
-		case ASC_CO_SERV:
-
-			theAttachement.out.flip();
-			client.write(theAttachement.out);
-			theAttachement.out.compact();
-
-			break;
-		case ACC_CO_PRV_CS:
-		case REF_CO_PRV_CS:
-			at = map.get(theAttachement.dataPacketRead.getLoginDst());
-			theAttachement.out.flip();
-			at.sc.write(theAttachement.out);
-			theAttachement.out.compact();
-
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
-			break;
-		case ASC_CO_PRV_CS:
-
-			at = map.get(theAttachement.dataPacketRead.getLoginDst());
-			theAttachement.out.flip();
-			at.sc.write(theAttachement.out);
-			theAttachement.out.compact();
-
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
-
-			break;
-		case MESSAGE:
-			if (map.size() > 1) {
-				publish(key, theAttachement);
-			}
-
-			// synthetethetic clear
-			theAttachement.out.clear();
-			theAttachement.out.position(theAttachement.out.remaining());
-			theAttachement.out.compact();
-
-			System.out.println("remaaaiinning :"
-					+ theAttachement.out.remaining());
-			break;
-
-		}
-		System.out.println("raaa");
-
-		if (theAttachement.isClosed) {
-			client.close();
-			theAttachement.isClosed = true;
-		}
-
-		key.interestOps(theAttachement.getInterest());
-	}
-
+	
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
 		new ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(

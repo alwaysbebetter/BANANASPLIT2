@@ -82,7 +82,7 @@ public class ClientTCPMatouInt {
 							//In this case we are c1 because c2 have open a channel for us.
 							if(privateChannel == null){
 								privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-								Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+								//Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 								fileChannel = SocketChannel.open();
 								//Writters.askPrivateFileConnection(privateChannel,9,fileChannel);
 							}
@@ -226,7 +226,7 @@ public class ClientTCPMatouInt {
 					//We prepare the channel here and send our address and port to c1.
 					//We need to connect to c1 after, the tread generalListener will do this.
 					privateChannel = SocketChannel.open();
-					Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
+					//Writters.acceptPrivateConnection(generalChannel,clientID,destName,privateChannel);
 				}
 				if(receivedFile && (privateChannel != null) ){
 					System.out.println("Vous avez accepté le fichier.");
