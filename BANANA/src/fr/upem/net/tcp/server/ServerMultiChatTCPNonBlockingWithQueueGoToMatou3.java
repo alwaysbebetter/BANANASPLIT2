@@ -640,7 +640,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// realBuildOut(TypePacket.ACC_CO_SERV);
 					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
 							out);
-					statusExchange = StatusExchange.WAITING_TO_CO_PRV;
+				//	statusExchange = StatusExchange.WAITING_TO_CO_PRV;
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 
@@ -677,7 +677,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
-				case REF_CO_PRV_CS:
+				case REF_CO_PRV_CS:// ce la session du client 2 qui reçoi la trame.
 					
 					if (/*(!dataPacketRead.getLoginSrc().equals(login))
 							||*/ (id != dataPacketRead.getId())) {
@@ -698,7 +698,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					 * -----------------------------------------
 					 */
 
-					statusExchange = StatusExchange.CONNECTED_TO_SERV;
+					
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
