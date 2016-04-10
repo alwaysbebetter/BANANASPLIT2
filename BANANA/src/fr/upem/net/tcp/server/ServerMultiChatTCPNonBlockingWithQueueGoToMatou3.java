@@ -116,7 +116,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		ByteBuffer in, out;
 		boolean isClosed = false;
-		int remainingTry = REMAINING_TRY ;
+		int remainingTry = REMAINING_TRY;
 		String login;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
 		public DataPacketRead dataPacketRead;
@@ -201,6 +201,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				} catch (IOException e) {
 					// Ignor
+					
 				}
 			}
 		}
@@ -524,11 +525,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			case ASC_CO_PRV_CS:
 				out.flip();
 				if ((at = map.get(dataPacketRead.getLoginDst())) != null) {
-					
+
 					at.sc.write(out);
-				
-					
-				} else {// si le client envoie une demande un client qui n'existe pas alors il ressevra une trame de refu
+
+				} else {// si le client envoie une demande un client qui
+						// n'existe pas alors il ressevra une trame de refu
 					sc.write(out);
 				}
 				System.out.println("remaaaiinning :" + out.remaining());
@@ -592,9 +593,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_SERV, out);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
-						if( --remainingTry <= 0 ){
+						if (--remainingTry <= 0) {
 							silentlyClose(sc);
-							
+
 						}
 						statusTreatment = StatusTreatment.TYPE_READING;
 						return;// and close se socket
@@ -808,8 +809,16 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					at.doRead(key);
 				}
 				System.out.println("aaaaa2");
+			} catch (IOException e) {
+				System.out.println("IOExcpetion catch !");//TODO : delete
+				if (map.get(at.login) != null) {// if an exception occured, anshure that client will be remove from the map
+					map.remove(at.login);
+				}
 			} catch (Exception e) {
-				;
+				System.out.println("Excpetion catch !");//TODO : delete
+				if (map.get(at.login) != null) {// if an exception occured, anshure that client will be remove from the map
+					map.remove(at.login);
+				}
 			}
 
 		}
