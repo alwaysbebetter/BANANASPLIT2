@@ -641,7 +641,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					}
 
 					String loginDest = dataPacketRead.getLoginDst();
-					if (map.get(loginDest) == null) {
+					if ((map.get(loginDest) == null) || (login.equals(loginDest)) ) {
 						// TODO: ne rien faire car il se peut que le
 						// destinataire ce
 						// soit déconnecté,
@@ -682,6 +682,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// TODO: close
 						CloseAnRejectClient(login);
 					}
+					
 
 					// attention c'est l'adresse privé c'est pour ça que debase
 					// le serveur ne la connait aps et qu'il la communique.
