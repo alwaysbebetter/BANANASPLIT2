@@ -671,7 +671,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// |7 | taille address | address | port |
 					// ---------------------------------------------------
 
-					statusExchange = StatusExchange.CONNECTED_TO_PRV;
+					//statusExchange = StatusExchange.CONNECTED_TO_PRV;
 					// TODO : on doit accede a l'autre client poru envoyer la
 					// trame sur ça socket et aussi pour changer son statu
 
