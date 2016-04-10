@@ -129,7 +129,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		String loginDest;
 
 		public Attachement(SocketChannel sc) {
-			
+
 			this.sc = sc;
 			in = ByteBuffer.allocate(BUFSIZ * 4);
 			out = ByteBuffer.allocate(BUFSIZ * 4);
@@ -166,8 +166,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				return false;
 			case WAITING_TO_CO_PRV:
 				if (typePacket.equals(TypePacket.MESSAGE))
-					//	|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
-						 
+					// || typePacket.equals(TypePacket.ACC_CO_PRV_CS)
+
 					return true;
 				return false;
 			case CONNECTED_TO_PRV:
@@ -295,7 +295,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 					if (readerASC_CO_SERV == null) {
-						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+						System.out.println("ALLOCATION "
+								+ Thread.currentThread().getStackTrace()[1]
+										.getLineNumber());
 						readerASC_CO_SERV = new ReaderString(SRC_DATA,
 								typeLastPacketReceiv);
 					}
@@ -306,7 +308,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ASC_CO_PRV_CS:// Code : 3
 
 					if (readerASC_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+						System.out.println("ALLOCATION "
+								+ Thread.currentThread().getStackTrace()[1]
+										.getLineNumber());
 						readerASC_CO_PRV_CS = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -316,19 +320,21 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
-						readerACC_CO_PRV_CS = new ReaderInt(
-								new ReaderString(new ReaderLong(
-										new ReaderString(DEST_DATA,
-												typeLastPacketReceiv))
-										, SRC_DATA_ADR));
+						System.out.println("ALLOCATION "
+								+ Thread.currentThread().getStackTrace()[1]
+										.getLineNumber());
+						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+								new ReaderLong(new ReaderString(DEST_DATA,
+										typeLastPacketReceiv)), SRC_DATA_ADR));
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
 				case REF_CO_PRV_CS:// Code : 6
 
 					if (readerREF_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+						System.out.println("ALLOCATION "
+								+ Thread.currentThread().getStackTrace()[1]
+										.getLineNumber());
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
 								DEST_DATA, typeLastPacketReceiv));
 					}
@@ -337,7 +343,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case MESSAGE:// Code :15
 
 					if (readerMESSAGE == null) {
-						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+						System.out.println("ALLOCATION "
+								+ Thread.currentThread().getStackTrace()[1]
+										.getLineNumber());
 						readerMESSAGE = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -401,11 +409,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					return StatusProcessing.REFILL;
 				}
 			}
-			return StatusProcessing.ERROR;//TODO: find other solution
+			return StatusProcessing.ERROR;// TODO: find other solution
 		}
 
-		private void publish(SelectionKey key)
-				throws IOException {
+		private void publish(SelectionKey key) throws IOException {
 			for (SelectionKey key2 : selector.keys()) {
 				if (key2.isValid() && (key2.channel() instanceof SocketChannel)
 						&& (!key2.equals(key))) {
@@ -417,7 +424,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			}
 		}
-		
+
 		public void writeString(ByteBuffer bb, String s) {
 			ByteBuffer tmp = UTF_8.encode(s);
 			bb.putInt(tmp.remaining()).put(tmp);
@@ -458,11 +465,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			Loggers.test(bb);
 
 		}
-		
-		private void doRead(SelectionKey key) throws IOException {
-		
 
-			SocketChannel client = sc ;
+		private void doRead(SelectionKey key) throws IOException {
+
+			SocketChannel client = sc;
 
 			// le problem c'est que el read renoie -1 et que la position est a 0
 
@@ -478,20 +484,22 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			System.out.println("INTEREST_OPS :" + getInterest());
 			readType();
 			findReader();
-			if( StatusProcessing.ERROR == applyReader()){
-				return ;
+			if (StatusProcessing.ERROR == applyReader()) {
+				return;
 			}
 			treatData();
 
 			key.interestOps(getInterest());
 		}
-		
+
 		private void doWrite(SelectionKey key) throws IOException {
 
 			Attachement at;
 
-			// faire le techeck sur la taille avant et il fatu faire en sorte que la
-			// taille n'excede jamasi celel du buffer qu'on a allouer comme ça pas
+			// faire le techeck sur la taille avant et il fatu faire en sorte
+			// que la
+			// taille n'excede jamasi celel du buffer qu'on a allouer comme ça
+			// pas
 			// besoin de reallouer.
 
 			switch (typeLastPacketReceiv) {
@@ -510,19 +518,20 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				at.sc.write(out);
 				out.compact();
 
-				System.out.println("remaaaiinning :"
-						+ out.remaining());
+				System.out.println("remaaaiinning :" + out.remaining());
 				break;
 			case ASC_CO_PRV_CS:
-
-				at = map.get(dataPacketRead.getLoginDst());
 				out.flip();
-				at.sc.write(out);
+				if ((at = map.get(dataPacketRead.getLoginDst())) != null) {
+					
+					at.sc.write(out);
+				
+					
+				} else {// si le client envoie une demande un client qui n'existe pas alors il ressevra une trame de refu
+					sc.write(out);
+				}
+				System.out.println("remaaaiinning :" + out.remaining());
 				out.compact();
-
-				System.out.println("remaaaiinning :"
-						+ out.remaining());
-
 				break;
 			case MESSAGE:
 				if (map.size() > 1) {
@@ -534,8 +543,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				out.position(out.remaining());
 				out.compact();
 
-				System.out.println("remaaaiinning :"
-						+ out.remaining());
+				System.out.println("remaaaiinning :" + out.remaining());
 				break;
 
 			}
@@ -548,7 +556,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			key.interestOps(getInterest());
 		}
-
 
 		public void treatData() {
 
@@ -566,7 +573,10 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
 					System.out.println("Is unexpectedTypePacket !!");// TODO :
 																		// delete
-					CloseAnRejectClient(login);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
+					CloseAnRejectClient(login);// TODO: ET METTRE A NUL L LA
+												// VARIABLE CLIENT POUR QU'ELLE
+												// SOIT PRISE PAR LE GARBAGE
+												// COLLECTORS
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
@@ -632,15 +642,19 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						// ouaalors simplement pour marqué
 						// le refu mais depuis le serveur,
 						System.out.println("LOGIN DOESN'T EXIST ");// TODO :
-																	// delete
-						// TODO : envoyer la trame de notification de reffu ( ce couop, si, depuis le server )
-					}
+						writePacketToSend(dataPacketRead,
+								TypePacket.REF_CO_PRV_SC, out);
+						// delete
+						// TODO : envoyer la trame de notification de reffu ( ce
+						// couop, si, depuis le server )
+					} else {
 
-					// WRITTER
-					// realBuildOut(TypePacket.ACC_CO_SERV);
-					writePacketToSend(dataPacketRead, TypePacket.ASC_CO_PRV_SC,
-							out);
-				//	statusExchange = StatusExchange.WAITING_TO_CO_PRV;
+						// WRITTER
+						// realBuildOut(TypePacket.ACC_CO_SERV);
+						writePacketToSend(dataPacketRead,
+								TypePacket.ASC_CO_PRV_SC, out);
+						// statusExchange = StatusExchange.WAITING_TO_CO_PRV;
+					}
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 
@@ -648,8 +662,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				case ACC_CO_PRV_CS:
 
-					if (/*(!dataPacketRead.getLoginSrc().equals(login))
-							||*/ (id != dataPacketRead.getId())) {
+					if (/*
+						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
+						 */(id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
@@ -671,17 +686,19 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// |7 | taille address | address | port |
 					// ---------------------------------------------------
 
-					//statusExchange = StatusExchange.CONNECTED_TO_PRV;
+					// statusExchange = StatusExchange.CONNECTED_TO_PRV;
 					// TODO : on doit accede a l'autre client poru envoyer la
 					// trame sur ça socket et aussi pour changer son statu
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
-				case REF_CO_PRV_CS:// ce la session du client 2 qui reçoi la trame.
-					
-					if (/*(!dataPacketRead.getLoginSrc().equals(login))
-							||*/ (id != dataPacketRead.getId())) {
-						System.out.println("CLOSE AN REJECET CLIENT "+login);
+				case REF_CO_PRV_CS:// ce la session du client 2 qui reçoi la
+									// trame.
+
+					if (/*
+						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
+						 */(id != dataPacketRead.getId())) {
+						System.out.println("CLOSE AN REJECET CLIENT " + login);
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
@@ -697,8 +714,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					 * String | id | 6 | taille pseudo c1 |pseudo c1| long
 					 * -----------------------------------------
 					 */
-
-					
 
 					statusTreatment = StatusTreatment.TYPE_READING;
 					break;
@@ -744,7 +759,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	public ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(int port)
 			throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
-		System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+		System.out.println("ALLOCATION "
+				+ Thread.currentThread().getStackTrace()[1].getLineNumber());
 		serverSocketChannel.bind(new InetSocketAddress(port));
 		selector = Selector.open();
 		selectedKeys = selector.selectedKeys();
@@ -800,21 +816,20 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-		System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
+		System.out.println("ALLOCATION "
+				+ Thread.currentThread().getStackTrace()[1].getLineNumber());
 		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
 				new Attachement(sc));// ALLOC : obligatoire
 
 	}
 
-	
-
-	
-
-	
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
-		
-		System.out.println("ALLOCATION line "+Thread.currentThread().getStackTrace()[1].getLineNumber());// ALLOC : obligatoire
+
+		System.out.println("ALLOCATION line "
+				+ Thread.currentThread().getStackTrace()[1].getLineNumber());// ALLOC
+																				// :
+																				// obligatoire
 		new ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(
 				Integer.parseInt(args[0])).launch();
 
