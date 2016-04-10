@@ -129,6 +129,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		String loginDest;
 
 		public Attachement(SocketChannel sc) {
+			
 			this.sc = sc;
 			in = ByteBuffer.allocate(BUFSIZ * 4);
 			out = ByteBuffer.allocate(BUFSIZ * 4);
@@ -158,14 +159,15 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				return false;
 			case CONNECTED_TO_SERV:
 				if (typePacket.equals(TypePacket.ASC_CO_PRV_CS)
+						|| typePacket.equals(TypePacket.REF_CO_PRV_CS)
 						|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
 						|| typePacket.equals(TypePacket.MESSAGE))
 					return true;
 				return false;
 			case WAITING_TO_CO_PRV:
-				if (typePacket.equals(TypePacket.REF_CO_PRV_CS)
+				if (typePacket.equals(TypePacket.MESSAGE))
 					//	|| typePacket.equals(TypePacket.ACC_CO_PRV_CS)
-						|| typePacket.equals(TypePacket.MESSAGE))
+						 
 					return true;
 				return false;
 			case CONNECTED_TO_PRV:
@@ -293,6 +295,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 					if (readerASC_CO_SERV == null) {
+						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 						readerASC_CO_SERV = new ReaderString(SRC_DATA,
 								typeLastPacketReceiv);
 					}
@@ -303,6 +306,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ASC_CO_PRV_CS:// Code : 3
 
 					if (readerASC_CO_PRV_CS == null) {
+						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 						readerASC_CO_PRV_CS = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -312,6 +316,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
+						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 						readerACC_CO_PRV_CS = new ReaderInt(
 								new ReaderString(new ReaderLong(
 										new ReaderString(DEST_DATA,
@@ -323,6 +328,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case REF_CO_PRV_CS:// Code : 6
 
 					if (readerREF_CO_PRV_CS == null) {
+						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
 								DEST_DATA, typeLastPacketReceiv));
 					}
@@ -331,6 +337,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case MESSAGE:// Code :15
 
 					if (readerMESSAGE == null) {
+						System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 						readerMESSAGE = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -555,7 +562,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				TypePacket theTypePacket = TypePacket.values()[dataPacketRead
 						.getTypePacket().getValue()];
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
-					System.out.println("Is an expectedTypePacket !!");// TODO :
+					System.out.println("Is unexpectedTypePacket !!");// TODO :
 																		// delete
 					CloseAnRejectClient(login);//TODO: ET METTRE A NUL L LA VARIABLE CLIENT POUR QU'ELLE SOIT PRISE PAR LE GARBAGE COLLECTORS
 				}
@@ -732,6 +739,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	public ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(int port)
 			throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
+		System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 		serverSocketChannel.bind(new InetSocketAddress(port));
 		selector = Selector.open();
 		selectedKeys = selector.selectedKeys();
@@ -787,9 +795,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
-
+		System.out.println("ALLOCATION "+Thread.currentThread().getStackTrace()[1].getLineNumber());
 		sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE,
-				new Attachement(sc));
+				new Attachement(sc));// ALLOC : obligatoire
 
 	}
 
@@ -800,6 +808,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
+		
+		System.out.println("ALLOCATION line "+Thread.currentThread().getStackTrace()[1].getLineNumber());// ALLOC : obligatoire
 		new ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(
 				Integer.parseInt(args[0])).launch();
 
