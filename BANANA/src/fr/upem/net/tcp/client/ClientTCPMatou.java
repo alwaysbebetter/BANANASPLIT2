@@ -83,9 +83,16 @@ public class ClientTCPMatou {
 								synchronized(lock){
 									this.receivedInvite = true;
 								}
-								this.destName = Readers.readDemand(generalChannel);
-								System.out.println(destName + " vous a invité en chat privé.");
-								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
+								if(privateChannel == null){
+									this.destName = Readers.readDemand(generalChannel);
+									System.out.println(destName + " vous a invité en chat privé.");
+									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
+								}
+								else{
+									System.out.println(Readers.readDemand(generalChannel) + " vous a invité mais vous"
+											+ " êtes déjà connecté avec " + this.destName);
+								}
+								
 								
 								break;
 								
@@ -95,13 +102,12 @@ public class ClientTCPMatou {
 								//c2 has received our demand so his privateChannel is open.
 								if(null == this.privateChannel){
 									
-	
 									System.out.println("Votre demande a été accepté par " + destName +" !");
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
 										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
 										lockPrivate.notify();
-										currentChannel = privateChannel;
+										currentChannel = privateChannel;										
 									}
 									//privateListener.start();
 									
@@ -128,6 +134,7 @@ public class ClientTCPMatou {
 					}catch (IOException e){
 						System.err.println("Deconnexion du server.");
 						silentlyCloseClient();
+						System.exit(0);
 					}	
 
 				}
@@ -144,7 +151,6 @@ public class ClientTCPMatou {
 							while(privateChannel == null)
 								lockPrivate.wait();
 						}
-						System.out.println("readByte");
 						byte id = Readers.readByte(privateChannel);
 						switch(id){
 							
@@ -163,7 +169,6 @@ public class ClientTCPMatou {
 							
 							//case we have a demand for file.
 							case 11:
-								//TODO
 								synchronized(lock){
 									receivedFile = true;
 								}
@@ -189,7 +194,6 @@ public class ClientTCPMatou {
 							case 15 : Readers.readPrivateMessage(privateChannel);break;
 						}
 					}catch (IOException e){
-						//TODO
 						System.err.println("Deconnexion du chat privé.");
 						silentlyClosePrivate();
 						this.currentChannel = this.generalChannel;
