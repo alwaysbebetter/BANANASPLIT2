@@ -24,7 +24,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
 	private int co = 0;
 	private int debug = 0;
-	static private final int BUFSIZ = 200, REMAINING_TRY = 3;
+	static private final int BUFSIZ = 200, MAX_ATTEMPS = 3, MAX_NBR_OF_CONNEXION = 2 ;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public final static int SRC_DATA = 0, DEST_DATA = 1, SRC_DATA_ADR = 2;
 	private Random rand = new Random();
@@ -116,7 +116,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		ByteBuffer in, out;
 		boolean isClosed = false;
-		int remainingTry = REMAINING_TRY;
+		int remainingTry = MAX_ATTEMPS;
 		String login;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
 		public DataPacketRead dataPacketRead;
@@ -455,10 +455,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				break;
 
 			case REF_CO_PRV_SC:
+				writeString(bb,login);
 				System.out.println("write in bb REF_CO_PRV_SC");
 				// Do nothing
 				break;
 			case ACC_CO_PRV_SC:
+				writeString(bb,login);
 				writeString(bb, data.getAdrSrc());
 				bb.putInt(data.getPortSrc());
 				break;
@@ -841,6 +843,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	private void doAccept(SelectionKey key) throws IOException {
 		// only the ServerSocketChannel is register in OP_ACCEPT
+		if ( MAX_NBR_OF_CONNEXION < map.size() ){
+			return ;
+		}
 		SocketChannel sc = serverSocketChannel.accept();
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
