@@ -100,41 +100,27 @@ public class ClientTCPMatou {
 	
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
-								//We check destName to check if we have invite someone, avoid late accept.
 								if(null == this.privateChannel && (this.destName != null)){
 									
 									System.out.println("Votre demande a été accepté par " + destName +" !");
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
 										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc);
-										lockPrivate.notify();	
+										lockPrivate.notify();
+										currentChannel = privateChannel;										
 									}
 									//privateListener.start();
 									
-									System.out.println("Connexion privé établie !");
+									System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
+									
 									Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
 									System.out.println("Demande de connexion pour envoyer des fichiers...");
 									fileChannel = ssc.accept();
 									System.out.println("Connexion pour envoi de fichier établie !");
-									System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
-									currentChannel=privateChannel;
-									
 									
 								}
-								else if((null != this.privateChannel) && receivedInvite){
-									synchronized(lockPrivate){
-										privateChannel = ssc.accept();	
-										lockPrivate.notify();
-										Readers.readAddress(generalChannel);
-										
-									}
-								}
-								
-		
 								
 								//case we are already connected, destName is not null
-								//TODO remove after change RFC with name in packet 7
 								else if(null != this.privateChannel && (this.destName != null)){
 									System.out.println("Erreur connexion déjà établie avec " + destName);
 									Readers.readAddress(generalChannel);
@@ -175,15 +161,10 @@ public class ClientTCPMatou {
 								fileChannel = SocketChannel.open();
 								fileChannel.connect(Readers.readAddress(privateChannel));
 								System.out.println("Connexion pour envoi de fichier établie !");
-								currentChannel = privateChannel;
-								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
-								currentChannel = privateChannel;
 								break;
 							//TODO remove because useless
 							case 10 :
 								fileChannel.connect(Readers.readAddress(privateChannel));
-								currentChannel = privateChannel;
-								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 								break;
 							
 							//case we have a demand for file.
@@ -390,19 +371,17 @@ public class ClientTCPMatou {
 						//We prepare the channel here and send our address and port to c1.
 						//We need to connect to c1 after, the tread generalListener will do this.
 	
-						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
 						//Let c1 connect to us
-						//TODO remove when done
-						/*synchronized(lockPrivate){
+						synchronized(lockPrivate){
 							privateChannel = ssc.accept();
 							lockPrivate.notify();
 							currentChannel = privateChannel;
-						}*/
+						}
 						System.out.println("Vous avez accepté l'invitation");
 						//privateListener.start();
 
-						
+						System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 						
 					}
 					else if(receivedFile && (privateChannel != null) ){
