@@ -455,12 +455,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				break;
 
 			case REF_CO_PRV_SC:
-				writeString(bb, login);
+				writeString(bb, data.getLoginDst());
 				System.out.println("write in bb REF_CO_PRV_SC");
 				// Do nothing
 				break;
 			case ACC_CO_PRV_SC:
-				writeString(bb, login);
+				writeString(bb, data.getLoginDst());
 				writeString(bb, data.getAdrSrc());
 				bb.putInt(data.getPortSrc());
 				break;
