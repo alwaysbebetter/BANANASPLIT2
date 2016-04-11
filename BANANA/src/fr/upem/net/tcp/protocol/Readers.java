@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import fr.upem.net.logger.Loggers;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 
 public class Readers {
@@ -103,10 +104,11 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static boolean nameAccepted(SocketChannel sc) throws IOException{
-		byte answer = readByte(sc);
-		if(answer == (byte)1)
+		
+		TypePacket packet = TypePacket.values()[readByte(sc)];
+		if(packet == TypePacket.ACC_CO_SERV)
 			return true;
-		else if(answer == (byte)2)
+		else if(packet == TypePacket.REF_CO_SERV)
 			return false;
 		throw new ReadersException("Problem, unknow response");
 	}

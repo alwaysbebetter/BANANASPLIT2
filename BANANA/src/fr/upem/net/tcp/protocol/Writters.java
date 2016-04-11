@@ -12,7 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import fr.upem.net.logger.Loggers;
-import fr.upem.net.tcp.server.ServerTcpNonBlocking.TypePacket;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class Writters {
 
@@ -33,7 +33,7 @@ public class Writters {
 		ByteBuffer buff2 = allocate(1, Byte.BYTES + buff.remaining());
 
 		// Code 0 ask for connection
-		buff2.put((byte) 0);
+		buff2.put((byte)TypePacket.ASC_CO_SERV.getValue());
 
 		// Name size in bytes. It's not name.length !
 		buff2.putInt(buff.remaining());
@@ -74,16 +74,6 @@ public class Writters {
 
 	}
 
-	public static void aquitPrivateConnection(TypePacket typePacket,
-			String login, int port, ByteBuffer out) {
-		ByteBuffer bb = UTF8.encode(login);
-		out.put((byte) typePacket.getValue());
-		out.putInt(bb.remaining());
-		out.put(bb);
-		out.putInt(port);
-
-	}
-
 	/**
 	 * Accept a private connection from the client scr.
 	 * 
@@ -104,7 +94,7 @@ public class Writters {
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ adressBuff.remaining());
 
-		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)
+		buff.put((byte)TypePacket.ACC_CO_PRV_CS.getValue()).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID).putInt(adressBuff.remaining())
 				.put(adressBuff);
 
@@ -131,7 +121,7 @@ public class Writters {
 		ByteBuffer buff = allocate(1,
 				Byte.BYTES + Long.BYTES + srcBuff.remaining());
 
-		buff.put((byte) 6).putInt(srcBuff.remaining()).put(srcBuff)
+		buff.put((byte)TypePacket.REF_CO_PRV_CS.getValue()).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID);
 
 		Loggers.test(buff);
@@ -148,10 +138,10 @@ public class Writters {
 	 * @param type
 	 *            9 for asking and 10 to respond.
 	 */
-	public static void askPrivateFileConnection(SocketChannel sc, byte type,
+	public static void askPrivateFileConnection(SocketChannel sc, TypePacket type,
 			ServerSocketChannel fileChannel) throws IOException,
 			IllegalStateException {
-		if ((type == (byte) 9) || (type == (byte) 10)) {
+		if ((type == TypePacket.ASC_CO_FIL_CC) || (type == TypePacket.ACC_CO_FIL_CC)) {
 			InetSocketAddress adress = (InetSocketAddress) fileChannel
 					.getLocalAddress();
 
@@ -159,7 +149,7 @@ public class Writters {
 
 			ByteBuffer buff = allocate(2, Byte.BYTES + adressBuff.remaining());
 
-			buff.put(type).putInt(adressBuff.remaining()).put(adressBuff).putInt(adress.getPort());
+			buff.put((byte)type.getValue()).putInt(adressBuff.remaining()).put(adressBuff).putInt(adress.getPort());
 
 			Loggers.test(buff);
 			buff.flip();
@@ -183,7 +173,7 @@ public class Writters {
 
 		ByteBuffer buff = allocate(1, Byte.BYTES + fileBuff.remaining());
 
-		buff.put((byte) 11).putInt(fileBuff.remaining()).put(fileBuff);
+		buff.put((byte) TypePacket.ASC_SEND_FIL_CC.getValue()).putInt(fileBuff.remaining()).put(fileBuff);
 
 		Loggers.test(buff);
 
@@ -199,7 +189,7 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void acceptFile(SocketChannel sc) throws IOException {
-		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) 12);
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) TypePacket.ACC_SEND_FIL_CC.getValue());
 		Loggers.test(buff);
 		buff.flip();
 		sc.write(buff);
@@ -212,7 +202,7 @@ public class Writters {
 	 * @throws IOException
 	 */
 	public static void refuseFile(SocketChannel sc) throws IOException {
-		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) 13);
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) TypePacket.REF_SEND_FIL_CC.getValue());
 		Loggers.test(buff);
 		buff.flip();
 		sc.write(buff);
@@ -269,7 +259,7 @@ public class Writters {
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ msgBuff.remaining());
 
-		buff.put((byte) 15).putInt(srcBuff.remaining()).put(srcBuff)
+		buff.put((byte) TypePacket.MESSAGE.getValue()).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
 
 		Loggers.testChatMessage(buff);

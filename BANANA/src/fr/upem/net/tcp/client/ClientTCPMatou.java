@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+
 
 
 public class ClientTCPMatou {
@@ -76,10 +78,10 @@ public class ClientTCPMatou {
 			
 				while(!Thread.interrupted()){
 					try{
-						byte id = Readers.readByte(generalChannel);
-						switch(id){
+						TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
+						switch(packet){
 							
-							case 4 : 
+							case ASC_CO_PRV_SC : 
 								synchronized(lock){
 									this.receivedInvite = true;
 								}
@@ -99,7 +101,7 @@ public class ClientTCPMatou {
 								
 								break;
 								
-							case 7 :
+							case ACC_CO_PRV_SC :
 	
 								
 								//TODO Changer Trame et checker si le nom c'est le bon avant le if
@@ -120,7 +122,7 @@ public class ClientTCPMatou {
 									//privateListener.start();
 									
 									System.out.println("Connexion privé établie !");
-									Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
+									Writters.askPrivateFileConnection(privateChannel,TypePacket.ASC_CO_FIL_CC,ssc);
 									System.out.println("Demande de connexion pour envoyer des fichiers...");
 									fileChannel = ssc.accept();
 									System.out.println("Connexion pour envoi de fichier établie !");
@@ -147,11 +149,11 @@ public class ClientTCPMatou {
 									Readers.readAddress(generalChannel);
 								}
 								break;
-							case 8:
+							case REF_CO_PRV_SC:
 								this.destName = null;
 								System.out.println("Votre demande a été refusé.");
 								break;
-							case 15 : Readers.readMessage(generalChannel);break;
+							case MESSAGE : Readers.readMessage(generalChannel);break;
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du server.");
@@ -172,12 +174,12 @@ public class ClientTCPMatou {
 							while(privateChannel == null)
 								lockPrivate.wait();
 						}
-						byte id = Readers.readByte(privateChannel);
-						switch(id){
+						TypePacket packet = TypePacket.values()[Readers.readByte(privateChannel)];
+						switch(packet){
 							
 						//Exchange address and port between the two clients
 						//Here we are c2, we open the channel and connect then send our address and port.
-							case 9 : 
+							case ASC_CO_FIL_CC : 
 								System.out.println("Demande fichier reçu");
 								fileChannel = SocketChannel.open();
 								fileChannel.connect(Readers.readAddress(privateChannel));
@@ -187,14 +189,14 @@ public class ClientTCPMatou {
 								currentChannel = privateChannel;
 								break;
 							//TODO remove because useless
-							case 10 :
+							case ACC_CO_FIL_CC :
 								fileChannel.connect(Readers.readAddress(privateChannel));
 								currentChannel = privateChannel;
 								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 								break;
 							
 							//case we have a demand for file.
-							case 11:
+							case ASC_SEND_FIL_CC:
 								synchronized(lock){
 									receivedFile = true;
 								}
@@ -203,7 +205,7 @@ public class ClientTCPMatou {
 								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								break;
 							//case the person has accepted our demand
-							case 12:
+							case ACC_SEND_FIL_CC:
 								synchronized(lockWriteFile){
 									acceptFile = true;
 									lockWriteFile.notify();
@@ -213,11 +215,11 @@ public class ClientTCPMatou {
 	;
 								break;
 							//case the person has refused our demand
-							case 13:
+							case REF_SEND_FIL_CC:
 								fileSending = false;
 								System.out.println("Votre demande d'envoi de fichier a été refusé.");
 								break;
-							case 15 : Readers.readPrivateMessage(privateChannel);break;
+							case MESSAGE : Readers.readPrivateMessage(privateChannel);break;
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du chat privé.");

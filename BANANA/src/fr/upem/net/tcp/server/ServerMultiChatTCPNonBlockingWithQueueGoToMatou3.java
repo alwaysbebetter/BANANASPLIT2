@@ -54,43 +54,99 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	public enum TypePacket {
 
 		// TO ESTABLISH CONNECTION TO TCHAT
+		/**
+		 * 0
+		 */
 		ASC_CO_SERV(0), // Demande de connection au serveux C1 ->S
+		/**
+		 * 1
+		 */
 		ACC_CO_SERV(1), // Acception de connection au serveur S -> C1
+		/**
+		 * 2
+		 */
 		REF_CO_SERV(2), // Refue de connection au serveur S -> C1
 
+		/**
+		 * 3
+		 */
 		// TO ESTABLISH CONNECTION PRIVATE TO MESSAGE
 		ASC_CO_PRV_CS(3), // Demande de connection privé C1 -> S (vers C2)
+		/**
+		 * 4
+		 */
 		ASC_CO_PRV_SC(4), // Demande de connection privé part2 S -> C2 (venant
 							// de
 		// C1)
+		
+		/**
+		 * 5
+		 */
 		ACC_CO_PRV_CS(5), // Acceptation connection privé C2 -> S (vers C1)
+		/**
+		 * 6
+		 */
 		REF_CO_PRV_CS(6), // Refue de connection privé C2 -> S (vers C1)
+		/**
+		 * 7
+		 */
 		ACC_CO_PRV_SC(7), // Acceptation connection privé parte2 S -> C1 (venant
 							// de
 		// C2)
+		/**
+		 * 8
+		 */
 		REF_CO_PRV_SC(8), // Refue de connection privé part2 S -> C1 (venant de
 							// C2)
 
 		// TO ESTABLISH CONNECTION PRIVATE TO FILE
+		/**
+		 * 9
+		 */
 		ASC_CO_FIL_CC(9), // Demande de connection privé fichier C1 -> S (vers
 							// C2)
+		/**
+		 * 10
+		 */
 		ACC_CO_FIL_CC(10), // Acceptation de connection privé pour fichier C2 ->
 							// S
 		// (vers C1)
+		/**
+		 * 11
+		 */
 		ASC_SEND_FIL_CC(11), // Demande d’envoie de fichié C1 -> C2
+		/**
+		 * 12
+		 */
 		ACC_SEND_FIL_CC(12), // Acceptation de la demande d’envoit de fichier C2
 								// -> C1
+		/**
+		 * 13
+		 */
 		REF_SEND_FIL_CC(13), // Refu de la demande d’envoie de fichier
 
 		// TO SEND FILE
+		/**
+		 * 14
+		 */
 		FILE(14),
 
 		// TO SEND MESSAGE
+		/**
+		 * 15
+		 */
 		MESSAGE(15),
 
+		/**
+		 * 16
+		 */
 		INITIAL_TYPE(16);
 		private final byte value;
 
+		/**
+		 * Get the byte value.
+		 * @return The byte.
+		 */
 		public byte getValue() {
 			return value;
 		}
