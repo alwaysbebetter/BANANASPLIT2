@@ -102,8 +102,10 @@ public class ClientTCPMatou {
 							case 7 :
 	
 								name = Readers.readString(generalChannel);
+								InetSocketAddress inet = Readers.readAddress(generalChannel);
 								if(name != destName){
 									System.out.println("Demande de " + name + "ignoré (ancienne demande)");
+									break;
 								}
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
@@ -114,7 +116,7 @@ public class ClientTCPMatou {
 									System.out.println("Votre demande a été accepté par " + destName +" !");
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
-										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+										privateChannel = SocketChannel.open(inet);
 										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc);
 										lockPrivate.notify();	
 									}
