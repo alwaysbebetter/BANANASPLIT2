@@ -331,9 +331,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						System.out.println("ALLOCATION "
 								+ Thread.currentThread().getStackTrace()[1]
 										.getLineNumber());
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+						readerACC_CO_PRV_CS = new ReaderString(new ReaderInt(new ReaderString(
 								new ReaderLong(new ReaderString(DEST_DATA,
-										typeLastPacketReceiv)), SRC_DATA_ADR));
+										typeLastPacketReceiv)), SRC_DATA_ADR)),SRC_DATA);
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -521,13 +521,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				break;
 			case ACC_CO_PRV_CS:
-				System.out.println("réponse a ACC_CO_PRV_CS");
-				at = map.get(dataPacketRead.getLoginSrc());
-				out.flip();
-				at.sc.write(out);
-				out.compact();
-				System.out.println("remaaaiinning :" + out.remaining());
-				break;
 			case REF_CO_PRV_CS:
 				System.out.println("réponse a REF_CO_PRV_CS");
 				at = map.get(dataPacketRead.getLoginDst());
@@ -839,7 +832,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					map.remove(at.login);
 				}
 			} catch (Exception e) {
-				System.out.println("Excpetion catch !");//TODO : delete
+				System.out.println(e+" catch !");//TODO : delete
 				if (map.get(at.login) != null) {// if an exception occured, anshure that client will be remove from the map
 					map.remove(at.login);
 				}

@@ -9,6 +9,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
+import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 
@@ -99,9 +100,10 @@ public class ClientTCPMatou {
 								break;
 								
 							case 7 :
-	
+								
 								name = Readers.readString(generalChannel);
 								System.out.println(name + "frefez");
+								System.out.println("destName "+ destName +" =? name "+name );
 								InetSocketAddress inet = Readers.readAddress(generalChannel);
 								
 								
@@ -151,6 +153,7 @@ public class ClientTCPMatou {
 								break;
 							case 8:
 								name = Readers.readString(generalChannel);
+								System.out.println("destName "+ destName +" =? name "+name );
 								if(!name.equals(destName))
 									System.out.println("Refus d'une ancienne demande (" + name + ").");
 								else{
