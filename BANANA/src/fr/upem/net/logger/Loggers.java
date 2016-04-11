@@ -92,7 +92,7 @@ public class Loggers {
 			size = buff.getInt();
 			sb.append(size).append(" ");
 			
-			//Get the first string
+			//Get the first string pseudo c1
 			limit = buff.limit();
 			buff.limit(buff.position() + size);
 			sb.append(utf8.decode(buff)).append(" ");
@@ -100,14 +100,19 @@ public class Loggers {
 			
 			sb.append(buff.getLong()).append(" ");
 			
-			//Get the second String
+			//Get the second String address
 			size = buff.getInt();
 			limit = buff.limit();
 			buff.limit(buff.position() + size);
 			sb.append(size).append(" ").append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
-			sb.append(buff.getInt());
-			
+			sb.append(buff.getInt()).append(" ");
+			//Get the Thrid String pseudo c2
+			size = buff.getInt();
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(size).append(" ").append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
 			System.out.println(sb);
 			return;
 		case 7:

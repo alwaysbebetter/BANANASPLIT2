@@ -85,30 +85,34 @@ public class Writters {
 	}
 
 	/**
-	 * Accept a private connection from the client scr.
+	 * Accept a private connection from the client src.
 	 * 
 	 * @param sc
 	 * @param src
 	 */
 
 	public static void acceptPrivateConnection(SocketChannel sc, long clientID,
-			String src, ServerSocketChannel ssc) throws IOException {
+			String src, ServerSocketChannel ssc, String myName) throws IOException {
 		ServerSocket socket =  ssc.socket();
 
 		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer nameBuff = UTF8.encode(myName);
 
 		ByteBuffer adressBuff = UTF8.encode(socket.getInetAddress().getHostAddress());
 
 		ByteBuffer buff = allocate(
-				3,
+				4,
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
-						+ adressBuff.remaining());
+						+ adressBuff.remaining() + nameBuff.remaining());
 
 		buff.put((byte) 5).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID).putInt(adressBuff.remaining())
 				.put(adressBuff);
 
 		buff.putInt(socket.getLocalPort());
+		
+		buff.putInt(nameBuff.remaining());
+		buff.put(nameBuff);
 
 		Loggers.test(buff);
 		buff.flip();
