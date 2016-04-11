@@ -78,6 +78,23 @@ public class Readers {
 		return buffLong.getLong();
 	
 	}
+	/**
+	 * Read a length (int) and the number of byte read.
+	 * @param sc
+	 * @return The string decode in utf8.
+	 * @throws IOException
+	 */
+	public static String readString(SocketChannel sc) throws IOException{
+		int stringSize = readInt(sc);
+
+		ByteBuffer buff = ByteBuffer.allocate(stringSize);
+		if (!readFully(sc, buff)) {
+			throw new ReadersException("Connection lost during readAdress");
+		}
+		buff.flip();
+		String string = UTF8.decode(buff).toString();
+		return string;
+	}
 	
 	/** 
 	 * 
@@ -101,14 +118,8 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static String readDemand(SocketChannel sc) throws IOException{
-		int pseudoSize = readInt(sc);
 		
-		ByteBuffer buff = ByteBuffer.allocate(pseudoSize);
-		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readDemandConnection");
-		}
-		buff.flip();
-		String pseudo = UTF8.decode(buff).toString();
+		String pseudo = readString(sc);
 
 		return pseudo;
 	}
@@ -119,14 +130,8 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static InetSocketAddress readAddress(SocketChannel sc) throws IOException{
-		int adressSize = readInt(sc);
-
-		ByteBuffer buff = ByteBuffer.allocate(adressSize);
-		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readAdress");
-		}
-		buff.flip();
-		String adress = UTF8.decode(buff).toString();
+		
+		String adress = readString(sc);
 
 		
 		int port = readInt(sc);
@@ -148,22 +153,11 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static void readMessage(SocketChannel sc) throws IOException{
-		int pseudoSize = readInt(sc);
 		
-		ByteBuffer buff = ByteBuffer.allocate(pseudoSize);
-		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readMessage");
-		}
-		buff.flip();
-		String pseudo = UTF8.decode(buff).toString();
+		String pseudo = readString(sc);
 		
-		int msgSize = readInt(sc);
-		buff = ByteBuffer.allocate(msgSize);
-		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readMessage");
-		}
-		buff.flip();
-		String message = UTF8.decode(buff).toString();
+		
+		String message = readString(sc);
 		
 		System.out.println(pseudo +" : " + message);
 		
@@ -175,19 +169,6 @@ public class Readers {
 		readMessage(sc);
 	}
 	
-	public static void readSimpleMessage(SocketChannel sc) throws IOException{
-		//TODO Erase method after test
-
-		int msgSize = readInt(sc);
-		ByteBuffer buff = ByteBuffer.allocate(msgSize);
-		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readMessage");
-		}
-		buff.flip();
-		String message = UTF8.decode(buff).toString();
-		
-		System.out.println("Message reçu : " + message);
-	}
 	
 	public static void readFile(SocketChannel sc, String fileName) throws IOException{
 		byte id = readByte(sc);
