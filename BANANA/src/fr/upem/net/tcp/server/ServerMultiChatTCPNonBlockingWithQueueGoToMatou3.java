@@ -24,7 +24,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
 	private int co = 0;
 	private int debug = 0;
-	static private final int BUFSIZ = 200, MAX_ATTEMPS = 3, MAX_NBR_OF_CONNEXION = 2 ;
+	static private final int BUFSIZ = 200, REMAINING_TRY = 3;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public final static int SRC_DATA = 0, DEST_DATA = 1, SRC_DATA_ADR = 2;
 	private Random rand = new Random();
@@ -116,7 +116,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 		ByteBuffer in, out;
 		boolean isClosed = false;
-		int remainingTry = MAX_ATTEMPS;
+		int remainingTry = REMAINING_TRY;
 		String login;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
 		public DataPacketRead dataPacketRead;
@@ -843,9 +843,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	private void doAccept(SelectionKey key) throws IOException {
 		// only the ServerSocketChannel is register in OP_ACCEPT
-		if ( MAX_NBR_OF_CONNEXION < map.size() ){
-			return ;
-		}
 		SocketChannel sc = serverSocketChannel.accept();
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
@@ -870,3 +867,5 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	}
 
 }
+
+

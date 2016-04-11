@@ -1,3 +1,4 @@
+
 package fr.upem.net.tcp.client;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class ClientTCPMatou {
 	//private final LinkedList<String> listPeople = new LinkedList<>();
 	
 	private final String myName;
-	private String destName, destNameInvite;
+	private String destName;
 	private String fileToSend,fileReceived;
 	private Scanner sc ;
 	//To prevent identity stealing.
@@ -77,18 +78,15 @@ public class ClientTCPMatou {
 				while(!Thread.interrupted()){
 					try{
 						byte id = Readers.readByte(generalChannel);
-						//TODO name use to check about old request
-						String name;
 						switch(id){
-							
 							
 							case 4 : 
 								synchronized(lock){
 									this.receivedInvite = true;
 								}
 								if(privateChannel == null){
-									this.destNameInvite = Readers.readDemand(generalChannel);
-									System.out.println(destNameInvite + " vous a invité en chat privé.");
+									this.destName = Readers.readDemand(generalChannel);
+									System.out.println(destName + " vous a invité en chat privé.");
 									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								}
 								else{
@@ -101,22 +99,15 @@ public class ClientTCPMatou {
 								
 							case 7 :
 	
-								name = Readers.readString(generalChannel);
-								InetSocketAddress inet = Readers.readAddress(generalChannel);
-								if(name != destName){
-									System.out.println("Demande de " + name + "ignoré (ancienne demande)");
-									break;
-								}
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
-								
-								else if(null == this.privateChannel && (this.destName != null)){
+								if(null == this.privateChannel && (this.destName != null)){
 									//TODO Changer Trame et checker si le nom c'est le bon
 									System.out.println("Votre demande a été accepté par " + destName +" !");
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
-										privateChannel = SocketChannel.open(inet);
+										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
 										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc);
 										lockPrivate.notify();	
 									}
@@ -151,11 +142,6 @@ public class ClientTCPMatou {
 								}
 								break;
 							case 8:
-								name = Readers.readString(generalChannel);
-								if(name != destName){
-									System.out.println("Refus de connexion privé de " + name + "ignoré (ancienne demande");
-									break;
-								}
 								this.destName = null;
 								System.out.println("Votre demande a été refusé.");
 								break;
@@ -404,7 +390,7 @@ public class ClientTCPMatou {
 					if(receivedInvite && (privateChannel == null)){
 						//We prepare the channel here and send our address and port to c1.
 						//We need to connect to c1 after, the tread generalListener will do this.
-						destName = destNameInvite;
+	
 						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
 						//Let c1 connect to us
