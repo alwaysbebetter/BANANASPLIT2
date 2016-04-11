@@ -41,10 +41,20 @@ public class Loggers {
 			System.out.println(sb);
 			return;
 		case 1:sb.append( buff.getLong()).append(" ");
-		case 2:
-		case 8:
+		case 2:			
 		case 12:
 		case 13 : System.out.println(sb);return;
+		case 8:
+			size = buff.getInt();
+			sb.append(size).append(" ");
+			//Get the first string (name)
+			limit = buff.limit();
+			buff.limit(buff.position() + size );
+			sb.append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
+			sb.append(buff.getLong() + " ");
+			System.out.println(sb);
+			return;
 		case 3: 
 
 		
@@ -101,6 +111,24 @@ public class Loggers {
 			System.out.println(sb);
 			return;
 		case 7:
+			size = buff.getInt();
+			sb.append(size).append(" ");
+			
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
+			
+			size = buff.getInt();
+			sb.append(size).append(" ");
+			
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
+			sb.append(buff.getInt());
+			System.out.println(sb);
+			return;
 		case 9 :
 		case 10:
 			size = buff.getInt();

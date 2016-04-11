@@ -78,6 +78,7 @@ public class ClientTCPMatou {
 				while(!Thread.interrupted()){
 					try{
 						byte id = Readers.readByte(generalChannel);
+						String name;
 						switch(id){
 							
 							case 4 : 
@@ -99,15 +100,22 @@ public class ClientTCPMatou {
 								
 							case 7 :
 	
+								name = Readers.readString(generalChannel);
+								System.out.println(name + "frefez");
+								InetSocketAddress inet = Readers.readAddress(generalChannel);
+								
+								
+								if(!name.equals(destName))
+									System.out.println("Acceptation d'une ancienne demande (" + name + ") refusé.");
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
-								if(null == this.privateChannel && (this.destName != null)){
+								else if( (null == this.privateChannel) && (this.destName != null) && name.equals(destName)){
 									//TODO Changer Trame et checker si le nom c'est le bon
 									System.out.println("Votre demande a été accepté par " + destName +" !");
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
-										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
+										privateChannel = SocketChannel.open(inet);
 										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc);
 										lockPrivate.notify();	
 									}
@@ -142,8 +150,13 @@ public class ClientTCPMatou {
 								}
 								break;
 							case 8:
-								this.destName = null;
-								System.out.println("Votre demande a été refusé.");
+								name = Readers.readString(generalChannel);
+								if(!name.equals(destName))
+									System.out.println("Refus d'une ancienne demande (" + name + ").");
+								else{
+									this.destName = null;
+									System.out.println("Votre demande a été refusé.");
+								}
 								break;
 							case 15 : Readers.readMessage(generalChannel);break;
 						}
