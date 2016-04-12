@@ -123,7 +123,7 @@ public class ClientTCPMatou {
 									//Here we receive the server address of c2 so we can connect to him.
 									synchronized(lockPrivate){
 										privateChannel = SocketChannel.open(Readers.readAddress(generalChannel));
-										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc);
+										Writters.acceptPrivateConnection(generalChannel, clientID, destName, ssc, myName);
 										lockPrivate.notify();	
 									}
 									//privateListener.start();
@@ -419,7 +419,7 @@ public class ClientTCPMatou {
 						//We need to connect to c1 after, the tread generalListener will do this.
 	
 						privateChannel = SocketChannel.open();
-						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
+						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc, myName);
 
 						System.out.println("Vous avez accepté l'invitation");
 
