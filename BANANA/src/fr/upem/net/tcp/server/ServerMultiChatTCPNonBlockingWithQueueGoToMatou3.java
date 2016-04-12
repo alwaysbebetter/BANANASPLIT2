@@ -362,8 +362,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						System.out.println("ALLOCATION "
 								+ Thread.currentThread().getStackTrace()[1]
 										.getLineNumber());
-						readerREF_CO_PRV_CS = new ReaderLong(new ReaderString(
-								DEST_DATA, typeLastPacketReceiv));
+						readerREF_CO_PRV_CS =  new ReaderString(new ReaderLong(new ReaderString(
+								DEST_DATA, typeLastPacketReceiv)),SRC_DATA);
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
