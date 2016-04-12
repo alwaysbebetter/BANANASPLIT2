@@ -789,9 +789,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				case ACC_CO_PRV_CS:
 
-					if (/*
-						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
-						 */(id != dataPacketRead.getId())) {
+					if (
+						 (/*!dataPacketRead.getLoginSrc().equals(login)) ||*/
+						 (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
