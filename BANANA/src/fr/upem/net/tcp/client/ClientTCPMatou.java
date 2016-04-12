@@ -155,6 +155,9 @@ public class ClientTCPMatou {
 								System.out.println("Votre demande a été refusé.");
 								break;
 							case MESSAGE : Readers.readMessage(generalChannel);break;
+							default : 
+								System.err.println("Unexpected packet, bad server");
+								throw new IOException("Unexpected Packet");
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du server.");
@@ -224,6 +227,9 @@ public class ClientTCPMatou {
 								System.out.println("Votre demande d'envoi de fichier a été refusé.");
 								break;
 							case MESSAGE : Readers.readPrivateMessage(privateChannel);break;
+							default : 
+								System.err.println("Unexpected packet, bad client in private chat");
+								throw new IOException("Unexpected Packet");
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du chat privé.");
