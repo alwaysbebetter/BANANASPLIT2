@@ -79,13 +79,10 @@ public class ClientTCPMatou {
 			
 				while(!Thread.interrupted()){
 					try{
-<<<<<<< HEAD
-						byte id = Readers.readByte(generalChannel);
-						switch(id){
-=======
+
 						TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
 						switch(packet){
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 							
 							case ASC_CO_PRV_SC : 
 								synchronized(lock){
@@ -97,11 +94,9 @@ public class ClientTCPMatou {
 									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								}
 								else{
-<<<<<<< HEAD
-									String otherDest = Readers.readDemand(generalChannel);
-=======
+
 									String otherDest = Readers.readString(generalChannel);
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 									System.out.println( otherDest + " vous a invité mais vous"
 											+ " êtes déjà connecté avec " + this.destName);
 									
@@ -111,17 +106,12 @@ public class ClientTCPMatou {
 								
 								break;
 								
-<<<<<<< HEAD
-							case 7 :
-	
-								
-								//TODO Changer Trame et checker si le nom c'est le bon avant le if
-=======
+
 							case ACC_CO_PRV_SC :
 	
 								
 								
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
@@ -166,11 +156,9 @@ public class ClientTCPMatou {
 									Readers.readAddress(generalChannel);
 								}
 								break;
-<<<<<<< HEAD
-							case 8:
-=======
+
 							case REF_CO_PRV_SC:
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 								this.destName = null;
 								System.out.println("Votre demande a été refusé.");
 								break;
@@ -432,17 +420,7 @@ public class ClientTCPMatou {
 	
 						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
-<<<<<<< HEAD
-						//Let c1 connect to us
-						//TODO remove when done
-						/*synchronized(lockPrivate){
-							privateChannel = ssc.accept();
-							lockPrivate.notify();
-							currentChannel = privateChannel;
-						}*/
-=======
-						
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 						System.out.println("Vous avez accepté l'invitation");
 
 

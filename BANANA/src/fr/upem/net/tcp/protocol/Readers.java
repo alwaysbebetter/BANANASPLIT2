@@ -70,11 +70,9 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static long readLong(SocketChannel sc) throws IOException{
-<<<<<<< HEAD
-		ByteBuffer buffLong = ByteBuffer.allocateDirect(Long.BYTES);
-=======
+
 		ByteBuffer buffLong = ByteBuffer.allocate(Long.BYTES);
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 		buffLong.clear();
 		if (!readFully(sc, buffLong)) {
 			throw new ReadersException("Connection lost during readLong");
@@ -108,18 +106,13 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static boolean nameAccepted(SocketChannel sc) throws IOException{
-<<<<<<< HEAD
-		byte answer = readByte(sc);
-		if(answer == (byte)1)
-			return true;
-		else if(answer == (byte)2)
-=======
+
 		
 		TypePacket packet = TypePacket.values()[readByte(sc)];
 		if(packet == TypePacket.ACC_CO_SERV)
 			return true;
 		else if(packet == TypePacket.REF_CO_SERV)
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 			return false;
 		throw new ReadersException("Problem, unknow response");
 	}
