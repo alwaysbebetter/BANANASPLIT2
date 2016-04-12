@@ -79,8 +79,10 @@ public class ClientTCPMatou {
 			
 				while(!Thread.interrupted()){
 					try{
+
 						TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
 						switch(packet){
+
 							
 							case ASC_CO_PRV_SC : 
 								synchronized(lock){
@@ -92,7 +94,9 @@ public class ClientTCPMatou {
 									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								}
 								else{
+
 									String otherDest = Readers.readString(generalChannel);
+
 									System.out.println( otherDest + " vous a invité mais vous"
 											+ " êtes déjà connecté avec " + this.destName);
 									
@@ -102,10 +106,12 @@ public class ClientTCPMatou {
 								
 								break;
 								
+
 							case ACC_CO_PRV_SC :
 	
 								
 								
+
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
@@ -150,7 +156,9 @@ public class ClientTCPMatou {
 									Readers.readAddress(generalChannel);
 								}
 								break;
+
 							case REF_CO_PRV_SC:
+
 								this.destName = null;
 								System.out.println("Votre demande a été refusé.");
 								break;
@@ -412,7 +420,7 @@ public class ClientTCPMatou {
 	
 						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
-						
+
 						System.out.println("Vous avez accepté l'invitation");
 
 
