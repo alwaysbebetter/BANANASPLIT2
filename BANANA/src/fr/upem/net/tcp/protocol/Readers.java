@@ -118,7 +118,6 @@ public class Readers {
 	}
 
 	/**
-<<<<<<< HEAD
 	 * Read the fileName of a demand or the name of a demander.
 	 * @param sc
 	 * @return The pseudo of the demander.
@@ -131,8 +130,7 @@ public class Readers {
 		return pseudo;
 	}
 	/**
-=======
->>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
+
 	 * Return a SocketChannel connected to the address and port read.
 	 * @param sc
 	 * @return
