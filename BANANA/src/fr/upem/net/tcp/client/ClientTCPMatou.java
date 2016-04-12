@@ -207,7 +207,7 @@ public class ClientTCPMatou {
 								}
 								size = Readers.readLong(privateChannel);
 								this.fileReceived = Readers.readString(privateChannel);
-								System.out.println(destName + " veut vous envoyer " + this.fileReceived + "( " + size
+								System.out.println(destName + " veut vous envoyer " + this.fileReceived + " (" + size
 										+ " bytes)");
 								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								break;
