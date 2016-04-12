@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
@@ -86,12 +87,12 @@ public class ClientTCPMatou {
 									this.receivedInvite = true;
 								}
 								if(privateChannel == null){
-									this.destName = Readers.readDemand(generalChannel);
+									this.destName = Readers.readString(generalChannel);
 									System.out.println(destName + " vous a invité en chat privé.");
 									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								}
 								else{
-									String otherDest = Readers.readDemand(generalChannel);
+									String otherDest = Readers.readString(generalChannel);
 									System.out.println( otherDest + " vous a invité mais vous"
 											+ " êtes déjà connecté avec " + this.destName);
 									
@@ -104,7 +105,7 @@ public class ClientTCPMatou {
 							case ACC_CO_PRV_SC :
 	
 								
-								//TODO Changer Trame et checker si le nom c'est le bon avant le if
+								
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
@@ -175,6 +176,7 @@ public class ClientTCPMatou {
 								lockPrivate.wait();
 						}
 						TypePacket packet = TypePacket.values()[Readers.readByte(privateChannel)];
+						long size;
 						switch(packet){
 							
 						//Exchange address and port between the two clients
@@ -200,8 +202,10 @@ public class ClientTCPMatou {
 								synchronized(lock){
 									receivedFile = true;
 								}
-								this.fileReceived = Readers.readDemand(privateChannel);
-								System.out.println(destName + " veut vous envoyer " + this.fileReceived);
+								size = Readers.readLong(privateChannel);
+								this.fileReceived = Readers.readString(privateChannel);
+								System.out.println(destName + " veut vous envoyer " + this.fileReceived + "( " + size
+										+ " bytes)");
 								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								break;
 							//case the person has accepted our demand
@@ -354,12 +358,13 @@ public class ClientTCPMatou {
 				//If we are not already sending a file
 				if(!fileSending){
 					//Test if the file exist before asking to send
-					if(Paths.get(fileName[1]).toFile().exists()){
+					Path path = Paths.get(fileName[1]);
+					if(path.toFile().exists()){
 						synchronized(lockWriteFile){
 							fileSending = true;
 						}
 						fileToSend = fileName[1];
-						Writters.askToSendFile(privateChannel,fileName[1]);
+						Writters.askToSendFile(privateChannel,path);
 						System.out.println("Demande d'envoi du fichier " + fileName[1] + " en cours...");
 					}
 					else{
@@ -401,15 +406,9 @@ public class ClientTCPMatou {
 	
 						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
-						//Let c1 connect to us
-						//TODO remove when done
-						/*synchronized(lockPrivate){
-							privateChannel = ssc.accept();
-							lockPrivate.notify();
-							currentChannel = privateChannel;
-						}*/
+						
 						System.out.println("Vous avez accepté l'invitation");
-						//privateListener.start();
+
 
 						
 						

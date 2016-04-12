@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.protocol;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -166,18 +167,20 @@ public class Writters {
 	 * 
 	 * @param sc
 	 */
-	public static void askToSendFile(SocketChannel sc, String fileName)
+	public static void askToSendFile(SocketChannel sc, Path path)
 			throws IOException {
+		
+		File file = path.toFile();
 
-		ByteBuffer fileBuff = UTF8.encode(fileName);
+		ByteBuffer fileBuff = UTF8.encode(file.getName());
 
-		ByteBuffer buff = allocate(1, Byte.BYTES + fileBuff.remaining());
+		ByteBuffer buff = allocate(1, Long.BYTES + Byte.BYTES + fileBuff.remaining());
 
-		buff.put((byte) TypePacket.ASC_SEND_FIL_CC.getValue()).putInt(fileBuff.remaining()).put(fileBuff);
+		buff.put((byte) TypePacket.ASC_SEND_FIL_CC.getValue()).putLong(file.length()).putInt(fileBuff.remaining()).put(fileBuff);
 
 		Loggers.test(buff);
 
-		buff.flip();
+		buff.flip();;
 
 		sc.write(buff);
 	}

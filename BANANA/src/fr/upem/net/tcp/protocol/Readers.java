@@ -38,7 +38,7 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static int readInt(SocketChannel sc) throws IOException {
-		ByteBuffer buffInt = ByteBuffer.allocateDirect(Integer.BYTES);
+		ByteBuffer buffInt = ByteBuffer.allocate(Integer.BYTES);
 		buffInt.clear();
 		if (!readFully(sc, buffInt)) {
 			throw new ReadersException("Connection lost during readInt");
@@ -54,7 +54,7 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static byte readByte(SocketChannel sc) throws IOException {
-		ByteBuffer buff = ByteBuffer.allocateDirect(Byte.BYTES);
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES);
 		buff.clear();
 		if (!readFully(sc, buff)) {
 			throw new ReadersException("Connection lost during readByte");
@@ -70,7 +70,7 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static long readLong(SocketChannel sc) throws IOException{
-		ByteBuffer buffLong = ByteBuffer.allocateDirect(Long.BYTES);
+		ByteBuffer buffLong = ByteBuffer.allocate(Long.BYTES);
 		buffLong.clear();
 		if (!readFully(sc, buffLong)) {
 			throw new ReadersException("Connection lost during readLong");
@@ -113,18 +113,6 @@ public class Readers {
 		throw new ReadersException("Problem, unknow response");
 	}
 
-	/**
-	 * Read the fileName of a demand or the name of a demander.
-	 * @param sc
-	 * @return The pseudo of the demander.
-	 * @throws IOException
-	 */
-	public static String readDemand(SocketChannel sc) throws IOException{
-		
-		String pseudo = readString(sc);
-
-		return pseudo;
-	}
 	/**
 	 * Return a SocketChannel connected to the address and port read.
 	 * @param sc
