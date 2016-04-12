@@ -350,9 +350,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						System.out.println("ALLOCATION "
 								+ Thread.currentThread().getStackTrace()[1]
 										.getLineNumber());
-						readerACC_CO_PRV_CS = new ReaderInt(new ReaderString(
+						readerACC_CO_PRV_CS = new ReaderString(new ReaderInt(new ReaderString(
 								new ReaderLong(new ReaderString(DEST_DATA,
-										typeLastPacketReceiv)), SRC_DATA_ADR));
+										typeLastPacketReceiv)), SRC_DATA_ADR)),SRC_DATA);
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -789,9 +789,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				case ACC_CO_PRV_CS:
 
-					if (/*
-						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
-						 */(id != dataPacketRead.getId())) {
+					if (
+						 (/*!dataPacketRead.getLoginSrc().equals(login)) ||*/
+						 (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
 						// TODO: close
