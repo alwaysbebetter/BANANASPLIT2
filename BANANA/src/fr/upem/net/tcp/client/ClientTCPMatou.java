@@ -5,11 +5,14 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+
 
 
 public class ClientTCPMatou {
@@ -76,20 +79,29 @@ public class ClientTCPMatou {
 			
 				while(!Thread.interrupted()){
 					try{
+<<<<<<< HEAD
 						byte id = Readers.readByte(generalChannel);
 						switch(id){
+=======
+						TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
+						switch(packet){
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 							
-							case 4 : 
+							case ASC_CO_PRV_SC : 
 								synchronized(lock){
 									this.receivedInvite = true;
 								}
 								if(privateChannel == null){
-									this.destName = Readers.readDemand(generalChannel);
+									this.destName = Readers.readString(generalChannel);
 									System.out.println(destName + " vous a invité en chat privé.");
 									System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								}
 								else{
+<<<<<<< HEAD
 									String otherDest = Readers.readDemand(generalChannel);
+=======
+									String otherDest = Readers.readString(generalChannel);
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 									System.out.println( otherDest + " vous a invité mais vous"
 											+ " êtes déjà connecté avec " + this.destName);
 									
@@ -99,10 +111,17 @@ public class ClientTCPMatou {
 								
 								break;
 								
+<<<<<<< HEAD
 							case 7 :
 	
 								
 								//TODO Changer Trame et checker si le nom c'est le bon avant le if
+=======
+							case ACC_CO_PRV_SC :
+	
+								
+								
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 								//In this case we are c1 because we are not yet connected like c2.
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
@@ -120,7 +139,7 @@ public class ClientTCPMatou {
 									//privateListener.start();
 									
 									System.out.println("Connexion privé établie !");
-									Writters.askPrivateFileConnection(privateChannel,(byte)9,ssc);
+									Writters.askPrivateFileConnection(privateChannel,TypePacket.ASC_CO_FIL_CC,ssc);
 									System.out.println("Demande de connexion pour envoyer des fichiers...");
 									fileChannel = ssc.accept();
 									System.out.println("Connexion pour envoi de fichier établie !");
@@ -147,11 +166,18 @@ public class ClientTCPMatou {
 									Readers.readAddress(generalChannel);
 								}
 								break;
+<<<<<<< HEAD
 							case 8:
+=======
+							case REF_CO_PRV_SC:
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 								this.destName = null;
 								System.out.println("Votre demande a été refusé.");
 								break;
-							case 15 : Readers.readMessage(generalChannel);break;
+							case MESSAGE : Readers.readMessage(generalChannel);break;
+							default : 
+								System.err.println("Unexpected packet, bad server");
+								throw new IOException("Unexpected Packet");
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du server.");
@@ -172,12 +198,13 @@ public class ClientTCPMatou {
 							while(privateChannel == null)
 								lockPrivate.wait();
 						}
-						byte id = Readers.readByte(privateChannel);
-						switch(id){
+						TypePacket packet = TypePacket.values()[Readers.readByte(privateChannel)];
+						long size;
+						switch(packet){
 							
 						//Exchange address and port between the two clients
 						//Here we are c2, we open the channel and connect then send our address and port.
-							case 9 : 
+							case ASC_CO_FIL_CC : 
 								System.out.println("Demande fichier reçu");
 								fileChannel = SocketChannel.open();
 								fileChannel.connect(Readers.readAddress(privateChannel));
@@ -187,23 +214,25 @@ public class ClientTCPMatou {
 								currentChannel = privateChannel;
 								break;
 							//TODO remove because useless
-							case 10 :
+							case ACC_CO_FIL_CC :
 								fileChannel.connect(Readers.readAddress(privateChannel));
 								currentChannel = privateChannel;
 								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 								break;
 							
 							//case we have a demand for file.
-							case 11:
+							case ASC_SEND_FIL_CC:
 								synchronized(lock){
 									receivedFile = true;
 								}
-								this.fileReceived = Readers.readDemand(privateChannel);
-								System.out.println(destName + " veut vous envoyer " + this.fileReceived);
+								size = Readers.readLong(privateChannel);
+								this.fileReceived = Readers.readString(privateChannel);
+								System.out.println(destName + " veut vous envoyer " + this.fileReceived + "( " + size
+										+ " bytes)");
 								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
 								break;
 							//case the person has accepted our demand
-							case 12:
+							case ACC_SEND_FIL_CC:
 								synchronized(lockWriteFile){
 									acceptFile = true;
 									lockWriteFile.notify();
@@ -213,11 +242,14 @@ public class ClientTCPMatou {
 	;
 								break;
 							//case the person has refused our demand
-							case 13:
+							case REF_SEND_FIL_CC:
 								fileSending = false;
 								System.out.println("Votre demande d'envoi de fichier a été refusé.");
 								break;
-							case 15 : Readers.readPrivateMessage(privateChannel);break;
+							case MESSAGE : Readers.readPrivateMessage(privateChannel);break;
+							default : 
+								System.err.println("Unexpected packet, bad client in private chat");
+								throw new IOException("Unexpected Packet");
 						}
 					}catch (IOException e){
 						System.err.println("Deconnexion du chat privé.");
@@ -352,12 +384,13 @@ public class ClientTCPMatou {
 				//If we are not already sending a file
 				if(!fileSending){
 					//Test if the file exist before asking to send
-					if(Paths.get(fileName[1]).toFile().exists()){
+					Path path = Paths.get(fileName[1]);
+					if(path.toFile().exists()){
 						synchronized(lockWriteFile){
 							fileSending = true;
 						}
 						fileToSend = fileName[1];
-						Writters.askToSendFile(privateChannel,fileName[1]);
+						Writters.askToSendFile(privateChannel,path);
 						System.out.println("Demande d'envoi du fichier " + fileName[1] + " en cours...");
 					}
 					else{
@@ -399,6 +432,7 @@ public class ClientTCPMatou {
 	
 						privateChannel = SocketChannel.open();
 						Writters.acceptPrivateConnection(generalChannel,clientID,destName,ssc);
+<<<<<<< HEAD
 						//Let c1 connect to us
 						//TODO remove when done
 						/*synchronized(lockPrivate){
@@ -406,8 +440,11 @@ public class ClientTCPMatou {
 							lockPrivate.notify();
 							currentChannel = privateChannel;
 						}*/
+=======
+						
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 						System.out.println("Vous avez accepté l'invitation");
-						//privateListener.start();
+
 
 						
 						

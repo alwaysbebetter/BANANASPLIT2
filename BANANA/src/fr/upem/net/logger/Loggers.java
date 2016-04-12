@@ -33,13 +33,24 @@ public class Loggers {
 			System.out.println(sb);
 			return;
 		case 0:
-		case 4:
-		case 11 :
+		case 4:	
 			size = buff.getInt();
 			sb.append(size).append(" ");
 			sb.append(utf8.decode(buff));
 			System.out.println(sb);
 			return;
+<<<<<<< HEAD
+=======
+		case 11 :
+
+			sb.append(buff.getLong()).append(" ");
+			
+			size = buff.getInt();
+			sb.append(size).append(" ");
+			sb.append(utf8.decode(buff));
+			System.out.println(sb);
+			return;
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 		case 1:sb.append( buff.getLong()).append(" ");
 		case 2:
 		case 8:

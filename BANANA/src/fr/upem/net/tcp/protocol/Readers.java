@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import fr.upem.net.logger.Loggers;
+import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 
 public class Readers {
@@ -37,7 +38,7 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static int readInt(SocketChannel sc) throws IOException {
-		ByteBuffer buffInt = ByteBuffer.allocateDirect(Integer.BYTES);
+		ByteBuffer buffInt = ByteBuffer.allocate(Integer.BYTES);
 		buffInt.clear();
 		if (!readFully(sc, buffInt)) {
 			throw new ReadersException("Connection lost during readInt");
@@ -53,7 +54,7 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static byte readByte(SocketChannel sc) throws IOException {
-		ByteBuffer buff = ByteBuffer.allocateDirect(Byte.BYTES);
+		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES);
 		buff.clear();
 		if (!readFully(sc, buff)) {
 			throw new ReadersException("Connection lost during readByte");
@@ -69,7 +70,11 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static long readLong(SocketChannel sc) throws IOException{
+<<<<<<< HEAD
 		ByteBuffer buffLong = ByteBuffer.allocateDirect(Long.BYTES);
+=======
+		ByteBuffer buffLong = ByteBuffer.allocate(Long.BYTES);
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 		buffLong.clear();
 		if (!readFully(sc, buffLong)) {
 			throw new ReadersException("Connection lost during readLong");
@@ -103,15 +108,24 @@ public class Readers {
 	 * @throws IOException
 	 */
 	public static boolean nameAccepted(SocketChannel sc) throws IOException{
+<<<<<<< HEAD
 		byte answer = readByte(sc);
 		if(answer == (byte)1)
 			return true;
 		else if(answer == (byte)2)
+=======
+		
+		TypePacket packet = TypePacket.values()[readByte(sc)];
+		if(packet == TypePacket.ACC_CO_SERV)
+			return true;
+		else if(packet == TypePacket.REF_CO_SERV)
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 			return false;
 		throw new ReadersException("Problem, unknow response");
 	}
 
 	/**
+<<<<<<< HEAD
 	 * Read the fileName of a demand or the name of a demander.
 	 * @param sc
 	 * @return The pseudo of the demander.
@@ -124,6 +138,8 @@ public class Readers {
 		return pseudo;
 	}
 	/**
+=======
+>>>>>>> 3962cb67945aef4edb81e58f6d6fbdf3e07d7d55
 	 * Return a SocketChannel connected to the address and port read.
 	 * @param sc
 	 * @return
