@@ -29,7 +29,15 @@ public class Loggers {
 			buff.limit(buff.position() + size);
 			sb.append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
-			sb.append(buff.getLong());
+			sb.append(buff.getLong()).append(" ");
+			
+			//Pseudo
+			size = buff.getInt();
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(size).append(" ").append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
+			
 			System.out.println(sb);
 			return;
 		case 0:
@@ -107,6 +115,13 @@ public class Loggers {
 			sb.append(size).append(" ").append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
 			sb.append(buff.getInt());
+			
+			//Get the third String pseudo
+			size = buff.getInt();
+			limit = buff.limit();
+			buff.limit(buff.position() + size);
+			sb.append(size).append(" ").append(utf8.decode(buff)).append(" ");
+			buff.limit(limit);
 			
 			System.out.println(sb);
 			return;

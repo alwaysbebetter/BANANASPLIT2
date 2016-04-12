@@ -100,7 +100,7 @@ public class ClientTCPMatou {
 									System.out.println( otherDest + " vous a invité mais vous"
 											+ " êtes déjà connecté avec " + this.destName);
 									
-									Writters.denyPrivateConnection(generalChannel, clientID, otherDest);
+									Writters.denyPrivateConnection(generalChannel, clientID, otherDest,myName);
 								}
 								
 								
@@ -445,7 +445,7 @@ public class ClientTCPMatou {
 			case "/no":
 				synchronized(lock){
 					if(receivedInvite && (privateChannel == null) ){
-						Writters.denyPrivateConnection(generalChannel,clientID,destName);
+						Writters.denyPrivateConnection(generalChannel,clientID,destName,myName);
 						receivedInvite = false;
 						System.out.println("Vous avez refusé l'invitation.");
 					}

@@ -119,14 +119,18 @@ public class Writters {
 	 */
 
 	public static void denyPrivateConnection(SocketChannel sc, long clientID,
-			String src) throws IOException {
+			String src, String myName) throws IOException {
 		ByteBuffer srcBuff = UTF8.encode(src);
+		ByteBuffer nameBuff = UTF8.encode(myName);
 
-		ByteBuffer buff = allocate(1,
-				Byte.BYTES + Long.BYTES + srcBuff.remaining());
+		ByteBuffer buff = allocate(2,
+				Byte.BYTES + Long.BYTES + srcBuff.remaining() + nameBuff.remaining());
 
 		buff.put((byte)TypePacket.REF_CO_PRV_CS.getValue()).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID);
+		
+		buff.putInt(nameBuff.remaining());
+		buff.put(nameBuff);
 
 		Loggers.test(buff);
 		buff.flip();
