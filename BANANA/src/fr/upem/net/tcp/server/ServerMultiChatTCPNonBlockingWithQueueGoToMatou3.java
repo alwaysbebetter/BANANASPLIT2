@@ -502,11 +502,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			case REF_CO_PRV_SC:
 				System.out.println("write in bb REF_CO_PRV_SC");
-				writeString(bb,data.getLoginDst());
+				writeString(bb,data.getLoginSrc());
 				// Do nothing
 				break;
 			case ACC_CO_PRV_SC:
-				writeString(bb,data.getLoginDst());//LA
+				writeString(bb,data.getLoginSrc());//LA
 				writeString(bb, data.getAdrSrc());
 				bb.putInt(data.getPortSrc());
 				

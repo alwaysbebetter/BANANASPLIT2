@@ -249,6 +249,7 @@ public class ClientTCPMulti {
 						TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
 						String name;
 						PrivateChannel channel;
+						System.out.println(packet.getValue());
 						switch(packet){
 
 							
@@ -278,6 +279,8 @@ public class ClientTCPMulti {
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
 								name = Readers.readString(generalChannel);
+								//TODO remove
+								System.out.println("Acceptation par " + name);
 								channel = map.get(name);
 								if(channel != null){
 									if(null == channel.pc ){								
@@ -387,10 +390,15 @@ public class ClientTCPMulti {
 				//Example /invite Bob
 				
 				if(argument.length >= 2){
-					System.out.println("Demande de chat privé à " + argument[1]);
-					//this.destName = argument[1];
-					map.put(argument[1],new PrivateChannel(argument[1]));
-					Writters.askPrivateConnection(generalChannel,clientID,myName,argument[1]);
+					if(map.get(argument[1]) == null){
+						map.put(argument[1], new PrivateChannel(argument[1]));
+						System.out.println("Demande de chat privé à " + argument[1]);
+						//this.destName = argument[1];
+						map.put(argument[1],new PrivateChannel(argument[1]));
+						Writters.askPrivateConnection(generalChannel,clientID,myName,argument[1]);
+					}
+					else
+						System.out.println(argument[1] + " est déjà en attente de connexion");
 				}
 				else
 					System.out.println("Précisez la personne à inviter !");
@@ -500,7 +508,8 @@ public class ClientTCPMulti {
 						synchronized(lock){
 							if(channel.receivedInvite && (channel.pc == null) ){
 								Writters.denyPrivateConnection(generalChannel,clientID,argument[1],myName);
-								channel.receivedInvite = false;
+								//channel.receivedInvite = false;
+								map.remove(argument[1]);
 								System.out.println("Vous avez refusé l'invitation.");
 							}
 							else if(channel.receivedFile && (privateChannel != null)){
@@ -512,9 +521,10 @@ public class ClientTCPMulti {
 								System.out.println("Vous n'avez pas reçu d'invitation.");
 						}
 					}
-					else
-						System.out.println("Précisez la personne à qui vous voulez envoyer le refus.");
+					
 				}
+				else
+					System.out.println("Précisez la personne à qui vous voulez envoyer le refus.");
 				return;
 			
 			//switch to private message
