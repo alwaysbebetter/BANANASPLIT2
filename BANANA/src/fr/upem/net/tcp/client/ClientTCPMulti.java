@@ -77,11 +77,11 @@ public class ClientTCPMulti {
 				while(!Thread.interrupted()){
 					try{
 						synchronized(lockPrivate){
-							while(privateChannel == null)
+							while(this.pc == null)
 								lockPrivate.wait();
 						}
 						
-						TypePacket packet = TypePacket.values()[Readers.readByte(privateChannel)];
+						TypePacket packet = TypePacket.values()[Readers.readByte(this.pc)];
 						long size;
 						switch(packet){
 							
@@ -89,17 +89,16 @@ public class ClientTCPMulti {
 						//Here we are c2, we open the channel and connect then send our address and port.
 							case ASC_CO_FIL_CC : 
 								System.out.println("Demande fichier reçu");
-								fileChannel = SocketChannel.open();
-								fileChannel.connect(Readers.readAddress(privateChannel));
+								this.fc = SocketChannel.open();
+								this.fc.connect(Readers.readAddress(this.pc));
 								System.out.println("Connexion pour envoi de fichier établie !");
-								currentChannel = privateChannel;
+								currentChannel = this.pc;
 								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
-								currentChannel = privateChannel;
 								break;
 							//TODO remove because useless
 							case ACC_CO_FIL_CC :
-								fileChannel.connect(Readers.readAddress(privateChannel));
-								currentChannel = privateChannel;
+								this.fc.connect(Readers.readAddress(this.pc));
+								currentChannel = this.pc;
 								System.out.println("Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 								break;
 							
@@ -108,8 +107,8 @@ public class ClientTCPMulti {
 								synchronized(lock){
 									receivedFile = true;
 								}
-								size = Readers.readLong(privateChannel);
-								this.fileReceived = Readers.readString(privateChannel);
+								size = Readers.readLong(this.pc);
+								this.fileReceived = Readers.readString(this.pc);
 								System.out.println(name + " veut vous envoyer " + this.fileReceived + " (" + size
 										+ " bytes)");
 								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
@@ -129,7 +128,7 @@ public class ClientTCPMulti {
 								fileSending = false;
 								System.out.println("Votre demande d'envoi de fichier a été refusé.");
 								break;
-							case MESSAGE : Readers.readPrivateMessage(privateChannel);break;
+							case MESSAGE : Readers.readPrivateMessage(this.pc);break;
 							default : 
 								System.err.println("Unexpected packet, bad client in private chat");
 								throw new IOException("Unexpected Packet");
@@ -284,11 +283,13 @@ public class ClientTCPMulti {
 								channel = map.get(name);
 								if(channel != null){
 									if(null == channel.pc ){								
-										System.out.println("Votre demande a été accepté par " + channel.name +" !");
+										System.out.println("Votre demande a été accepté par " + name +" !");
 										//Here we receive the server address of c2 so we can connect to him.
 										synchronized(channel.lockPrivate){
+											System.out.println("Connexion à l'autre client.");
 											channel.pc = SocketChannel.open(Readers.readAddress(generalChannel));
-											Writters.acceptPrivateConnection(generalChannel, clientID, channel.name, ssc, myName);
+											System.out.println("Connexion établie");
+											Writters.acceptPrivateConnection(generalChannel, clientID, name, ssc, myName);
 											channel.lockPrivate.notify();	
 										}
 										//privateListener.start();
@@ -305,7 +306,9 @@ public class ClientTCPMulti {
 									}
 									else if((null != channel.pc) && channel.receivedInvite){
 										synchronized(channel.lockPrivate){
-											channel.pc = ssc.accept();	
+											System.out.println("Attente de connexion de l'autre client.");
+											channel.pc = ssc.accept();
+											System.out.println("Connexion établie !");
 											channel.lockPrivate.notify();
 											Readers.readAddress(generalChannel);
 											
@@ -452,6 +455,8 @@ public class ClientTCPMulti {
 					else
 						System.out.println("Vous n'avez pas de discussion privé en cours.");
 				}
+				else
+					System.out.println("Précisez la personne avec qui vous voulez coupé contact.");
 				return;
 				
 			case "/leave":
@@ -493,9 +498,11 @@ public class ClientTCPMulti {
 								System.out.println("Vous n'avez pas reçu d'invitation");
 						}
 					}
+					else
+						System.out.println("Vous n'avez pas reçu de demande de " + argument[1]);
 				}
 				else{
-					System.out.println("Précisez la personne que vous voulez accepté.");
+					System.out.println("Précisez la personne que vous voulez accepter.");
 				}
 				
 				return;
@@ -521,6 +528,8 @@ public class ClientTCPMulti {
 								System.out.println("Vous n'avez pas reçu d'invitation.");
 						}
 					}
+					else
+						System.out.println("Vous n'avez pas reçu de demande de " + argument[1]);
 					
 				}
 				else
@@ -541,8 +550,10 @@ public class ClientTCPMulti {
 						}	
 					}
 					else
-						System.out.println("Pas de chat privé.");
+						System.out.println("Pas de chat privé avec cette personne.");
 				}
+				else
+					System.out.println("Précisez la personne avec qui vous voulez parlé");
 				return;
 				
 				
