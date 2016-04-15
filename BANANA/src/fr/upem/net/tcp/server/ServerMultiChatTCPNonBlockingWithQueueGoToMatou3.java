@@ -131,6 +131,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		ByteBuffer in, out;
 		boolean isClosed = false;
 		int remainingTry = REMAINING_TRY;
+		private static final int MAX_SIZE_QUEUE = 1024;
 		String login;
 		LinkedList<ByteBuffer> queue = new LinkedList<>();
 		public DataPacketRead dataPacketRead;
@@ -233,7 +234,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public void CloseAnRejectClient(String login) {
 			silentlyClose(map.get(login).sc);
 			// TODO : desalouer
-			if( map.get(login) != null ){
+			if (map.get(login) != null) {
 				map.remove(login);
 			}
 		}
@@ -351,9 +352,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						System.out.println("ALLOCATION "
 								+ Thread.currentThread().getStackTrace()[1]
 										.getLineNumber());
-						readerACC_CO_PRV_CS = new ReaderString(new ReaderInt(new ReaderString(
-								new ReaderLong(new ReaderString(DEST_DATA,
-										typeLastPacketReceiv)), SRC_DATA_ADR)),SRC_DATA);
+						readerACC_CO_PRV_CS = new ReaderString(new ReaderInt(
+								new ReaderString(new ReaderLong(
+										new ReaderString(DEST_DATA,
+												typeLastPacketReceiv)),
+										SRC_DATA_ADR)), SRC_DATA);
 					}
 					currentReader = readerACC_CO_PRV_CS;
 					break;
@@ -363,8 +366,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						System.out.println("ALLOCATION "
 								+ Thread.currentThread().getStackTrace()[1]
 										.getLineNumber());
-						readerREF_CO_PRV_CS =  new ReaderString(new ReaderLong(new ReaderString(
-								DEST_DATA, typeLastPacketReceiv)),SRC_DATA);
+						readerREF_CO_PRV_CS = new ReaderString(new ReaderLong(
+								new ReaderString(DEST_DATA,
+										typeLastPacketReceiv)), SRC_DATA);
 					}
 					currentReader = readerREF_CO_PRV_CS;
 					break;
@@ -453,11 +457,19 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		 */
 		private void sendToOtherClient(Attachement at) {
 
-			ByteBuffer outToOtherClient = ByteBuffer.allocate(out.remaining());
-			outToOtherClient.put(out);
-			at.queue.addLast(outToOtherClient);
-			outToOtherClient = null;
+			out.position(out.remaining());
+			if (queue.size() >= MAX_SIZE_QUEUE) {
+				queue.poll();// we remove the latest
+			}
+			at.queue.addLast(out.duplicate());// même reference, mee position ou
+												// on demar mais ce qu'on fasur
+												// les autre position n'influ
+												// pas le reste
+
 			at.key.interestOps(at.getInterest());
+			// at.queue.addLast(out.duplicate());// même reference, mee position
+			// ou on demar mais ce qu'on fasur les autre position n'influ pas le
+			// reste
 
 		}
 
@@ -502,14 +514,14 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			case REF_CO_PRV_SC:
 				System.out.println("write in bb REF_CO_PRV_SC");
-				writeString(bb,data.getLoginSrc());
+				writeString(bb, data.getLoginSrc());
 				// Do nothing
 				break;
 			case ACC_CO_PRV_SC:
-				writeString(bb,data.getLoginSrc());//LA
+				writeString(bb, data.getLoginSrc());// LA
 				writeString(bb, data.getAdrSrc());
 				bb.putInt(data.getPortSrc());
-				
+
 				break;
 			case MESSAGE:
 
@@ -548,11 +560,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			key.interestOps(getInterest());
 		}
-		ByteBuffer outFromQueue = null;
+
+		// ByteBuffer outFromQueue = null; MOD X
 		private void doWrite(SelectionKey key) throws IOException {
 
 			Attachement at;
-			
+
 			// faire le techeck sur la taille avant et il fatu faire en sorte
 			// que la
 			// taille n'excede jamasi celel du buffer qu'on a allouer comme ça
@@ -560,26 +573,27 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 			// besoin de reallouer.
 			if ((statusWriting != StatusWriting.CURRENT_WRITING_START)
 					&& (statusWriting != StatusWriting.CURRENT_WRITING)
-					&& (  (!queue.isEmpty()) || (statusWriting == StatusWriting.WRITE_ONLY) )) {
-				
+					&& ((!queue.isEmpty()) || (statusWriting == StatusWriting.WRITE_ONLY))) {
 
+				ByteBuffer outFromQueue;// MOD X
 				switch (statusWriting) {
 
 				case RETRIEVE_AND_WRITE:
 
-					outFromQueue = queue.poll();
-					outFromQueue.flip();
+					outFromQueue = queue.peek();// MOD X
+					outFromQueue.flip();// MOD X
 
 					sc.write(outFromQueue);
 					outFromQueue.compact();
 					statusWriting = StatusWriting.WRITE_ONLY;
 					break;
 				case WRITE_ONLY:
-					/*try{*/
-					outFromQueue.flip();
+					/* try{ */
+					outFromQueue = queue.poll();// MOD X
+					outFromQueue.flip();// MOD X
 					sc.write(outFromQueue);
 					if (outFromQueue.hasRemaining()) {
-						//System.out.println("UUUUUUUUUUUUUUUUUUUUUUUU");System.exit(1);
+						// System.out.println("UUUUUUUUUUUUUUUUUUUUUUUU");System.exit(1);
 						outFromQueue.compact();
 						break;
 
@@ -587,14 +601,15 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					outFromQueue = null;// pour la liberation
 					statusWriting = StatusWriting.RETRIEVE_AND_WRITE;
 					break;
-				/*}catch ( Exception e ){
-					System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-					throw e;
-				}*/
+				/*
+				 * }catch ( Exception e ){ System.out.println(
+				 * "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				 * ); throw e; }
+				 */
 				}
-				
+
 			} else {
-				
+
 				if (statusWriting != StatusWriting.CURRENT_WRITING) {
 					statusWriting = StatusWriting.CURRENT_WRITING_START;
 				}
@@ -603,12 +618,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					if (statusWriting == StatusWriting.CURRENT_WRITING_START) {
 						out.flip();
 						statusWriting = StatusWriting.CURRENT_WRITING;
-						
+
 					}
 
 					sc.write(out);
 					if (out.hasRemaining()) {
-						
+
 						return;
 
 					}
@@ -679,7 +694,6 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 				key.interestOps(getInterest());
 
-				
 			}
 		}
 
@@ -710,7 +724,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					// je test la car ça pourrait êre faut au moment ou on le
 					// recupere de lafile
 					String loginToTest = dataPacketRead.getLoginSrc();
-					
+
 					if (!isAUniqLogin(loginToTest)) {
 						// TODO : if false login we refused connexion ?
 						// appeler la fonction qui va remplir le out avec le
@@ -719,7 +733,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 								TypePacket.REF_CO_SERV, out);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
 						if (--remainingTry <= 0) {
-							 // si non quand on fait la suppression du client en caas d'exception on en supprime un autre
+							// si non quand on fait la suppression du client en
+							// caas d'exception on en supprime un autre
 							// MODIF 1
 							silentlyClose(sc);
 
@@ -728,7 +743,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 						return;// and close se socket
 					}
 					// une fois que le login est assuré
-					login = loginToTest ;
+					login = loginToTest;
 					// TODO: do we have to manage the unicity with a comparason
 
 					id = rand.nextLong();
@@ -799,7 +814,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				case ACC_CO_PRV_CS:
 
 					if (/*
-						 (!dataPacketRead.getLoginSrc().equals(login)) ||
+						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
 						 */(id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
@@ -950,7 +965,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				System.out.println("aaaaa2");
 			} catch (IOException e) {
 				System.out.println("IOExcpetion catch !");// TODO : delete
-			
+
 				if (map.get(at.login) != null) {// if an exception occured,
 												// anshure that client will be
 												// remove from the map
@@ -958,13 +973,15 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				}
 			} catch (Exception e) {
 				System.out.println("Excpetion catch !");// TODO : delete
-				//if( 2 >= 1 ) throw new IOException(e);
-				if ((at.login !=null) && (map.get(at.login) != null)) {// if an exception occured,
-												// anshure that client will be
-												// remove from the map
+				// if( 2 >= 1 ) throw new IOException(e);
+				if ((at.login != null) && (map.get(at.login) != null)) {// if an
+																		// exception
+																		// occured,
+					// anshure that client will be
+					// remove from the map
 					map.remove(at.login);
 				}
-			} 
+			}
 
 		}
 	}
