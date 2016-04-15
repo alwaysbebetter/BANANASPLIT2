@@ -67,7 +67,6 @@ public class Loggers {
 		case 8:
 			size = buff.getInt();
 			sb.append(size).append(" ");
-
 			limit = buff.limit();
 			buff.limit(buff.position() + size);
 			sb.append(utf8.decode(buff)).append(" ");
@@ -138,6 +137,7 @@ public class Loggers {
 			return;
 		case 7:
 
+
 			size = buff.getInt();
 			sb.append(size).append(" ");
 
@@ -146,8 +146,10 @@ public class Loggers {
 			sb.append(utf8.decode(buff)).append(" ");
 			buff.limit(limit);
 
+			
 			size = buff.getInt();
 			sb.append(size).append(" ");
+			
 
 			limit = buff.limit();
 			buff.limit(buff.position() + size);
@@ -156,7 +158,9 @@ public class Loggers {
 			sb.append(buff.getInt());
 			System.out.println(sb);
 			return;
+
 		case 9:
+
 		case 10:
 			size = buff.getInt();
 			sb.append(size).append(" ");
