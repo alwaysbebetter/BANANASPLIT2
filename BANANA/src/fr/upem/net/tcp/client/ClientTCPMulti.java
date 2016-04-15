@@ -151,10 +151,10 @@ public class ClientTCPMulti {
 					try{
 						//Wait until a connection is make
 						synchronized(lockReadFile){
-							while(fileChannel == null || !receivedFile)
+							while(this.fc == null || !receivedFile)
 								lockReadFile.wait();
 						}
-						Readers.readFile(fileChannel,fileReceived);
+						Readers.readFile(this.fc,fileReceived);
 						//Share with general Thread and main, so use simple lock
 						synchronized(lock){
 							receivedFile = false;
@@ -182,7 +182,7 @@ public class ClientTCPMulti {
 								lockWriteFile.wait();
 						}
 								
-						Writters.sendFile(fc, Paths.get(fileToSend));
+						Writters.sendFile(this.fc, Paths.get(fileToSend));
 						synchronized(lockWriteFile){
 							fileSending = false;
 						}
