@@ -127,6 +127,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 	}
 
 	private class Attachement {
+		private static final int MAX_SIZE_QUEUE = 1024 ;
 		SelectionKey key;
 		ByteBuffer in, out;
 		boolean isClosed = false;
@@ -453,11 +454,14 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		 */
 		private void sendToOtherClient(Attachement at) {
 
-			ByteBuffer outToOtherClient = ByteBuffer.allocate(out.remaining());
-			outToOtherClient.put(out);
-			at.queue.addLast(outToOtherClient);
-			outToOtherClient = null;
+			out.position(out.remaining());
+			if( queue.size() >= MAX_SIZE_QUEUE ){
+				queue.poll();// we remove the latest
+			}
+			at.queue.addLast(out.duplicate());// même reference, mee position ou on demar mais ce qu'on fasur les autre position n'influ pas le reste
+
 			at.key.interestOps(at.getInterest());
+			//at.queue.addLast(out.duplicate());// même reference, mee position ou on demar mais ce qu'on fasur les autre position n'influ pas le reste
 
 		}
 
@@ -502,11 +506,11 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			case REF_CO_PRV_SC:
 				System.out.println("write in bb REF_CO_PRV_SC");
-				writeString(bb,data.getLoginDst());
+				writeString(bb,data.getLoginSrc());
 				// Do nothing
 				break;
 			case ACC_CO_PRV_SC:
-				writeString(bb,data.getLoginDst());//LA
+				writeString(bb,data.getLoginSrc());//LA
 				writeString(bb, data.getAdrSrc());
 				bb.putInt(data.getPortSrc());
 				
@@ -548,7 +552,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 			key.interestOps(getInterest());
 		}
-		ByteBuffer outFromQueue = null;
+		// 				ByteBuffer outFromQueue = null; MOD X
 		private void doWrite(SelectionKey key) throws IOException {
 
 			Attachement at;
@@ -562,13 +566,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					&& (statusWriting != StatusWriting.CURRENT_WRITING)
 					&& (  (!queue.isEmpty()) || (statusWriting == StatusWriting.WRITE_ONLY) )) {
 				
-
+				ByteBuffer outFromQueue;// MOD X
 				switch (statusWriting) {
 
 				case RETRIEVE_AND_WRITE:
 
-					outFromQueue = queue.poll();
-					outFromQueue.flip();
+					outFromQueue = queue.peek();// MOD X
+					outFromQueue.flip();// MOD X
 
 					sc.write(outFromQueue);
 					outFromQueue.compact();
@@ -576,7 +580,8 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					break;
 				case WRITE_ONLY:
 					/*try{*/
-					outFromQueue.flip();
+					outFromQueue = queue.poll();// MOD X
+					outFromQueue.flip();// MOD X
 					sc.write(outFromQueue);
 					if (outFromQueue.hasRemaining()) {
 						//System.out.println("UUUUUUUUUUUUUUUUUUUUUUUU");System.exit(1);
@@ -615,7 +620,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 					out.compact();
 
 					break;
-				case ACC_CO_PRV_CS:
+				case ACC_CO_PRV_CS: // ERREUR POTENTIEL
 				case REF_CO_PRV_CS:// TOCHECK
 					System.out.println("réponse a REF_CO_PRV_CS");
 
