@@ -8,7 +8,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.security.Key;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Set;
@@ -234,7 +233,9 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		public void CloseAnRejectClient(String login) {
 			silentlyClose(map.get(login).sc);
 			// TODO : desalouer
-			map.remove(login);
+			if( map.get(login) != null ){
+				map.remove(login);
+			}
 		}
 
 		private boolean isValideTypePacket(byte typePacket) {
@@ -702,11 +703,12 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				}
 				System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
-				case ASC_CO_SERV:
+				case ASC_CO_SERV:// MODIF A ( modifier tout ça ).
 					// je test la car ça pourrait êre faut au moment ou on le
 					// recupere de lafile
-					login = dataPacketRead.getLoginSrc();
-					if (!isAUniqLogin(login)) {
+					String loginToTest = dataPacketRead.getLoginSrc();
+					
+					if (!isAUniqLogin(loginToTest)) {
 						// TODO : if false login we refused connexion ?
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )
@@ -714,12 +716,16 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 								TypePacket.REF_CO_SERV, out);
 						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
 						if (--remainingTry <= 0) {
+							 // si non quand on fait la suppression du client en caas d'exception on en supprime un autre
+							// MODIF 1
 							silentlyClose(sc);
 
 						}
 						statusTreatment = StatusTreatment.TYPE_READING;
 						return;// and close se socket
 					}
+					// une fois que le login est assuré
+					login = loginToTest ;
 					// TODO: do we have to manage the unicity with a comparason
 
 					id = rand.nextLong();
@@ -949,13 +955,13 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				}
 			} catch (Exception e) {
 				System.out.println("Excpetion catch !");// TODO : delete
-				if( 2 >= 1 ) throw new IOException(e);
-				if (map.get(at.login) != null) {// if an exception occured,
+				//if( 2 >= 1 ) throw new IOException(e);
+				if ((at.login !=null) && (map.get(at.login) != null)) {// if an exception occured,
 												// anshure that client will be
 												// remove from the map
 					map.remove(at.login);
 				}
-			}
+			} 
 
 		}
 	}
