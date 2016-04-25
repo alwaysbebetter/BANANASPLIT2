@@ -164,7 +164,6 @@ public class ClientTCPMulti {
 						System.err.println("Deconnexion pour l'envoi de fichier.");
 						silentlyClosePrivate();
 					}catch(InterruptedException ie){
-						System.err.println("Stop listening on fileChannel.");
 						Thread.currentThread().interrupt();
 					}	
 				}
@@ -190,7 +189,6 @@ public class ClientTCPMulti {
 					}catch(IOException e){
 						silentlyClosePrivate();
 					}catch(InterruptedException ie){
-						ie.printStackTrace();
 						Thread.currentThread().interrupt();
 					}	
 				}						
@@ -203,6 +201,7 @@ public class ClientTCPMulti {
 				currentChannel = generalChannel;
 			silentlyClose(pc);
 			silentlyClose(fc);
+			stop();
 			System.out.println("Connection privé fermé.");		
 		}
 		
@@ -210,6 +209,12 @@ public class ClientTCPMulti {
 			if(this.pc != null)
 				return pc.isConnected();
 			return false;
+		}
+		
+		private void stop(){
+			privateListener.interrupt();
+			fileListener.interrupt();
+			fileWritter.interrupt();
 		}
 		
 	}
@@ -287,7 +292,8 @@ public class ClientTCPMulti {
 										//Here we receive the server address of c2 so we can connect to him.
 										synchronized(channel.lockPrivate){
 											System.out.println("Connexion à l'autre client.");
-											channel.pc = SocketChannel.open(Readers.readAddress(generalChannel));
+											InetSocketAddress address = Readers.readAddress(generalChannel);
+											channel.pc = SocketChannel.open(address);
 											System.out.println("Connexion établie");
 											Writters.acceptPrivateConnection(generalChannel, clientID, name, ssc, myName);
 											channel.lockPrivate.notify();	
@@ -448,12 +454,12 @@ public class ClientTCPMulti {
 			case "/quit":
 				if(argument.length >= 2){
 					channel = map.get(argument[1]);
-					if(channel.pc != null && channel.pc != null){
+					if((channel != null) && (channel.pc != null) && (channel.pc != null)){
 						System.out.println("Vous avez quitté le chat privé.");
 						channel.silentlyClosePrivate();
 					}
 					else
-						System.out.println("Vous n'avez pas de discussion privé en cours.");
+						System.out.println("Vous n'avez pas de discussion privé en cours avec " + argument[1] +".");
 				}
 				else
 					System.out.println("Précisez la personne avec qui vous voulez coupé contact.");
@@ -633,10 +639,12 @@ public class ClientTCPMulti {
 	}
 	
 	private void silentlyCloseClient(){
+		if(generalChannel != null)
+			System.out.println("Le client va fermé.");
 		silentlyClose(generalChannel);
 		//silentlyClosePrivate();
 		map.clear();
-		System.out.println("Le client va fermé.");
+
 		System.exit(0);
 		
 	}
@@ -647,6 +655,7 @@ public class ClientTCPMulti {
 		if (socket != null)
 			try {
 				socket.close();
+				socket = null;
 			} catch (IOException e) {
 				// Ignore
 			}
