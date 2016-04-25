@@ -367,6 +367,11 @@ public class ClientTCPMulti {
 				System.out.println("What is your pseudo ?");
 				if (sc.hasNextLine()) {		
 					name = sc.nextLine();
+					//refuse name with space
+					if(name.contains(" ")){
+						System.out.println("Les espaces sont interdis.");
+						continue;
+					}
 					Writters.requestName(generalChannel, name);
 					if(Readers.nameAccepted(generalChannel)){
 
