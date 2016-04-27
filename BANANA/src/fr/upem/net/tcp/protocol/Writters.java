@@ -3,6 +3,7 @@ package fr.upem.net.tcp.protocol;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
@@ -85,12 +86,13 @@ public class Writters {
 	public static void acceptPrivateConnection(SocketChannel sc, long clientID,
 			String src, ServerSocketChannel ssc,String myName) throws IOException {
 		ServerSocket socket =  ssc.socket();
-
+		String[] address = InetAddress.getLocalHost().toString().split("/");
 		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer adressBuff = UTF8.encode(socket.getInetAddress().getHostAddress());
+		ByteBuffer adressBuff = UTF8.encode(address[1]);
 		ByteBuffer nameBuff = UTF8.encode(myName);
+		
 
-		ByteBuffer buff = allocate(
+		ByteBuffer buff = allocate(	
 				4,
 				Byte.BYTES + Long.BYTES + srcBuff.remaining()
 						+ adressBuff.remaining() + nameBuff.remaining());

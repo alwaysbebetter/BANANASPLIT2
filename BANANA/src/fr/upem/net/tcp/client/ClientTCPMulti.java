@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
@@ -111,7 +112,7 @@ public class ClientTCPMulti {
 								this.fileReceived = Readers.readString(this.pc);
 								System.out.println(name + " veut vous envoyer " + this.fileReceived + " (" + size
 										+ " bytes)");
-								System.out.println("Tapez /yes pour accepter ou /no pour refuser.");
+								System.out.println("Tapez /yes " + name +" pour accepter ou /no " + name +" pour refuser.");
 								break;
 							//case the person has accepted our demand
 							case ACC_SEND_FIL_CC:
@@ -412,7 +413,7 @@ public class ClientTCPMulti {
 						Writters.askPrivateConnection(generalChannel,clientID,myName,argument[1]);
 					}
 					else
-						System.out.println(argument[1] + " est déjà en attente de connexion");
+						System.out.println(argument[1] + " est déjà en attente de connexion ou déjà connecté");
 				}
 				else
 					System.out.println("Précisez la personne à inviter !");
@@ -444,6 +445,9 @@ public class ClientTCPMulti {
 					else{
 						System.out.println("Le fichier " + channel.fileToSend + " est en attente d'une réponde de " + argument[2]);
 					}
+				}
+				else if(argument[2].isEmpty()){
+					System.out.println("Veuillez préciser la personne à qui l'envoyer.");
 				}
 				//channel is null
 				else {
@@ -530,7 +534,7 @@ public class ClientTCPMulti {
 								map.remove(argument[1]);
 								System.out.println("Vous avez refusé l'invitation.");
 							}
-							else if(channel.receivedFile && (privateChannel != null)){
+							else if(channel.receivedFile && (channel.pc != null)){
 								Writters.refuseFile(channel.pc);
 								channel.receivedFile = false;
 								System.out.println("Vous avez refusé le fichier.");
