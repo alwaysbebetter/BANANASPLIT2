@@ -37,7 +37,7 @@ public class ClientTCPMulti {
 
 	private final Object lock = new Object();
 	// delay in second
-	private final int maxTime = 5;
+	private final int maxTime = 10,maxConnection = 5;
 	private Thread generalListener, timeout;
 	private final ConcurrentHashMap<String, PrivateChannel> map;
 
@@ -195,6 +195,7 @@ public class ClientTCPMulti {
 			silentlyClose(pc);
 			silentlyClose(fc);
 			stop();
+			map.remove(this.name);
 			System.out.println("Connection privé fermé.");
 		}
 
@@ -249,8 +250,12 @@ public class ClientTCPMulti {
 					case ASC_CO_PRV_SC:
 
 						name = Readers.readString(generalChannel);
+						if(map.size() >= this.maxConnection){
+							Writters.denyPrivateConnection(generalChannel, clientID, name, myName);
+							break;
+						}
 
-						if (map.get(name) == null) {
+						if (map.get(name) == null) { 
 							channel = new PrivateChannel(name);
 							channel.receivedInvite = true;
 							map.put(name, channel);
@@ -433,6 +438,10 @@ public class ClientTCPMulti {
 			case "/invite":
 				// Take the two first word
 				// Example /invite Bob
+				if(map.size() >= this.maxConnection){
+					System.out.println("Le maximum de connexion est atteinte, désolé.");
+					return;
+				}
 
 				if (argument.length >= 2) {
 
@@ -489,9 +498,10 @@ public class ClientTCPMulti {
 			case "/quit":
 				if (argument.length >= 2) {
 					channel = map.get(argument[1]);
-					if ((channel != null) && (channel.pc != null) && (channel.pc != null)) {
+					if ((channel != null)  && (channel.pc != null)) {
 						System.out.println("Vous avez quitté le chat privé.");
 						channel.silentlyClosePrivate();
+						
 					} else
 						System.out.println("Vous n'avez pas de discussion privé en cours avec " + argument[1] + ".");
 				} else
