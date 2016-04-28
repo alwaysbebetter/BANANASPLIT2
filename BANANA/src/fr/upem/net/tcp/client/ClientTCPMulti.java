@@ -306,7 +306,7 @@ public class ClientTCPMulti {
 								// privateListener.start();
 
 								System.out.println("Connexion privé établie !");
-								Writters.askPrivateFileConnection(channel.pc, TypePacket.ASC_CO_FIL_CC, ssc);
+								Writters.askPrivateFileConnection(channel.pc, TypePacket.ASC_CO_FIL_CC, myIP,ssc.socket().getLocalPort());
 								System.out.println("Demande de connexion pour envoyer des fichiers...");
 								channel.fc = ssc.accept();
 								System.out.println("Connexion pour envoi de fichier établie !");

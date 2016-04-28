@@ -149,17 +149,16 @@ public class Writters {
 	 *            9 for asking and 10 to respond.
 	 */
 	public static void askPrivateFileConnection(SocketChannel sc, TypePacket type,
-			ServerSocketChannel fileChannel) throws IOException,
+			String myIP, int port) throws IOException,
 			IllegalStateException {
 		if ((type == TypePacket.ASC_CO_FIL_CC) || (type == TypePacket.ACC_CO_FIL_CC)) {
-			InetSocketAddress adress = (InetSocketAddress) fileChannel
-					.getLocalAddress();
 
-			ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
+			//ByteBuffer adressBuff = UTF8.encode(adress.getHostName());
+			ByteBuffer adressBuff = UTF8.encode(myIP);
 
 			ByteBuffer buff = allocate(2, Byte.BYTES + adressBuff.remaining());
 
-			buff.put((byte)type.getValue()).putInt(adressBuff.remaining()).put(adressBuff).putInt(adress.getPort());
+			buff.put((byte)type.getValue()).putInt(adressBuff.remaining()).put(adressBuff).putInt(port);
 
 			Loggers.test(buff);
 			buff.flip();
