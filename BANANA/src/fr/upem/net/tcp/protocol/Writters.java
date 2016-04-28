@@ -86,9 +86,10 @@ public class Writters {
 	public static void acceptPrivateConnection(SocketChannel sc, long clientID,
 			String src, ServerSocketChannel ssc,String myName) throws IOException {
 		ServerSocket socket =  ssc.socket();
-		String[] address = InetAddress.getLocalHost().toString().split("/");
+		//String[] address = InetAddress.getLocalHost().toString().split("/");
 		ByteBuffer srcBuff = UTF8.encode(src);
-		ByteBuffer adressBuff = UTF8.encode(address[1]);
+		//ByteBuffer adressBuff = UTF8.encode(address[1]);
+		ByteBuffer adressBuff = UTF8.encode(socket.getInetAddress().getHostName());
 		ByteBuffer nameBuff = UTF8.encode(myName);
 		
 
