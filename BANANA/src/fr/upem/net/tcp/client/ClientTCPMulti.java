@@ -231,7 +231,7 @@ public class ClientTCPMulti {
 		this.remoteAddress = new InetSocketAddress(serverAdress, serverPort);
 		generalChannel.connect(this.remoteAddress);
 		ssc = ServerSocketChannel.open();
-		//ssc.bind(null);
+		ssc.bind(null);
 		this.map = new ConcurrentHashMap<>();
 		this.sc = new Scanner(System.in);
 		myName = askName();

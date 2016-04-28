@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fr.upem.net.logger.Loggers;
+import fr.upem.net.tcp.protocol.Format;
 import fr.upem.net.tcp.server.Reader.StatusProcessing;
 
 public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
@@ -914,6 +915,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 		System.out.println("ALLOCATION "
 				+ Thread.currentThread().getStackTrace()[1].getLineNumber());
 		serverSocketChannel.bind(new InetSocketAddress(port));
+		System.out.println("serveur bound on " + Format.getMyIP() + " port :" + port);
 		selector = Selector.open();
 		selectedKeys = selector.selectedKeys();
 	}
