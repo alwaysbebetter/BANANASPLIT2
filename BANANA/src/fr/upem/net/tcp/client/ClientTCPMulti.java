@@ -56,7 +56,7 @@ public class ClientTCPMulti {
 	
 	
 	
-	private class PrivateChannel{
+	class PrivateChannel{
 		private SocketChannel pc = null;
 		private SocketChannel fc = null;
 		private Thread privateListener,fileListener,fileWritter;
@@ -284,16 +284,20 @@ public class ClientTCPMulti {
 								//c2 has received our demand so his privateChannel is open.
 								//We check destName to check if we have invite someone, avoid late accept.
 								name = Readers.readString(generalChannel);
-								//TODO remove
-								System.out.println("Acceptation par " + name);
+								InetSocketAddress address = Readers.readAddress(generalChannel);
+								
+								//Case we receive an acceptation but didn't invite him
+								if(!map.containsKey(name))
+									break;
+																
 								channel = map.get(name);
+								System.out.println("Acceptation par " + name);
 								if(channel != null){
 									if(null == channel.pc ){								
 										System.out.println("Votre demande a été accepté par " + name +" !");
 										//Here we receive the server address of c2 so we can connect to him.
 										synchronized(channel.lockPrivate){
-											System.out.println("Connexion à l'autre client.");
-											InetSocketAddress address = Readers.readAddress(generalChannel);
+											System.out.println("Connexion à l'autre client.");											
 											channel.pc = SocketChannel.open(address);
 											System.out.println("Connexion établie");
 											Writters.acceptPrivateConnection(generalChannel, clientID, name, ssc, myName);
@@ -317,13 +321,13 @@ public class ClientTCPMulti {
 											channel.pc = ssc.accept();
 											System.out.println("Connexion établie !");
 											channel.lockPrivate.notify();
-											Readers.readAddress(generalChannel);
+											//Readers.readAddress(generalChannel);
 											
 										}
 									}
 									else if(null != channel.pc){
 										System.out.println("Erreur connexion déjà établie avec " + name);
-										Readers.readAddress(generalChannel);
+										//Readers.readAddress(generalChannel);
 									}
 								}
 								
@@ -342,7 +346,7 @@ public class ClientTCPMulti {
 								
 							case MESSAGE : Readers.readMessage(generalChannel);break;
 							default : 
-								System.err.println("Unexpected packet, bad server");
+								System.err.println("Unexpected packet");
 								throw new IOException("Unexpected Packet");
 						}
 					}catch (IOException e){
@@ -495,10 +499,7 @@ public class ClientTCPMulti {
 								Writters.acceptPrivateConnection(generalChannel,clientID,argument[1],ssc, myName);
 		
 								System.out.println("Vous avez accepté l'invitation");
-		
-		
-								
-								
+					
 							}
 							else if(channel.receivedFile && (channel.pc != null) ){
 								Writters.acceptFile(channel.pc);
@@ -582,6 +583,7 @@ public class ClientTCPMulti {
 					System.out.println("Vous avez basculé sur le chat général.");
 				}
 				return;
+				
 			case "/help" :
 				printCommand();
 				return;
