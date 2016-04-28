@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
+import fr.upem.net.tcp.protocol.Format;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
 import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
@@ -27,7 +28,7 @@ public class ClientTCPMulti {
 	// if we want to connect again.
 	private final InetSocketAddress remoteAddress;
 
-	private final String myName;
+	private final String myName,myIP;
 
 	private Scanner sc;
 	// To prevent identity stealing.
@@ -221,11 +222,16 @@ public class ClientTCPMulti {
 	 * @throws IOException
 	 */
 	public ClientTCPMulti(String serverAdress, int serverPort) throws UnknownHostException, IOException {
+		myIP = Format.getMyIP();
+		if(myIP.isEmpty()){
+			throw new UnknownHostException("Problem getting your ip");
+		}
+			
 		generalChannel = SocketChannel.open();
 		this.remoteAddress = new InetSocketAddress(serverAdress, serverPort);
 		generalChannel.connect(this.remoteAddress);
 		ssc = ServerSocketChannel.open();
-		ssc.bind(null);
+		//ssc.bind(null);
 		this.map = new ConcurrentHashMap<>();
 		this.sc = new Scanner(System.in);
 		myName = askName();
@@ -294,7 +300,7 @@ public class ClientTCPMulti {
 									System.out.println("Connexion à l'autre client.");
 									channel.pc = SocketChannel.open(address);
 									System.out.println("Connexion établie");
-									Writters.acceptPrivateConnection(generalChannel, clientID, name, ssc, myName);
+									Writters.acceptPrivateConnection(generalChannel, clientID, name, myIP,ssc.socket().getLocalPort(), myName);
 									channel.lockPrivate.notify();
 								}
 								// privateListener.start();
@@ -527,7 +533,7 @@ public class ClientTCPMulti {
 							// generalListener will do this.
 
 							channel.pc = SocketChannel.open();
-							Writters.acceptPrivateConnection(generalChannel, clientID, argument[1], ssc, myName);
+							Writters.acceptPrivateConnection(generalChannel, clientID, argument[1], myIP,ssc.socket().getLocalPort(), myName);
 
 							System.out.println("Vous avez accepté l'invitation");
 

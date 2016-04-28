@@ -84,12 +84,11 @@ public class Writters {
 	 */
 
 	public static void acceptPrivateConnection(SocketChannel sc, long clientID,
-			String src, ServerSocketChannel ssc,String myName) throws IOException {
-		ServerSocket socket =  ssc.socket();
+			String src, String ip, int port,String myName) throws IOException {
 		//String[] address = InetAddress.getLocalHost().toString().split("/");
 		ByteBuffer srcBuff = UTF8.encode(src);
 		//ByteBuffer adressBuff = UTF8.encode(address[1]);
-		ByteBuffer adressBuff = UTF8.encode(socket.getInetAddress().getHostName());
+		ByteBuffer adressBuff = UTF8.encode(ip);
 		ByteBuffer nameBuff = UTF8.encode(myName);
 		
 
@@ -102,7 +101,7 @@ public class Writters {
 				.putLong(clientID).putInt(adressBuff.remaining())
 				.put(adressBuff);
 
-		buff.putInt(socket.getLocalPort());
+		buff.putInt(port);
 		
 		buff.putInt(nameBuff.remaining());
 		buff.put(nameBuff);

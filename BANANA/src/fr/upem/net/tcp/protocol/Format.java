@@ -1,3 +1,4 @@
+package fr.upem.net.tcp.protocol;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -7,7 +8,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 
-public class Test {
+public class Format {
 	
 	public static boolean isIPv4(String ip) {
 	    if (ip == null || ip.isEmpty()) return false;
@@ -70,7 +71,7 @@ public class Test {
 	                	return ip;
 	            }
 	        }
-	        return null;
+	        return "";
 	    } catch (SocketException e) {
 	        throw new RuntimeException(e);
 	    }
