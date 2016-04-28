@@ -627,8 +627,6 @@ public class ClientTCPMulti {
 		else
 			Writters.sendPrivateMessage(currentChannel, myName, line);
 
-		System.out.println(line + " envoyé !");
-
 	}
 
 	private void printCommand() {

@@ -3,17 +3,12 @@ package fr.upem.net.tcp.protocol;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-
-import fr.upem.net.logger.Loggers;
+//Loggers;
 import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
 
 public class Writters {
@@ -42,7 +37,7 @@ public class Writters {
 
 		buff2.put(buff);
 
-		Loggers.test(buff2);
+		//Loggers.test(buff2);
 		buff2.flip();
 
 		sc.write(buff2);
@@ -69,7 +64,7 @@ public class Writters {
 		buff.put((byte) 3).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID).putInt(destBuff.remaining()).put(destBuff);
 
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 
 		sc.write(buff);
@@ -106,7 +101,7 @@ public class Writters {
 		buff.putInt(nameBuff.remaining());
 		buff.put(nameBuff);
 
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 
 		sc.write(buff);
@@ -134,7 +129,7 @@ public class Writters {
 		buff.putInt(nameBuff.remaining());
 		buff.put(nameBuff);
 
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 
 		sc.write(buff);
@@ -160,7 +155,7 @@ public class Writters {
 
 			buff.put((byte)type.getValue()).putInt(adressBuff.remaining()).put(adressBuff).putInt(port);
 
-			Loggers.test(buff);
+			//Loggers.test(buff);
 			buff.flip();
 			sc.write(buff);
 		} else {
@@ -186,7 +181,7 @@ public class Writters {
 
 		buff.put((byte) TypePacket.ASC_SEND_FIL_CC.getValue()).putLong(file.length()).putInt(fileBuff.remaining()).put(fileBuff);
 
-		Loggers.test(buff);
+		//Loggers.test(buff);
 
 		buff.flip();;
 
@@ -201,7 +196,7 @@ public class Writters {
 	 */
 	public static void acceptFile(SocketChannel sc) throws IOException {
 		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) TypePacket.ACC_SEND_FIL_CC.getValue());
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 		sc.write(buff);
 	}
@@ -214,7 +209,7 @@ public class Writters {
 	 */
 	public static void refuseFile(SocketChannel sc) throws IOException {
 		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES).put((byte) TypePacket.REF_SEND_FIL_CC.getValue());
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 		sc.write(buff);
 	}
@@ -246,7 +241,7 @@ public class Writters {
 
 		fChan.close();
 		fIn.close();
-		Loggers.test(buff);
+		//Loggers.test(buff);
 		buff.flip();
 		sc.write(buff);
 	}
@@ -273,7 +268,7 @@ public class Writters {
 		buff.put((byte) TypePacket.MESSAGE.getValue()).putInt(srcBuff.remaining()).put(srcBuff)
 				.putLong(clientID).putInt(msgBuff.remaining()).put(msgBuff);
 
-		Loggers.testChatMessage(buff);
+		//Loggers.testChatMessage(buff);
 
 		buff.flip();
 
@@ -302,7 +297,7 @@ public class Writters {
 		buff.put((byte) 15).putInt(srcBuff.remaining()).put(srcBuff)
 				.putInt(msgBuff.remaining()).put(msgBuff);
 
-		Loggers.test(buff);
+		//Loggers.test(buff);
 
 		buff.flip();
 
