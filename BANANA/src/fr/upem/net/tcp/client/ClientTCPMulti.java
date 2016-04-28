@@ -1,7 +1,6 @@
 package fr.upem.net.tcp.client;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
@@ -10,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
@@ -51,8 +51,10 @@ public class ClientTCPMulti {
 	
 	
 	private final Object lock = new Object();
-	private Thread generalListener;
-	private final HashMap<String,PrivateChannel> map;
+	//delay in second
+	private final int maxTime = 5;
+	private Thread generalListener, timeout;
+	private final ConcurrentHashMap<String,PrivateChannel> map;
 	
 	
 	
@@ -65,6 +67,8 @@ public class ClientTCPMulti {
 		private  boolean receivedInvite = false;
 		private final String name;
 		private Object lockPrivate = new Object(),lockReadFile = new Object(),lockWriteFile = new Object();
+		//use to refuse automatically request
+		int countConnection = 0;
 		
 		
 		public PrivateChannel(String name){
@@ -236,7 +240,7 @@ public class ClientTCPMulti {
 		generalChannel.connect(this.remoteAddress);
 		ssc = ServerSocketChannel.open();
 		ssc.bind(null);
-		this.map = new HashMap<>();
+		this.map = new ConcurrentHashMap<>();
 		this.sc = new Scanner(System.in);
 		myName = askName();
 		this.clientID = Readers.readLong(generalChannel);
@@ -359,6 +363,50 @@ public class ClientTCPMulti {
 		});
 		generalListener.start();
 		
+		this.timeout = new Thread(() -> {
+			try{
+				while(!Thread.interrupted()){
+					synchronized(lock){
+						for(PrivateChannel p : map.values()){
+							//check part
+							if(p.pc != null){
+								p.countConnection = 0;
+								continue;
+							}
+							else
+								p.countConnection++;
+							
+							
+							
+							//Treatment part
+							if(p.countConnection == this.maxTime){
+								//Refuse automatically an invitation, if we waiting someone
+								// he will just be remove after the delay
+								if(p.receivedInvite){
+									System.out.println("Refus automatique.");
+									Writters.denyPrivateConnection(generalChannel, clientID, p.name, myName);
+									p.receivedInvite = false;
+								}
+								//Remove the person
+								this.map.remove(p.name);
+								System.out.println("Le délai est dépassé, connexion avec " + p.name + " interrompu.");
+								p.countConnection = 0;
+							}
+						}
+						//Wait 1 second to check again
+						Thread.sleep(1000);
+					}
+				}
+			}catch(IOException ioe){
+					
+			}
+			catch(InterruptedException e){
+				Thread.currentThread().interrupt();
+			}
+			
+		});
+		this.timeout.start();
+		
 		
 	}
 	
@@ -409,15 +457,16 @@ public class ClientTCPMulti {
 				//Example /invite Bob
 				
 				if(argument.length >= 2){
-					if(map.get(argument[1]) == null){
-						map.put(argument[1], new PrivateChannel(argument[1]));
-						System.out.println("Demande de chat privé à " + argument[1]);
-						//this.destName = argument[1];
-						map.put(argument[1],new PrivateChannel(argument[1]));
-						Writters.askPrivateConnection(generalChannel,clientID,myName,argument[1]);
+					synchronized(lock){
+						if(map.get(argument[1]) == null){
+							map.put(argument[1], new PrivateChannel(argument[1]));
+							System.out.println("Demande de chat privé à " + argument[1]);
+							//this.destName = argument[1];
+							Writters.askPrivateConnection(generalChannel,clientID,myName,argument[1]);
+						}
+						else
+							System.out.println(argument[1] + " est déjà en attente de connexion ou déjà connecté");
 					}
-					else
-						System.out.println(argument[1] + " est déjà en attente de connexion ou déjà connecté");
 				}
 				else
 					System.out.println("Précisez la personne à inviter !");
