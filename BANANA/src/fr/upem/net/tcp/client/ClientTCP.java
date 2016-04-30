@@ -197,7 +197,7 @@ public class ClientTCP {
 			silentlyClose(fc);
 			stop();
 			map.remove(this.name);
-			System.out.println("Connection privé fermé.");
+			System.out.println("Connexion privé fermé avec " + this.name);
 		}
 
 		public boolean isConnect() {
@@ -251,7 +251,6 @@ public class ClientTCP {
 					TypePacket packet = TypePacket.values()[Readers.readByte(generalChannel)];
 					String name;
 					PrivateChannel channel;
-					System.out.println(packet.getValue());
 					switch (packet) {
 
 					case ASC_CO_PRV_SC:
@@ -445,7 +444,7 @@ public class ClientTCP {
 					System.out.println("Personne connecté avec vous.");
 				else
 					for(PrivateChannel p : map.values()){
-						if(p.pc == null)
+						if(!p.isConnect())
 							System.out.println(p.name + " en attente de connexion.");
 						else
 							System.out.println(p.name + " connecté avec vous.");
