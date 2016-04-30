@@ -653,7 +653,7 @@ public class ServerTCP {
 					// recupere de lafile
 					String loginToTest = dataPacketRead.getLoginSrc();
 
-					if (!isAUniqLogin(loginToTest)) {
+					if (!(isAUniqLogin(loginToTest)) || loginToTest.contains(" ") || loginToTest.isEmpty()) {
 						// : if false login we refused connexion ?
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )

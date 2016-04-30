@@ -411,8 +411,8 @@ public class ClientTCP {
 			if (sc.hasNextLine()) {
 				name = sc.nextLine();
 				// refuse name with space
-				if (name.contains(" ")) {
-					System.out.println("Les espaces sont interdis.");
+				if (name.contains(" ") || name.isEmpty()) {
+					System.out.println("Les espaces et pseudos nuls sont interdis.");
 					continue;
 				}
 				Writters.requestName(generalChannel, name);
@@ -452,6 +452,7 @@ public class ClientTCP {
 						
 					}
 				System.out.println("total : " + map.size());
+				System.out.println("Maximum autorisé : " + this.maxConnection);
 				return;
 
 			// Invite someone
