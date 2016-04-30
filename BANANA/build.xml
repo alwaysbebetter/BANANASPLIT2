@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+
+<project name ="JshellBook" default="jar">
+
+	<target name="init">
+		<mkdir dir="classes"/>
+		<mkdir dir="docs/api"/>
+	</target>
+	
+	
+	<target name="compile" depends ="init">
+       		 <javac includeantruntime="false" srcdir="src" destdir="classes"
+       		 	debug ="on">
+       		 	<classpath>
+       		 		<fileset dir="libs">
+       		 			<include name="*.jar" />
+       		 		</fileset>
+       		 		<fileset dir="vert.x-3.0.0">
+       		 			<include name="lib/*.jar" />
+       		 		</fileset>
+       		 	</classpath>
+       		 </javac>
+       	</target>
+	
+	<target name="clean" depends="init">
+		<delete dir="classes/fr" />
+	</target>
+	
+	<target name="jar" depends ="compile">
+		<jar destfile="./jshellbook.jar">
+		 <fileset dir="classes" />
+		 <restrict>
+                <name name="*/**" />
+                <archives>
+                    <zips>
+                        <fileset dir="libs">
+                            <include name="*.jar" />
+                        </fileset>
+                        <fileset dir="vert.x-3.0.0">
+       		 		<include name="lib/*.jar" />
+       		 	</fileset>
+                    </zips>
+                </archives>
+            </restrict>
+            <manifest>
+                <attribute name="Main-class" value="fr.umlv.main.Main" />
+            </manifest>
+        </jar>
+
+    </target>
+	
+	<target name="javadoc" depends ="init">
+       		 <javadoc sourcepath="src" destdir="docs/api">
+       		 	<classpath>
+       		 		<fileset dir="libs">
+       		 			<include name="*.jar" />
+       		 		</fileset>
+       		 		<fileset dir="vert.x-3.0.0">
+       		 			<include name="lib/*.jar" />
+       		 		</fileset>
+       		 	</classpath>
+       		 </javadoc>
+       	</target>
+	
+	<target name="execute" depends="compile">
+		<java
+			classname="fr.umlv.main.Main"
+			classpath="classes"
+			fork="true">
+			<classpath>
+       		 		<fileset dir="libs">
+       		 			<include name="*.jar" />
+       		 		</fileset>
+       		 		<fileset dir="vert.x-3.0.0">
+       		 			<include name="lib/*.jar" />
+       		 		</fileset>
+       		 	</classpath>
+		</java>
+	</target>
+	
+</project>
