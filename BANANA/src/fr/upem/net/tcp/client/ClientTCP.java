@@ -15,7 +15,7 @@ import fr.upem.net.tcp.clientProtocol.Readers;
 import fr.upem.net.tcp.clientProtocol.Writters;
 import fr.upem.net.tcp.server.ServerTCP.TypePacket;
 
-public class ClientTCPMulti {
+public class ClientTCP {
 
 	private SocketChannel currentChannel;
 
@@ -221,7 +221,7 @@ public class ClientTCPMulti {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public ClientTCPMulti(String serverAdress, int serverPort) throws UnknownHostException, IOException {
+	public ClientTCP(String serverAdress, int serverPort) throws UnknownHostException, IOException {
 		myIP = Format.getMyIP();
 		if(myIP.isEmpty()){
 			throw new UnknownHostException("Problem getting your ip");
@@ -693,9 +693,16 @@ public class ClientTCPMulti {
 			}
 
 	}
+	
+	private static void usage(){
+		System.out.println("usage java -jar clientTCP.jar \"IP du server\" \"port du server\"");
+		System.exit(0);
+	}
 
 	public static void main(String[] args)
 			throws NumberFormatException, UnknownHostException, IOException, InterruptedException {
-		new ClientTCPMulti(args[0], Integer.parseInt(args[1])).launch();
+		if(args.length != 2)
+			usage();
+		new ClientTCP(args[0], Integer.parseInt(args[1])).launch();
 	}
 }

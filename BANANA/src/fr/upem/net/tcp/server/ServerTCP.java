@@ -903,12 +903,18 @@ public class ServerTCP {
 				| SelectionKey.OP_WRITE, at);
 		at.key = key2;
 	}
+	
+	private static void usage(){
+		System.out.println("usage java -jar serverTCP.jar \"port du server\"");
+		System.exit(0);
+	}
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
 
-	
-	new ServerTCP(
+		if(args.length != 1)
+			usage();
+		new ServerTCP(
 				Integer.parseInt(args[0])).launch();
 
 	}
