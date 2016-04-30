@@ -17,7 +17,7 @@ import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.protocol.Format;
 import fr.upem.net.tcp.server.Reader.StatusProcessing;
 
-public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
+public class ServerTCP {
 
 	private final ServerSocketChannel serverSocketChannel;
 	private final Selector selector;
@@ -909,7 +909,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 
 	}
 
-	public ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(int port)
+	public ServerTCP(int port)
 			throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
 		System.out.println("ALLOCATION "
@@ -1011,7 +1011,7 @@ public class ServerMultiChatTCPNonBlockingWithQueueGoToMatou3 {
 				+ Thread.currentThread().getStackTrace()[1].getLineNumber());// ALLOC
 																				// :
 																				// obligatoire
-		new ServerMultiChatTCPNonBlockingWithQueueGoToMatou3(
+		new ServerTCP(
 				Integer.parseInt(args[0])).launch();
 
 	}

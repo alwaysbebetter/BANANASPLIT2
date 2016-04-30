@@ -1,6 +1,6 @@
 package fr.upem.net.tcp.server;
 
-import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+import fr.upem.net.tcp.server.ServerTCP.TypePacket;
 
 public class DataPacketRead {
 	private TypePacket typePacket = TypePacket.INITIAL_TYPE;

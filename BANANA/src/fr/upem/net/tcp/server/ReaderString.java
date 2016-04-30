@@ -3,7 +3,7 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.server.DataPacketRead;
-import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+import fr.upem.net.tcp.server.ServerTCP.TypePacket;
 
 public class ReaderString implements Reader {
 	private int sizeString;

@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import fr.upem.net.tcp.protocol.Format;
 import fr.upem.net.tcp.protocol.Readers;
 import fr.upem.net.tcp.protocol.Writters;
-import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+import fr.upem.net.tcp.server.ServerTCP.TypePacket;
 
 public class ClientTCPMulti {
 

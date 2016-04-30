@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import fr.upem.net.logger.Loggers;
-import fr.upem.net.tcp.server.ServerMultiChatTCPNonBlockingWithQueueGoToMatou3.TypePacket;
+import fr.upem.net.tcp.server.ServerTCP.TypePacket;
 
 
 public class Readers {

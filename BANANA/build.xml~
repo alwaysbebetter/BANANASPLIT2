@@ -38,7 +38,7 @@
 
    	 </target>
 
-	<target name="jar" depends ="client,serveur">
+	<target name="serveur" depends ="client,server">
 
    	 </target>
 	
