@@ -3,8 +3,6 @@ package fr.upem.net.tcp.server;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import javax.xml.crypto.Data;
-
 public interface Reader {
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public static final int BUFSIZ = 200 ;

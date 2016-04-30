@@ -85,7 +85,7 @@ public class ClientTCPMulti {
 							System.out.println(
 									"Vous êtes maintenant sur le chat privé, tapez /g pour revenir sur le chat normal.");
 							break;
-						// TODO remove because useless
+						
 						case ACC_CO_FIL_CC:
 							this.fc.connect(Readers.readAddress(this.pc));
 							currentChannel = this.pc;
@@ -274,7 +274,7 @@ public class ClientTCPMulti {
 						break;
 
 					case ACC_CO_PRV_SC:
-						// TODO
+						
 
 						// In this case we are c1 because we are not yet
 						// connected like c2.

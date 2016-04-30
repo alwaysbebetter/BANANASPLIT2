@@ -13,7 +13,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import fr.upem.net.logger.Loggers;
 import fr.upem.net.tcp.clientProtocol.Format;
 import fr.upem.net.tcp.server.Reader.StatusProcessing;
 
@@ -23,8 +22,6 @@ public class ServerTCP {
 	private final Selector selector;
 	private final Set<SelectionKey> selectedKeys;
 	private final ConcurrentHashMap<String, Attachement> map = new ConcurrentHashMap<>();
-	private int co = 0;
-	private int debug = 0;
 	static private final int BUFSIZ = 200, REMAINING_TRY = 3;
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public final static int SRC_DATA = 0, DEST_DATA = 1, SRC_DATA_ADR = 2;
@@ -41,6 +38,8 @@ public class ServerTCP {
 				3);
 		private final int value;
 
+		//Used by enum
+		@SuppressWarnings("unused")
 		public int getValue() {
 			return value;
 		}
@@ -143,21 +142,12 @@ public class ServerTCP {
 				readerASC_CO_SERV, readerMESSAGE, currentReader;
 		long id;
 		SocketChannel sc;
-		String loginDest;
 		StatusWriting statusWriting = StatusWriting.RETRIEVE_AND_WRITE;
 
 		public Attachement(SocketChannel sc) {
 
 			this.sc = sc;
-			System.out
-					.println("ALLOCATION "
-							+ Thread.currentThread().getStackTrace()[1]
-									.getLineNumber());
 			in = ByteBuffer.allocate(BUFSIZ * 4);
-			System.out
-					.println("ALLOCATION "
-							+ Thread.currentThread().getStackTrace()[1]
-									.getLineNumber());
 			out = ByteBuffer.allocate(BUFSIZ * 4);
 
 		}
@@ -234,33 +224,16 @@ public class ServerTCP {
 
 		public void CloseAnRejectClient(String login) {
 			silentlyClose(map.get(login).sc);
-			// TODO : desalouer
+			// : desalouer
 			if (map.get(login) != null) {
 				map.remove(login);
 			}
 		}
 
-		private boolean isValideTypePacket(byte typePacket) {
-			if (typePacket < 0 || typePacket > 15)
-				return false;
-			return true;
-		}
-
 		private void readType() {// CHECKED
-			System.out.println("coco");
+			//System.out.println("coco");
 			if ((statusTreatment == StatusTreatment.TYPE_READING)
 					&& (in.position() >= 1)) {
-				System.out.println("coco2");
-				// System.out.print("Received format packet:");Loggers.test(in);//TODO
-				// : displaying to debbug, after remove it
-				System.out.println("statusTreatement : " + statusTreatment);// TODO
-																			// :
-																			// displaying
-																			// to
-																			// debbug,
-																			// after
-																			// remove
-																			// it
 				in.flip();
 				// get type
 				typeLastPacketReceiv = TypePacket.values()[in.get()];
@@ -268,28 +241,11 @@ public class ServerTCP {
 				in.compact();
 				// change status
 				if (!isAnExpectedTypePacket(typeLastPacketReceiv)) {
-					System.out
-							.println("UNEXCPECTED PACKET -> close and remove");// TODO
-																				// :
-																				// displaying
-																				// to
-																				// debbug,
-																				// after
-																				// remove
-																				// it
 					CloseAnRejectClient(login);
 				}
 
-				System.out.println("readType() -> " + typeLastPacketReceiv);// TODO
-																			// :
-																			// displaying
-																			// to
-																			// debbug,
-																			// after
-																			// remove
-																			// it
-				statusTreatment = StatusTreatment.TYPE_KNOWN;
-				System.out.println("statusTreatement : " + statusTreatment);// TODO
+			statusTreatment = StatusTreatment.TYPE_KNOWN;
+				//System.out.println("statusTreatement : " + statusTreatment);//
 																			// :
 																			// displaying
 																			// to
@@ -309,25 +265,11 @@ public class ServerTCP {
 
 			if (statusTreatment == StatusTreatment.TYPE_KNOWN) {
 				if (dataPacketRead != null) {
-					// dataPacketRead.reset();// on ricte les donné avant chaque
-					// nouvelle lecture
 					dataPacketRead.reset();
 				}
-				System.out.println("findReader -> reader"
-						+ typeLastPacketReceiv);// TODO
-				// :
-				// displaying
-				// to
-				// debbug,
-				// after
-				// remove
-				// it
-				switch (typeLastPacketReceiv) {
+					switch (typeLastPacketReceiv) {
 				case ASC_CO_SERV:
 					if (readerASC_CO_SERV == null) {
-						System.out.println("ALLOCATION "
-								+ Thread.currentThread().getStackTrace()[1]
-										.getLineNumber());
 						readerASC_CO_SERV = new ReaderString(SRC_DATA,
 								typeLastPacketReceiv);
 					}
@@ -338,9 +280,6 @@ public class ServerTCP {
 				case ASC_CO_PRV_CS:// Code : 3
 
 					if (readerASC_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "
-								+ Thread.currentThread().getStackTrace()[1]
-										.getLineNumber());
 						readerASC_CO_PRV_CS = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -350,9 +289,6 @@ public class ServerTCP {
 				case ACC_CO_PRV_CS:// Code : 5
 
 					if (readerACC_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "
-								+ Thread.currentThread().getStackTrace()[1]
-										.getLineNumber());
 						readerACC_CO_PRV_CS = new ReaderString(new ReaderInt(
 								new ReaderString(new ReaderLong(
 										new ReaderString(DEST_DATA,
@@ -364,9 +300,6 @@ public class ServerTCP {
 				case REF_CO_PRV_CS:// Code : 6
 
 					if (readerREF_CO_PRV_CS == null) {
-						System.out.println("ALLOCATION "
-								+ Thread.currentThread().getStackTrace()[1]
-										.getLineNumber());
 						readerREF_CO_PRV_CS = new ReaderString(new ReaderLong(
 								new ReaderString(DEST_DATA,
 										typeLastPacketReceiv)), SRC_DATA);
@@ -376,9 +309,6 @@ public class ServerTCP {
 				case MESSAGE:// Code :15
 
 					if (readerMESSAGE == null) {
-						System.out.println("ALLOCATION "
-								+ Thread.currentThread().getStackTrace()[1]
-										.getLineNumber());
 						readerMESSAGE = new ReaderString(
 								new ReaderLong(new ReaderString(SRC_DATA,
 										typeLastPacketReceiv)), DEST_DATA);
@@ -387,7 +317,7 @@ public class ServerTCP {
 					break;
 
 				default: // close
-					System.out.println("UNKNOWN PACKET -> close and remove!!");// TODO
+					//System.out.println("UNKNOWN PACKET -> close and remove!!");//
 																				// :
 																				// displaying
 																				// to
@@ -398,7 +328,7 @@ public class ServerTCP {
 					CloseAnRejectClient(login);
 				}
 				statusTreatment = StatusTreatment.READER_KNOWN;
-				System.out.println("statusTreatement : " + statusTreatment);// TODO
+				//System.out.println("statusTreatement : " + statusTreatment);//
 																			// :
 																			// displaying
 																			// to
@@ -417,7 +347,7 @@ public class ServerTCP {
 				switch (currentReader.process(in)) {
 				case DONE:// TRAITEMENT
 
-					System.out.println("applyReader -> DONE");// TODO :
+					//System.out.println("applyReader -> DONE");// :
 																// displaying to
 																// debbug, after
 																// remove it
@@ -427,22 +357,22 @@ public class ServerTCP {
 					// dataPacketRead.setTypePacket(typeLastPacketReceiv);
 					return StatusProcessing.DONE;
 				case ERROR:
-					System.out.println("applyReader -> ERROR");// TODO :
+					//System.out.println("applyReader -> ERROR");// :
 																// displaying to
 																// debbug, after
 																// remove it
-					// TODO : close
+					// : close
 					CloseAnRejectClient(login);
 					return StatusProcessing.ERROR;
 				case REFILL:
-					System.out.println("applyReader -> REFILL");// TODO :
+					//System.out.println("applyReader -> REFILL");// :
 																// displaying to
 																// debbug, after
 																// remove it
 					return StatusProcessing.REFILL;
 				}
 			}
-			return StatusProcessing.ERROR;// TODO: find other solution
+			return StatusProcessing.ERROR;//: find other solution
 		}
 
 		/*
@@ -486,7 +416,7 @@ public class ServerTCP {
 
 					// key2.interestOps(at.getInterest());
 					// at.getInterest();
-					// TODO : attachement diférent du null FAIRE LE TESTE AVANT
+					// : attachement diférent du null FAIRE LE TESTE AVANT
 
 				}
 			}
@@ -499,7 +429,7 @@ public class ServerTCP {
 
 		public void writePacketToSend(DataPacketRead data,
 				TypePacket typePacketToSend, ByteBuffer bb) {
-			System.out.println("TYPE " + typePacketToSend.getValue());
+			//System.out.println("TYPE " + typePacketToSend.getValue());
 			bb.put((byte) typePacketToSend.getValue());
 			switch (typePacketToSend) {
 			case ACC_CO_SERV:
@@ -514,7 +444,7 @@ public class ServerTCP {
 				break;
 
 			case REF_CO_PRV_SC:
-				System.out.println("write in bb REF_CO_PRV_SC");
+				//System.out.println("write in bb REF_CO_PRV_SC");
 				writeString(bb, data.getLoginSrc());
 				//writeString(bb, data.getLoginDst());
 				// Do nothing
@@ -530,19 +460,17 @@ public class ServerTCP {
 				writeString(bb, data.getLoginSrc());
 				// login dst is here the message
 				writeString(bb, data.getLoginDst());
+				break;
+			default : break;
 
 			}
-			System.out.println("SERVER SEND :");
-			Loggers.test(bb);
+			//Loggers.test(bb);
 
 		}
 
 		private void doRead(SelectionKey key) throws IOException {
 
 			SocketChannel client = sc;
-
-			// le problem c'est que el read renoie -1 et que la position est a 0
-
 			if (-1 == client.read(in)) {
 
 				isClosed = true;
@@ -552,7 +480,7 @@ public class ServerTCP {
 				}
 
 			}
-			System.out.println("INTEREST_OPS :" + getInterest());
+			//System.out.println("INTEREST_OPS :" + getInterest());
 			readType();
 			findReader();
 			if (StatusProcessing.ERROR == applyReader()) {
@@ -595,7 +523,7 @@ public class ServerTCP {
 					outFromQueue.flip();// MOD X
 					sc.write(outFromQueue);
 					if (outFromQueue.hasRemaining()) {
-						// System.out.println("UUUUUUUUUUUUUUUUUUUUUUUU");System.exit(1);
+						// //System.out.println("UUUUUUUUUUUUUUUUUUUUUUUU");//System.exit(1);
 						outFromQueue.compact();
 						break;
 
@@ -603,11 +531,7 @@ public class ServerTCP {
 					outFromQueue = null;// pour la liberation
 					statusWriting = StatusWriting.RETRIEVE_AND_WRITE;
 					break;
-				/*
-				 * }catch ( Exception e ){ System.out.println(
-				 * "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-				 * ); throw e; }
-				 */
+				default : break;
 				}
 
 			} else {
@@ -634,7 +558,7 @@ public class ServerTCP {
 					break;
 				case ACC_CO_PRV_CS:
 				case REF_CO_PRV_CS:// TOCHECK
-					System.out.println("réponse a REF_CO_PRV_CS");
+					//System.out.println("réponse a REF_CO_PRV_CS");
 
 					at = map.get(dataPacketRead.getLoginDst());
 					out.flip();
@@ -646,7 +570,7 @@ public class ServerTCP {
 					 * at.sc.write(out); out.compact();
 					 */
 
-					System.out.println("remaaaiinning :" + out.remaining());
+					//System.out.println("remaaaiinning :" + out.remaining());
 					break;
 				case ASC_CO_PRV_CS:
 
@@ -668,7 +592,7 @@ public class ServerTCP {
 						}
 
 					}
-					System.out.println("remaaaiinning :" + out.remaining());
+					//System.out.println("remaaaiinning :" + out.remaining());
 					out.compact();
 					break;
 				case MESSAGE:
@@ -681,13 +605,15 @@ public class ServerTCP {
 					out.position(out.remaining());
 					out.compact();
 
-					System.out.println("remaaaiinning :" + out.remaining());
+					//System.out.println("remaaaiinning :" + out.remaining());
 					break;
+					
+				default : break;
 
 				}
 				statusWriting = StatusWriting.RETRIEVE_AND_WRITE;
 
-				System.out.println("raaa");
+				//System.out.println("raaa");
 
 				if (isClosed) {
 					sc.close();
@@ -702,9 +628,9 @@ public class ServerTCP {
 		public void treatData() {
 
 			if (statusTreatment == StatusTreatment.DATA_PACKET_KNOWN) {
-				System.out.println("statusTreatment -> " + statusTreatment);
+				//System.out.println("statusTreatment -> " + statusTreatment);
 				dataPacketRead = currentReader.get();
-				System.out.println("Packet to treat :" + dataPacketRead);
+				//System.out.println("Packet to treat :" + dataPacketRead);
 				/*
 				 * if (bbWaitingsToBeUsed.isEmpty()) return; DataPacketRead data
 				 * = bbWaitingsToBeUsed.poll();
@@ -713,14 +639,14 @@ public class ServerTCP {
 				TypePacket theTypePacket = TypePacket.values()[dataPacketRead
 						.getTypePacket().getValue()];
 				if (!isAnExpectedTypePacket(theTypePacket)) {/* close */
-					System.out.println("Is unexpectedTypePacket !!");// TODO :
+					//System.out.println("Is unexpectedTypePacket !!");// :
 																		// delete
-					CloseAnRejectClient(login);// TODO: ET METTRE A NUL L LA
+					CloseAnRejectClient(login);//: ET METTRE A NUL L LA
 												// VARIABLE CLIENT POUR QU'ELLE
 												// SOIT PRISE PAR LE GARBAGE
 												// COLLECTORS
 				}
-				System.out.println("SERVER WILL TREAT :" + theTypePacket);
+				//System.out.println("SERVER WILL TREAT :" + theTypePacket);
 				switch (theTypePacket) {
 				case ASC_CO_SERV:// MODIF A ( modifier tout ça ).
 					// je test la car ça pourrait êre faut au moment ou on le
@@ -728,12 +654,12 @@ public class ServerTCP {
 					String loginToTest = dataPacketRead.getLoginSrc();
 
 					if (!isAUniqLogin(loginToTest)) {
-						// TODO : if false login we refused connexion ?
+						// : if false login we refused connexion ?
 						// appeler la fonction qui va remplir le out avec le
 						// packet de refu ( et fermer la connection ? )
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_SERV, out);
-						System.out.println("IS NOT UNIQUE LOGIN");// TODO :
+						//System.out.println("IS NOT UNIQUE LOGIN");// :
 						if (--remainingTry <= 0) {
 							// si non quand on fait la suppression du client en
 							// caas d'exception on en supprime un autre
@@ -746,14 +672,14 @@ public class ServerTCP {
 					}
 					// une fois que le login est assuré
 					login = loginToTest;
-					// TODO: do we have to manage the unicity with a comparason
+					//: do we have to manage the unicity with a comparason
 
 					id = rand.nextLong();
 
-					// TODO ; add the client, here ?
+					// ; add the client, here ?
 					map.put(login, this);
 
-					// TODO : Appeler la fonction qui va remplir le out avec
+					// : Appeler la fonction qui va remplir le out avec
 					// le paquet d'acceptation.
 
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_SERV,
@@ -762,7 +688,7 @@ public class ServerTCP {
 					// change status of exchange
 
 					statusExchange = StatusExchange.CONNECTED_TO_SERV;
-					// TODO: Verifier si c'est pas la qu'on change l'état
+					//: Verifier si c'est pas la qu'on change l'état
 					// WRITE ou READ ( je pense pas non )
 
 					statusTreatment = StatusTreatment.TYPE_READING;
@@ -776,14 +702,14 @@ public class ServerTCP {
 							|| (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
-						// TODO: close
+						//: close
 						CloseAnRejectClient(login);
 					}
 
 					String loginDest = dataPacketRead.getLoginDst();
 					if ((map.get(loginDest) == null)
 							|| (login.equals(loginDest))) {
-						// TODO: ne rien faire car il se peut que le
+						//: ne rien faire car il se peut que le
 						// destinataire ce
 						// soit déconnecté,
 						// on aura alors une gestion du time out pour l'attente
@@ -794,11 +720,11 @@ public class ServerTCP {
 						// pour dirt que l'utilisateur n'est plus disponible
 						// ouaalors simplement pour marqué
 						// le refu mais depuis le serveur,
-						System.out.println("LOGIN DOESN'T EXIST ");// TODO :
+						//System.out.println("LOGIN DOESN'T EXIST ");// :
 						writePacketToSend(dataPacketRead,
 								TypePacket.REF_CO_PRV_SC, out);
 						// delete
-						// TODO : envoyer la trame de notification de reffu ( ce
+						// : envoyer la trame de notification de reffu ( ce
 						// couop, si, depuis le server )
 					} else {
 
@@ -820,13 +746,13 @@ public class ServerTCP {
 						 */(id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
-						// TODO: close
+						//: close
 						CloseAnRejectClient(login);
 					}
 
 					// attention c'est l'adresse privé c'est pour ça que debase
 					// le serveur ne la connait aps et qu'il la communique.
-					// TODO/ dans le rapport il faudra bien mettre en avant ce
+					/// dans le rapport il faudra bien mettre en avant ce
 					// que gere le serveur, notemment il empeche l'usurapation
 					writePacketToSend(dataPacketRead, TypePacket.ACC_CO_PRV_SC,
 							out);
@@ -840,7 +766,7 @@ public class ServerTCP {
 					// ---------------------------------------------------
 
 					// statusExchange = StatusExchange.CONNECTED_TO_PRV;
-					// TODO : on doit accede a l'autre client poru envoyer la
+					// : on doit accede a l'autre client poru envoyer la
 					// trame sur ça socket et aussi pour changer son statu
 
 					statusTreatment = StatusTreatment.TYPE_READING;
@@ -851,13 +777,13 @@ public class ServerTCP {
 					if (/*
 						 * (!dataPacketRead.getLoginSrc().equals(login)) ||
 						 */(id != dataPacketRead.getId())) {
-						System.out.println("CLOSE AN REJECET CLIENT " + login);
+						//System.out.println("CLOSE AN REJECET CLIENT " + login);
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
-						// TODO: close
+						//: close
 						CloseAnRejectClient(login);
 					}
-					System.out.println("recepetion de REF_CO_PRV_CS");
+					//System.out.println("recepetion de REF_CO_PRV_CS");
 					writePacketToSend(dataPacketRead, TypePacket.REF_CO_PRV_SC,
 							out);
 
@@ -886,22 +812,18 @@ public class ServerTCP {
 							|| (id != dataPacketRead.getId())) {
 						// si il s'agit d'une usurpation d'identité on ferme la
 						// connection
-						// TODO: close
+						//: close
 						CloseAnRejectClient(login);
 					}
 					writePacketToSend(dataPacketRead, TypePacket.MESSAGE, out);
 
 					statusTreatment = StatusTreatment.TYPE_READING;
-					// Writters.aquitPrivateConnection(TypePacket.MESSAGE,
-					// loginDest, port, out);
-					// Writters.sendMessage(sc, src, data.getLoginDst()/*size
-					// message*/);
-
+				
 					break;
+					
+					default: break;
 
 				}
-				System.out.println("statusExchange : " + statusExchange);
-				System.out.println("statusTreatment : " + statusTreatment);
 
 			}
 
@@ -912,10 +834,8 @@ public class ServerTCP {
 	public ServerTCP(int port)
 			throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
-		System.out.println("ALLOCATION "
-				+ Thread.currentThread().getStackTrace()[1].getLineNumber());
 		serverSocketChannel.bind(new InetSocketAddress(port));
-		System.out.println("serveur bound on " + Format.getMyIP() + " port :" + port);
+		System.out.println("Server bound on " + Format.getMyIP() + " port : " + port);
 		selector = Selector.open();
 		selectedKeys = selector.selectedKeys();
 	}
@@ -934,10 +854,7 @@ public class ServerTCP {
 		Set<SelectionKey> selectedKeys = selector.selectedKeys();
 
 		while (!Thread.interrupted()) {
-
-			System.out.println("avant selecte");
 			selector.select();
-			System.out.println("aprés selecte");
 			clearUnconnectedClient();
 			processSelectedKeys();
 			selectedKeys.clear();
@@ -949,39 +866,25 @@ public class ServerTCP {
 		for (SelectionKey key : selectedKeys) {
 			Attachement at = (Attachement) key.attachment();
 			if (key.isValid() && key.isAcceptable()) {
-				doAccept(key);// on ne catrch pas cette exception parce que si
-								// le accept
-				// pete c'et que le serveur est mor
+				doAccept(key);
 			}
-			System.out.println("aaaaa0");
 
-			try { // on la catch ici car on arrete pas le serveur pour ça
+
+			try { 
 				if (key.isValid() && key.isWritable()) {
-					System.out.println("START DOWRITE");
 					at.doWrite(key);
 				}
-				System.out.println("aaaaa1");
+
 				if (key.isValid() && key.isReadable()) {
-					System.out.println("START DOREAD");
 					at.doRead(key);
 				}
-				System.out.println("aaaaa2");
 			} catch (IOException e) {
-				System.out.println("IOExcpetion catch !");// TODO : delete
-
-				if (map.get(at.login) != null) {// if an exception occured,
-												// anshure that client will be
-												// remove from the map
+				
+				if (map.get(at.login) != null) {
 					map.remove(at.login);
 				}
 			} catch (Exception e) {
-				System.out.println("Excpetion catch !");// TODO : delete
-				// if( 2 >= 1 ) throw new IOException(e);
-				if ((at.login != null) && (map.get(at.login) != null)) {// if an
-																		// exception
-																		// occured,
-					// anshure that client will be
-					// remove from the map
+				if ((at.login != null) && (map.get(at.login) != null)) {
 					map.remove(at.login);
 				}
 			}
@@ -990,28 +893,22 @@ public class ServerTCP {
 	}
 
 	private void doAccept(SelectionKey key) throws IOException {
-		// only the ServerSocketChannel is register in OP_ACCEPT
 		SocketChannel sc = serverSocketChannel.accept();
 		if (sc == null)
 			return; // In case, the selector gave a bad hint
 		sc.configureBlocking(false);
 
 		Attachement at = new Attachement(sc);
-		System.out.println("ALLOCATION "
-				+ Thread.currentThread().getStackTrace()[1].getLineNumber());
 		SelectionKey key2 = sc.register(selector, SelectionKey.OP_READ
-				| SelectionKey.OP_WRITE, at);// ALLOC : obligatoire
+				| SelectionKey.OP_WRITE, at);
 		at.key = key2;
 	}
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
 
-		System.out.println("ALLOCATION line "
-				+ Thread.currentThread().getStackTrace()[1].getLineNumber());// ALLOC
-																				// :
-																				// obligatoire
-		new ServerTCP(
+	
+	new ServerTCP(
 				Integer.parseInt(args[0])).launch();
 
 	}

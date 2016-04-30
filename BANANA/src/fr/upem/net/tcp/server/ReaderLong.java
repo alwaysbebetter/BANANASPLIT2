@@ -49,6 +49,8 @@ public class ReaderLong implements Reader {
 			}
 			break;// on envel volontairement le break dans le but de passer a la
 					// size
+		default:
+			break;
 		} // suivante
 
 		// c quand qu'on a error
