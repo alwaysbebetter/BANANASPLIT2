@@ -1,4 +1,4 @@
-package fr.upem.net.tcp.protocol;
+package fr.upem.net.tcp.clientProtocol;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;

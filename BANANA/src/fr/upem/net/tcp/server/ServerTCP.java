@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fr.upem.net.logger.Loggers;
-import fr.upem.net.tcp.protocol.Format;
+import fr.upem.net.tcp.clientProtocol.Format;
 import fr.upem.net.tcp.server.Reader.StatusProcessing;
 
 public class ServerTCP {

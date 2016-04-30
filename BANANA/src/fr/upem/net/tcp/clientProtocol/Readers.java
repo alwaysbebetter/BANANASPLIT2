@@ -1,4 +1,4 @@
-package fr.upem.net.tcp.protocol;
+package fr.upem.net.tcp.clientProtocol;
 
 import java.io.File;
 import java.io.FileOutputStream;

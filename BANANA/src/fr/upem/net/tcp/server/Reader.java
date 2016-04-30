@@ -5,8 +5,6 @@ import java.nio.charset.Charset;
 
 import javax.xml.crypto.Data;
 
-import fr.upem.net.tcp.server.DataPacketRead;
-
 public interface Reader {
 	public static final Charset UTF_8 = Charset.forName("utf-8");
 	public static final int BUFSIZ = 200 ;
