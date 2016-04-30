@@ -221,7 +221,7 @@ public class ClientTCP {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public ClientTCP(String serverAdress, int serverPort) throws UnknownHostException, IOException {
+	public ClientTCP(String serverAdress, int serverPort) throws IOException {
 		myIP = Format.getMyIP();
 		if(myIP.isEmpty()){
 			throw new UnknownHostException("Problem getting your ip");
@@ -234,6 +234,7 @@ public class ClientTCP {
 		ssc.bind(null);
 		this.map = new ConcurrentHashMap<>();
 		this.sc = new Scanner(System.in);
+		
 		myName = askName();
 		this.clientID = Readers.readLong(generalChannel);
 		System.out.println("Your name is " + myName);
@@ -403,8 +404,8 @@ public class ClientTCP {
 
 	private String askName() throws IOException {
 
+		
 		String name;
-
 		while (true) {
 			System.out.println("What is your pseudo ?");
 			if (sc.hasNextLine()) {
@@ -421,7 +422,6 @@ public class ClientTCP {
 				}
 
 			}
-
 		}
 
 	}
@@ -438,6 +438,20 @@ public class ClientTCP {
 			case "/log":
 				System.out.println("Voici les personnes connectés :");
 				// Writters.askConnected(generalChannel,clientID,myName);
+				return;
+				
+			case "/who":
+				if(map.isEmpty())
+					System.out.println("Personne connecté avec vous.");
+				else
+					for(PrivateChannel p : map.values()){
+						if(p.pc == null)
+							System.out.println(p.name + " en attente de connexion.");
+						else
+							System.out.println(p.name + " connecté avec vous.");
+						
+					}
+				System.out.println("total : " + map.size());
 				return;
 
 			// Invite someone
@@ -632,6 +646,7 @@ public class ClientTCP {
 	private void printCommand() {
 		System.out.println("Voici la liste des commandes :\n");
 		System.out.println("/log : Pas encore disponible.");
+		System.out.println("/who : Affiche les personnes avec qui vous êtes connecté.");
 		System.out.println("/invite name : demande une connexion privé à \"name\".");
 		System.out.println("/leave : quitter le client.");
 		System.out.println("/send file name: envoi le fichier \"file\" à la personne \"name\" connecté en privé.");
