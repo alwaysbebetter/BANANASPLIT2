@@ -41,7 +41,7 @@ public class Readers {
 		ByteBuffer buffInt = ByteBuffer.allocate(Integer.BYTES);
 		buffInt.clear();
 		if (!readFully(sc, buffInt)) {
-			throw new ReadersException("Connection lost during readInt");
+			throw new IOException("Connection lost during readInt");
 		}
 		buffInt.flip();
 		return buffInt.getInt();
@@ -57,7 +57,7 @@ public class Readers {
 		ByteBuffer buff = ByteBuffer.allocate(Byte.BYTES);
 		buff.clear();
 		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readByte");
+			throw new IOException("Connection lost during readByte");
 		}
 		buff.flip();
 		return buff.get();
@@ -75,7 +75,7 @@ public class Readers {
 
 		buffLong.clear();
 		if (!readFully(sc, buffLong)) {
-			throw new ReadersException("Connection lost during readLong");
+			throw new IOException("Connection lost during readLong");
 		}
 		buffLong.flip();
 		return buffLong.getLong();
@@ -92,7 +92,7 @@ public class Readers {
 
 		ByteBuffer buff = ByteBuffer.allocate(stringSize);
 		if (!readFully(sc, buff)) {
-			throw new ReadersException("Connection lost during readAdress");
+			throw new IOException("Connection lost during readAdress");
 		}
 		buff.flip();
 		String string = UTF8.decode(buff).toString();
@@ -114,7 +114,7 @@ public class Readers {
 		else if(packet == TypePacket.REF_CO_SERV)
 
 			return false;
-		throw new ReadersException("Problem, unknow response");
+		throw new IOException("Problem, unknow response");
 	}
 
 	/**
@@ -187,7 +187,7 @@ public class Readers {
 		//Data use for debug with logger
 		buff.put(id).putLong(size);
 		if(!readFully(sc,buff)){
-			throw new ReadersException("Connection lost during readFile");
+			throw new IOException("Connection lost during readFile");
 		}
 		String newFileName;
 		
